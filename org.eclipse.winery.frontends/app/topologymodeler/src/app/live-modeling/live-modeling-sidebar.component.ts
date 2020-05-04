@@ -168,11 +168,11 @@ export class LiveModelingSidebarComponent implements OnInit, OnDestroy {
         return this.liveModelingState !== LiveModelingStates.ENABLED;
     }
 
-    handleRedeploy() {
-        this.ngRedux.dispatch(this.liveModelingActions.setState(LiveModelingStates.REDEPLOY));
+    handleReconfiguration() {
+        this.ngRedux.dispatch(this.liveModelingActions.setState(LiveModelingStates.RECONFIGURATE));
     }
 
-    isRedeployDisabled() {
+    isReconfigurationDisabled() {
         return !(this.liveModelingState === LiveModelingStates.ENABLED &&
             !this.unsavedChanges &&
             this.deploymentChanges);

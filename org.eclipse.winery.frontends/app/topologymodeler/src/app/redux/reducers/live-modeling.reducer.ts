@@ -74,7 +74,7 @@ export const LiveModelingReducer =
                         break;
                     }
                     case LiveModelingStates.ENABLED: {
-                        if (state === LiveModelingStates.REDEPLOY ||
+                        if (state === LiveModelingStates.RECONFIGURATE ||
                             state === LiveModelingStates.UPDATE ||
                             state === LiveModelingStates.TERMINATE ||
                             state === LiveModelingStates.DISABLED ||
@@ -84,7 +84,7 @@ export const LiveModelingReducer =
                         }
                         break;
                     }
-                    case LiveModelingStates.REDEPLOY: {
+                    case LiveModelingStates.RECONFIGURATE: {
                         if (state === LiveModelingStates.UPDATE) {
                             nextState = state;
                         }

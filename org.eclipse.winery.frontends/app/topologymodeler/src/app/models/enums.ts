@@ -69,7 +69,7 @@ export enum LiveModelingStates {
     TERMINATE = 'TERMINATE',
     TERMINATED = 'TERMINATED',
     ENABLED = 'ENABLED',
-    REDEPLOY = 'REDEPLOY',
+    RECONFIGURATE = 'RECONFIGURATE',
     UPDATE = 'UPDATE',
     ERROR = 'ERROR'
 }
@@ -123,5 +123,5 @@ export enum LiveModelingButtons {
     TERMINATE,
     REFRESH,
     SWITCH,
-    REDEPLOY,
+    RECONFIGURATE,
 }

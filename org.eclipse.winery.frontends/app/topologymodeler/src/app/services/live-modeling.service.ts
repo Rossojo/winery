@@ -101,8 +101,8 @@ export class LiveModelingService {
             case LiveModelingStates.ENABLED:
                 this.enable();
                 break;
-            case LiveModelingStates.REDEPLOY:
-                this.redeploy();
+            case LiveModelingStates.RECONFIGURATE:
+                this.reconfigurate();
                 break;
             case LiveModelingStates.TERMINATE:
                 this.terminate();
@@ -189,7 +189,7 @@ export class LiveModelingService {
         }
     }
 
-    private async redeploy() {
+    private async reconfigurate() {
         try {
             // Temporary solution until migration bug is resolved
             // this.overlayService.showOverlay('Cleaning up');
