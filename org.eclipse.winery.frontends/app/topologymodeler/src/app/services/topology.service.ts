@@ -23,9 +23,9 @@ import { LiveModelingActions } from '../redux/actions/live-modeling.actions';
 
 @Injectable()
 export class TopologyService {
-    private currentJsonTopology: TTopologyTemplate;
-    private _lastSavedJsonTopology = new TTopologyTemplate();
-    private _lastDeployedJsonTopology = new TTopologyTemplate();
+    private currentJsonTopologyTemplate: TTopologyTemplate;
+    private lastSavedJsonTopologyTemplate: TTopologyTemplate;
+    private deployedJsonTopologyTemplate: TTopologyTemplate;
     private enabled = false;
     private liveModelingState: LiveModelingStates;
 
@@ -33,27 +33,23 @@ export class TopologyService {
                 private wineryActions: WineryActions,
                 private liveModelingActions: LiveModelingActions) {
         this.ngRedux.select(state => state.wineryState.currentJsonTopology)
-            .subscribe(currentJsonTopology => {
-                this.currentJsonTopology = currentJsonTopology;
+            .subscribe(topologyTemplate => {
+                this.currentJsonTopologyTemplate = topologyTemplate;
                 this.checkForSaveChanges();
                 this.checkForDeployChanges();
             });
-    }
-
-    get lastSavedJsonTopology() {
-        return this._lastSavedJsonTopology;
-    }
-
-    set lastSavedJsonTopology(topologyTemplate: TTopologyTemplate) {
-        this._lastSavedJsonTopology = JSON.parse(JSON.stringify(topologyTemplate));
-    }
-
-    get lastDeployedJsonTopology() {
-        return this._lastDeployedJsonTopology;
-    }
-
-    set lastDeployedJsonTopology(topologyTemplate: TTopologyTemplate) {
-        this._lastDeployedJsonTopology = JSON.parse(JSON.stringify(topologyTemplate));
+        this.ngRedux.select(state => state.wineryState.lastSavedJsonTopology)
+            .subscribe(topologyTemplate => {
+                this.lastSavedJsonTopologyTemplate = topologyTemplate;
+            });
+        this.ngRedux.select(state => state.liveModelingState.deployedJsonTopology)
+            .subscribe(topologyTemplate => {
+                this.deployedJsonTopologyTemplate = topologyTemplate;
+            });
+        this.ngRedux.select(state => state.liveModelingState.state)
+            .subscribe(state => {
+                this.liveModelingState = state;
+            });
     }
 
     public enableCheck() {
@@ -64,15 +60,15 @@ export class TopologyService {
         if (!this.enabled) {
             return;
         }
-        const changed = TopologyTemplateUtil.hasTopologyTemplateChanged(this.currentJsonTopology, this.lastSavedJsonTopology);
+        const changed = TopologyTemplateUtil.hasTopologyTemplateChanged(this.currentJsonTopologyTemplate, this.lastSavedJsonTopologyTemplate);
         this.ngRedux.dispatch(this.wineryActions.setUnsavedChanges(changed));
     }
 
     public checkForDeployChanges() {
-        if (this.liveModelingState === LiveModelingStates.DISABLED) {
+        if (this.liveModelingState === LiveModelingStates.DISABLED || this.liveModelingState == null) {
             return;
         }
-        const changed = TopologyTemplateUtil.hasTopologyTemplateChanged(this.currentJsonTopology, this.lastDeployedJsonTopology);
+        const changed = TopologyTemplateUtil.hasTopologyTemplateChanged(this.currentJsonTopologyTemplate, this.deployedJsonTopologyTemplate);
         this.ngRedux.dispatch(this.liveModelingActions.setDeploymentChanges(changed));
     }
 }

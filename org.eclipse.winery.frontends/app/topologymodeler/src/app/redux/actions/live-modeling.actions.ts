@@ -18,6 +18,7 @@ import { LiveModelingStates, ServiceTemplateInstanceStates } from '../../models/
 import { InputParameter } from '../../models/container/input-parameter.model';
 import { Csar } from '../../models/container/csar.model';
 import { PlanInstance } from '../../models/container/plan-instance.model';
+import { TTopologyTemplate } from '../../models/ttopology-template';
 
 export interface SetStateAction extends Action {
     state: LiveModelingStates;
@@ -55,6 +56,10 @@ export interface SetCurrentBuildPlanInstance extends Action {
     buildPlanInstance: PlanInstance;
 }
 
+export interface SetDeployedJsonTopology extends Action {
+    deployedJsonTopology: TTopologyTemplate;
+}
+
 /**
  * Actions for live modeling
  */
@@ -69,6 +74,7 @@ export class LiveModelingActions {
     static SET_SETTINGS = 'SET_SETTING';
     static SET_DEPLOYMENT_CHANGES = 'SET_DEPLOYMENT_CHANGES';
     static SET_CURRENT_BUILD_PLAN_INSTANCE = 'SET_CURRENT_BUILD_PLAN_INSTANCE';
+    static SET_DEPLOYED_JSON_TOPOLOGY = 'SET_DEPLOYED_JSON_TOPOLOGY';
 
     setState(state: LiveModelingStates): SetStateAction {
         return {
@@ -130,6 +136,13 @@ export class LiveModelingActions {
         return {
             type: LiveModelingActions.SET_CURRENT_BUILD_PLAN_INSTANCE,
             buildPlanInstance: buildPlanInstance
+        };
+    }
+    
+    setDeployedJsonTopology(topologyTemplate: TTopologyTemplate): SetDeployedJsonTopology {
+        return {
+            type: LiveModelingActions.SET_DEPLOYED_JSON_TOPOLOGY,
+            deployedJsonTopology: topologyTemplate
         };
     }
 }

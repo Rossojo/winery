@@ -17,7 +17,7 @@ import { BsModalRef, BsModalService, ProgressbarConfig } from 'ngx-bootstrap';
 import { Subscription } from 'rxjs';
 import { NgRedux } from '@angular-redux/store';
 import { IWineryState } from '../redux/store/winery.store';
-import { LiveModelingStates, ServiceTemplateInstanceStates } from '../models/enums';
+import { LiveModelingStates, ReconfigureOptions, ServiceTemplateInstanceStates } from '../models/enums';
 import { LiveModelingActions } from '../redux/actions/live-modeling.actions';
 import { LiveModelingService } from '../services/live-modeling.service';
 import { WineryActions } from '../redux/actions/winery.actions';
@@ -28,7 +28,7 @@ import { EnableModalComponent } from './modals/enable-modal/enable-modal.compone
 import { SettingsModalComponent } from './modals/settings-modal/settings-modal.component';
 import { DisableModalComponent } from './modals/disable-modal/disable-modal.component';
 import { ConfirmModalComponent } from './modals/confirm-modal/confirm-modal.component';
-import { InputParameter } from '../models/container/input-parameter.model';
+import { ReconfigureModalComponent } from './modals/reconfigure-modal/reconfigure-modal.component';
 
 export function getProgressbarConfig(): ProgressbarConfig {
     return Object.assign(new ProgressbarConfig(), { animate: true, striped: true, max: 100 });
@@ -141,7 +141,7 @@ export class LiveModelingSidebarComponent implements OnInit, OnDestroy {
     async handleDeploy() {
         const resp = await this.openConfirmModal('Deploy new Instance', `Do you want to deploy a new instance of type ${this.currentCsarId}?`);
         if (resp) {
-            this.ngRedux.dispatch(this.liveModelingActions.setState(LiveModelingStates.DEPLOY));
+            this.liveModelingService.deploy();
         }
     }
 
@@ -152,7 +152,7 @@ export class LiveModelingSidebarComponent implements OnInit, OnDestroy {
     async handleTerminate() {
         const resp = await this.openConfirmModal('Terminate Instance', 'Are you sure you want to terminate the instance?');
         if (resp) {
-            this.ngRedux.dispatch(this.liveModelingActions.setState(LiveModelingStates.TERMINATE));
+            this.liveModelingService.terminate();
         }
     }
 
@@ -161,15 +161,37 @@ export class LiveModelingSidebarComponent implements OnInit, OnDestroy {
     }
 
     handleRefresh() {
-        this.ngRedux.dispatch(this.liveModelingActions.setState(LiveModelingStates.UPDATE));
+        this.liveModelingService.update();
     }
 
     isRefreshDisabled() {
         return this.liveModelingState !== LiveModelingStates.ENABLED;
     }
 
-    handleReconfiguration() {
-        this.ngRedux.dispatch(this.liveModelingActions.setState(LiveModelingStates.RECONFIGURATE));
+    async handleReconfiguration() {
+        const modalRef = this.modalService.show(ReconfigureModalComponent, { backdrop: 'static' });
+        await new Promise(resolve => {
+            const subscription = this.modalService.onHidden.subscribe(_ => {
+                subscription.unsubscribe();
+                resolve();
+            });
+        });
+
+        if (modalRef.content.selectedOption !== ReconfigureOptions.NONE) {
+            switch (modalRef.content.selectedOption) {
+                case ReconfigureOptions.REDEPLOY: {
+                    this.liveModelingService.redeploy();
+                    return;
+                }
+                case ReconfigureOptions.TRANSFORM: {
+                    this.liveModelingService.transform();
+                    return;
+                }
+                case ReconfigureOptions.ADAPT: {
+                    return;
+                }
+            }
+        }
     }
 
     isReconfigurationDisabled() {
@@ -185,13 +207,13 @@ export class LiveModelingSidebarComponent implements OnInit, OnDestroy {
     getBackgroundForState(serviceTemplateInstanceState: ServiceTemplateInstanceStates) {
         switch (serviceTemplateInstanceState) {
             case ServiceTemplateInstanceStates.DELETED:
-            case ServiceTemplateInstanceStates.DELETING:
             case ServiceTemplateInstanceStates.ERROR:
                 return '#dc3545';
-            case ServiceTemplateInstanceStates.MIGRATED:
+            case ServiceTemplateInstanceStates.DELETING:
             case ServiceTemplateInstanceStates.MIGRATING:
             case ServiceTemplateInstanceStates.CREATING:
                 return '#007bff';
+            case ServiceTemplateInstanceStates.MIGRATED:
             case ServiceTemplateInstanceStates.CREATED:
                 return '#28a745';
             case ServiceTemplateInstanceStates.INITIAL:

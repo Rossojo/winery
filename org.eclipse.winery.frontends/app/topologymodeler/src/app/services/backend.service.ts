@@ -33,6 +33,10 @@ import { VersionElement } from '../models/versionElement';
 import { WineryRepositoryConfigurationService } from '../../../../tosca-management/src/app/wineryFeatureToggleModule/WineryRepositoryConfiguration.service';
 import { concatMap } from 'rxjs/operators';
 import { TopologyService } from './topology.service';
+import { NgRedux } from '@angular-redux/store';
+import { IWineryState } from '../redux/store/winery.store';
+import { WineryActions } from '../redux/actions/winery.actions';
+import { TopologyTemplateUtil } from '../models/topologyTemplateUtil';
 
 /**
  * Responsible for interchanging data between the app and the server.
@@ -56,7 +60,9 @@ export class BackendService {
                 private alert: ToastrService,
                 private errorHandler: ErrorHandlerService,
                 private configurationService: WineryRepositoryConfigurationService,
-                private topologyService: TopologyService) {
+                private topologyService: TopologyService,
+                private ngRedux: NgRedux<IWineryState>,
+                private wineryActions: WineryActions) {
         this.endpointConfiguration$.subscribe((params: TopologyModelerConfiguration) => {
             if (!(isNullOrUndefined(params.id) && isNullOrUndefined(params.ns) &&
                 isNullOrUndefined(params.repositoryURL) && isNullOrUndefined(params.uiURL))) {
@@ -282,7 +288,7 @@ export class BackendService {
                 { headers: headers, responseType: 'text', observe: 'response' }
             ).map(res => {
                 if (res.ok) {
-                    this.topologyService.lastSavedJsonTopology = topologyTemplate;
+                    this.ngRedux.dispatch(this.wineryActions.setLastSavedJsonTopology(topologyTemplate));
                 }
                 return res;
             }).finally(() => {

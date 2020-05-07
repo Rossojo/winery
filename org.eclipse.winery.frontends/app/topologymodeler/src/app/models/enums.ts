@@ -125,3 +125,10 @@ export enum LiveModelingButtons {
     SWITCH,
     RECONFIGURATE,
 }
+
+export enum ReconfigureOptions {
+    NONE,
+    REDEPLOY,
+    TRANSFORM,
+    ADAPT
+}

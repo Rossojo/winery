@@ -34,6 +34,7 @@ import { WineryRepositoryConfigurationService } from '../../../tosca-management/
 import { ResizedEvent } from 'angular-resize-event';
 import { FeatureEnum } from '../../../tosca-management/src/app/wineryFeatureToggleModule/wineryRepository.feature.direct';
 import { TopologyService } from './services/topology.service';
+import { WineryActions } from './redux/actions/winery.actions';
 
 /**
  * This is the root component of the topology modeler.
@@ -74,6 +75,7 @@ export class WineryComponent implements OnInit, AfterViewInit {
                 private appReadyEvent: AppReadyEventService,
                 public backendService: BackendService,
                 private ngRedux: NgRedux<IWineryState>,
+                private wineryActions: WineryActions,
                 private actions: TopologyRendererActions,
                 private alert: ToastrService,
                 private activatedRoute: ActivatedRoute,
@@ -322,7 +324,7 @@ export class WineryComponent implements OnInit, AfterViewInit {
 
     onReduxReady() {
         this.loaded.generatedReduxState = true;
-        this.topologyService.lastSavedJsonTopology = this.ngRedux.getState().wineryState.currentJsonTopology;
+        this.ngRedux.dispatch(this.wineryActions.setLastSavedJsonTopology(this.ngRedux.getState().wineryState.currentJsonTopology));
         this.topologyService.enableCheck();
         window.addEventListener('beforeunload', (e => {
             if (this.ngRedux.getState().wineryState.unsavedChanges) {

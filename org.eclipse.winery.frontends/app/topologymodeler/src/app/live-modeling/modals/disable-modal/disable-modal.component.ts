@@ -16,9 +16,8 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { BsModalRef } from 'ngx-bootstrap';
 import { NgRedux } from '@angular-redux/store';
 import { IWineryState } from '../../../redux/store/winery.store';
-import { LiveModelingActions } from '../../../redux/actions/live-modeling.actions';
-import { LiveModelingStates } from '../../../models/enums';
 import { Subscription } from 'rxjs';
+import { LiveModelingService } from '../../../services/live-modeling.service';
 
 @Component({
     selector: 'winery-live-modeling-disable-modal',
@@ -31,7 +30,7 @@ export class DisableModalComponent implements OnInit, OnDestroy {
 
     constructor(private bsModalRef: BsModalRef,
                 private ngRedux: NgRedux<IWineryState>,
-                private liveModelingActions: LiveModelingActions,
+                private liveModelingService: LiveModelingService,
     ) {
     }
 
@@ -43,7 +42,7 @@ export class DisableModalComponent implements OnInit, OnDestroy {
     }
 
     disable() {
-        this.ngRedux.dispatch(this.liveModelingActions.setState(LiveModelingStates.DISABLED));
+        this.liveModelingService.disable();
         this.dismissModal();
     }
 

@@ -17,7 +17,8 @@ import {
     DecMaxInstances, DecMinInstances, DeleteDeploymentArtifactAction, DeleteNodeAction, DeletePolicyAction,
     DeleteRelationshipAction, HideNavBarAndPaletteAction, IncMaxInstances, IncMinInstances, SaveNodeTemplateAction,
     SaveRelationshipAction, SendCurrentNodeIdAction, SendLiveModelingSidebarOpenedAction, SendPaletteOpenedAction, SetCababilityAction,
-    SetDeploymentArtifactAction, SetNodeInstanceStateAction, SetNodePropertyValidityAction, SetNodeVisuals, SetNodeWorkingAction,
+    SetDeploymentArtifactAction, SetLastSavedJsonTopologyAction, SetNodeInstanceStateAction, SetNodePropertyValidityAction, SetNodeVisuals,
+    SetNodeWorkingAction,
     SetPolicyAction,
     SetPropertyAction, SetRequirementAction,
     SetTargetLocation, SetUnsavedChangesAction, SidebarMaxInstanceChanges, SidebarMinInstanceChanges, SidebarNodeNamechange, SidebarStateAction,
@@ -26,6 +27,7 @@ import {
 import { TNodeTemplate, TRelationshipTemplate, TTopologyTemplate } from '../../models/ttopology-template';
 import { TDeploymentArtifact } from '../../models/artifactsModalData';
 import { Visuals } from '../../models/visuals';
+import { TopologyTemplateUtil } from '../../models/topologyTemplateUtil';
 
 export interface WineryState {
     currentPaletteOpenedState: boolean;
@@ -35,6 +37,7 @@ export interface WineryState {
     currentNodeData: any;
     nodeVisuals: Visuals[];
     liveModelingSidebarOpenedState: boolean;
+    lastSavedJsonTopology: TTopologyTemplate;
     unsavedChanges: boolean;
 }
 
@@ -61,6 +64,7 @@ export const INITIAL_WINERY_STATE: WineryState = {
     },
     nodeVisuals: null,
     liveModelingSidebarOpenedState: false,
+    lastSavedJsonTopology: null,
     unsavedChanges: false,
 };
 
@@ -502,6 +506,14 @@ export const WineryReducer =
                 return <WineryState>{
                     ...lastState,
                     liveModelingSidebarOpenedState: sidebarOpened
+                };
+            }
+            case WineryActions.SET_LAST_SAVED_JSON_TOPOLOGY: {
+                const lastSavedJsonTopology: TTopologyTemplate = (<SetLastSavedJsonTopologyAction>action).lastSavedJsonTopology;
+
+                return {
+                    ...lastState,
+                    lastSavedJsonTopology: TopologyTemplateUtil.cloneTopologyTemplate(lastSavedJsonTopology)
                 };
             }
             case WineryActions.SET_UNSAVED_CHANGES: {

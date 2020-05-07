@@ -18,6 +18,7 @@ import { Visuals } from './visuals';
 import { NgRedux } from '@angular-redux/store';
 import { IWineryState } from '../redux/store/winery.store';
 import { WineryActions } from '../redux/actions/winery.actions';
+import * as _ from 'lodash';
 
 export class TopologyTemplateUtil {
 
@@ -235,12 +236,19 @@ export class TopologyTemplateUtil {
             );
     }
 
-    static hasTopologyTemplateChanged(currentTopology: TTopologyTemplate, lastSavedTopology: TTopologyTemplate) {
+    static cloneTopologyTemplate(topologyTemplate: TTopologyTemplate): TTopologyTemplate {
+        return _.cloneDeep(topologyTemplate);
+    }
+
+    static hasTopologyTemplateChanged(currentTopology: TTopologyTemplate, lastSavedTopology: TTopologyTemplate): boolean {
         const objectsEqual = (o1, o2) =>
             typeof o1 === 'object' && Object.keys(o1).length > 0
                 ? Object.keys(o1).length === Object.keys(o2).length
                 && Object.keys(o1).every(p => objectsEqual(o1[p], o2[p]))
                 : JSON.stringify(o1) === JSON.stringify(o2); // JSON.stringify so we also cover
+        if (lastSavedTopology == null) {
+            return true;
+        }
 
         if (currentTopology.nodeTemplates.length !== lastSavedTopology.nodeTemplates.length ||
             currentTopology.relationshipTemplates.length !== lastSavedTopology.relationshipTemplates.length) {

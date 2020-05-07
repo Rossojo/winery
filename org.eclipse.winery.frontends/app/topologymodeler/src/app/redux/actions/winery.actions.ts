@@ -14,7 +14,7 @@
 
 import { Action } from 'redux';
 import { Injectable } from '@angular/core';
-import { TNodeTemplate, TRelationshipTemplate } from '../../models/ttopology-template';
+import { TNodeTemplate, TRelationshipTemplate, TTopologyTemplate } from '../../models/ttopology-template';
 import { TDeploymentArtifact } from '../../models/artifactsModalData';
 import { TPolicy } from '../../models/policiesModalData';
 import { Visuals } from '../../models/visuals';
@@ -192,6 +192,10 @@ export interface SendLiveModelingSidebarOpenedAction extends Action {
     sidebarOpened: boolean;
 }
 
+export interface SetLastSavedJsonTopologyAction extends Action {
+    lastSavedJsonTopology: TTopologyTemplate;
+}
+
 export interface SetUnsavedChangesAction extends Action {
     unsavedChanges: boolean;
 }
@@ -253,6 +257,7 @@ export class WineryActions {
     static SET_NODE_VISUALS = 'SET_NODE_VISUALS';
     static SEND_LIVE_MODELING_SIDEBAR_OPENED = 'SEND_LIVE_MODELING_SIDEBAR_OPENED';
 
+    static SET_LAST_SAVED_JSON_TOPOLOGY = 'SET_LAST_SAVED_JSON_TOPOLOGY';
     static SET_UNSAVED_CHANGES = 'SET_UNSAVED_CHANGES';
     static SET_NODE_VALIDITY = 'SET_NODE_VALIDITY';
     static SET_NODE_INSTANCE_STATE = 'SET_NODE_INSTANCE_STATE';
@@ -444,6 +449,13 @@ export class WineryActions {
         return {
             type: WineryActions.SEND_LIVE_MODELING_SIDEBAR_OPENED,
             sidebarOpened: sidebarOpened
+        };
+    }
+
+    setLastSavedJsonTopology(lastSavedJsonTopology: TTopologyTemplate): SetLastSavedJsonTopologyAction {
+        return {
+            type: WineryActions.SET_LAST_SAVED_JSON_TOPOLOGY,
+            lastSavedJsonTopology: lastSavedJsonTopology
         };
     }
 

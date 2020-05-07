@@ -16,11 +16,14 @@ import { Action } from 'redux';
 import {
     LiveModelingActions, SetCurrentBuildPlanInstance, SetContainerUrlAction, SetCurrentCsarAction,
     SetCurrentCsarIdAction,
-    SetCurrentServiceTemplateInstanceIdAction, SetCurrentServiceTemplateInstanceStateAction, SetDeploymentChangesAction, SetSettingsAction, SetStateAction
+    SetCurrentServiceTemplateInstanceIdAction, SetCurrentServiceTemplateInstanceStateAction, SetDeploymentChangesAction, SetSettingsAction, SetStateAction,
+    SetDeployedJsonTopology
 } from '../actions/live-modeling.actions';
 import { InputParameter } from '../../models/container/input-parameter.model';
 import { Csar } from '../../models/container/csar.model';
 import { PlanInstance } from '../../models/container/plan-instance.model';
+import { TTopologyTemplate } from '../../models/ttopology-template';
+import { TopologyTemplateUtil } from '../../models/topologyTemplateUtil';
 
 export interface LiveModelingState {
     state: LiveModelingStates;
@@ -32,6 +35,7 @@ export interface LiveModelingState {
     settings: any;
     deploymentChanges: boolean;
     currentBuildPlanInstance: PlanInstance;
+    deployedJsonTopology: TTopologyTemplate;
 }
 
 export const INITIAL_LIVE_MODELING_STATE: LiveModelingState = {
@@ -44,74 +48,13 @@ export const INITIAL_LIVE_MODELING_STATE: LiveModelingState = {
     settings: { timeout: 60000, interval: 1000 },
     deploymentChanges: false,
     currentBuildPlanInstance: null,
+    deployedJsonTopology: null
 };
 
 export const LiveModelingReducer =
     function (lastState: LiveModelingState = INITIAL_LIVE_MODELING_STATE, action: Action): LiveModelingState {
         switch (action.type) {
             case LiveModelingActions.SET_STATE:
-                /**
-                 const state = (<SetStateAction>action).state;
-                 let nextState;
-
-                 switch (lastState.state) {
-                    case LiveModelingStates.DISABLED: {
-                        if (state === LiveModelingStates.INIT || state === LiveModelingStates.UPDATE) {
-                            nextState = state;
-                        }
-                        break;
-                    }
-                    case LiveModelingStates.INIT: {
-                        if (state === LiveModelingStates.DEPLOY || state === LiveModelingStates.DISABLED) {
-                            nextState = state;
-                        }
-                        break;
-                    }
-                    case LiveModelingStates.DEPLOY: {
-                        if (state === LiveModelingStates.UPDATE) {
-                            nextState = state;
-                        }
-                        break;
-                    }
-                    case LiveModelingStates.ENABLED: {
-                        if (state === LiveModelingStates.RECONFIGURATE ||
-                            state === LiveModelingStates.UPDATE ||
-                            state === LiveModelingStates.TERMINATE ||
-                            state === LiveModelingStates.DISABLED ||
-                            state === LiveModelingStates.INIT
-                        ) {
-                            nextState = state;
-                        }
-                        break;
-                    }
-                    case LiveModelingStates.RECONFIGURATE: {
-                        if (state === LiveModelingStates.UPDATE) {
-                            nextState = state;
-                        }
-                        break;
-                    }
-                    case LiveModelingStates.UPDATE: {
-                        if (state === LiveModelingStates.ENABLED) {
-                            nextState = state;
-                        }
-                        break;
-                    }
-                    case LiveModelingStates.TERMINATE: {
-                        if (state === LiveModelingStates.DISABLED) {
-                            nextState = state;
-                        }
-                        break;
-                    }
-                    case LiveModelingStates.ERROR: {
-                        nextState = state;
-                    }
-                }
-
-                 if (!nextState) {
-                    nextState = LiveModelingStates.ERROR;
-                }
-                 **/
-
                 const state = (<SetStateAction>action).state;
                 return <LiveModelingState>{
                     ...lastState,
@@ -179,6 +122,14 @@ export const LiveModelingReducer =
                 return <LiveModelingState>{
                     ...lastState,
                     currentBuildPlanInstance: buildPlanInstance
+                };
+            }
+            case LiveModelingActions.SET_DEPLOYED_JSON_TOPOLOGY: {
+                const topologyTemplate = (<SetDeployedJsonTopology>action).deployedJsonTopology;
+
+                return <LiveModelingState>{
+                    ...lastState,
+                    deployedJsonTopology: TopologyTemplateUtil.cloneTopologyTemplate(topologyTemplate)
                 };
             }
             default: {

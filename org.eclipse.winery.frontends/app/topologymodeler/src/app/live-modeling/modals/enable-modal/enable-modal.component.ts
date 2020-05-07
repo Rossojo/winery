@@ -12,17 +12,11 @@
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
  *******************************************************************************/
 
-import { Component, OnDestroy } from '@angular/core';
+import { Component } from '@angular/core';
 import { BsModalRef } from 'ngx-bootstrap';
 import { LiveModelingService } from '../../../services/live-modeling.service';
-import { ContainerService } from '../../../services/container.service';
 import { BackendService } from '../../../services/backend.service';
-import { NgRedux } from '@angular-redux/store';
-import { IWineryState } from '../../../redux/store/winery.store';
-import { LiveModelingActions } from '../../../redux/actions/live-modeling.actions';
 import { HttpClient } from '@angular/common/http';
-import { LiveModelingStates } from '../../../models/enums';
-import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 @Component({
@@ -39,10 +33,7 @@ export class EnableModalComponent {
 
     constructor(private bsModalRef: BsModalRef,
                 private liveModelingService: LiveModelingService,
-                private containerService: ContainerService,
                 private backendService: BackendService,
-                private ngRedux: NgRedux<IWineryState>,
-                private liveModelingActions: LiveModelingActions,
                 private http: HttpClient
     ) {
         this.currentCsarId = this.normalizeCsarId(this.backendService.configuration.id);
@@ -54,28 +45,28 @@ export class EnableModalComponent {
         return csarId.endsWith(csarEnding) ? csarId : csarId + csarEnding;
     }
 
-    enableLiveModeling() {
+    private async enableLiveModeling() {
         this.resetErrorsAndAnimations();
         this.testingContainerUrl = true;
-        this.checkContainerUrl().subscribe(resp => {
-            if (!resp) {
+        try {
+            const isContainerUrlValid = await this.checkContainerUrl();
+            if (isContainerUrlValid) {
+                this.liveModelingService.enable(this.containerUrl);
+                this.dismissModal();
+            } else {
                 this.isContainerUrlInvalid = true;
-                return;
             }
-            this.ngRedux.dispatch(this.liveModelingActions.setContainerUrl(this.containerUrl));
-            this.ngRedux.dispatch(this.liveModelingActions.setState(LiveModelingStates.INIT));
-            this.dismissModal();
-        }, error => {
+        } catch (e) {
             this.isContainerUrlInvalid = true;
-        }).add(() => {
+        } finally {
             this.testingContainerUrl = false;
-        });
+        }
     }
 
-    checkContainerUrl(): Observable<boolean> {
+    checkContainerUrl(): Promise<boolean> {
         return this.http.get(this.containerUrl, { observe: 'response' }).pipe(
             map(resp => resp.ok),
-        );
+        ).toPromise();
     }
 
     resetErrorsAndAnimations() {

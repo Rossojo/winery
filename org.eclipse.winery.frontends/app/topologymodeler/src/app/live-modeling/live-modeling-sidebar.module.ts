@@ -35,6 +35,7 @@ import { ConfirmModalComponent } from './modals/confirm-modal/confirm-modal.comp
 import { SettingsModalComponent } from './modals/settings-modal/settings-modal.component';
 import { CsarInfoComponent } from './csar-info/csar-info.component';
 import { InputParametersModalComponent } from './modals/input-parameters-modal/input-parameters-modal.component';
+import { ReconfigureModalComponent } from './modals/reconfigure-modal/reconfigure-modal.component';
 
 @NgModule({
     imports: [
@@ -64,7 +65,8 @@ import { InputParametersModalComponent } from './modals/input-parameters-modal/i
         DisableModalComponent,
         ConfirmModalComponent,
         SettingsModalComponent,
-        InputParametersModalComponent
+        InputParametersModalComponent,
+        ReconfigureModalComponent
     ],
     exports: [
         LiveModelingSidebarComponent
@@ -74,7 +76,8 @@ import { InputParametersModalComponent } from './modals/input-parameters-modal/i
         DisableModalComponent,
         ConfirmModalComponent,
         SettingsModalComponent,
-        InputParametersModalComponent
+        InputParametersModalComponent,
+        ReconfigureModalComponent
     ]
 })
 export class LiveModelingSidebarModule {

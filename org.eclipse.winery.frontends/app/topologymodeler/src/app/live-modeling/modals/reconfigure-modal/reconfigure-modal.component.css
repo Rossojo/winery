@@ -1,0 +1,41 @@
+/*******************************************************************************
+ * Copyright (c) 2020 Contributors to the Eclipse Foundation
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0, or the Apache Software License 2.0
+ * which is available at https://www.apache.org/licenses/LICENSE-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
+ *******************************************************************************/
+
+.reconfigure-icon-container {
+    padding: 0.5em;
+    display: flex;
+    flex-direction: column;
+    width: 135px;
+    height: 135px;
+    border: 2px solid #dddddd;
+    cursor: pointer;
+}
+
+.reconfigure-icon {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 4em;
+}
+
+.select-icon-container {
+    background-color: #AAEEAA;
+}
+
+.disabled-icon-container {
+    color: #dddddd;
+    pointer-events: none;
+    cursor: not-allowed;
+}
