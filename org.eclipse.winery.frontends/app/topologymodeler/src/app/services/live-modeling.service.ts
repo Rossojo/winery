@@ -35,6 +35,7 @@ import { PlanInstance } from '../models/container/plan-instance.model';
 import { InputParameter } from '../models/container/input-parameter.model';
 import { InputParametersModalComponent } from '../live-modeling/modals/input-parameters-modal/input-parameters-modal.component';
 import { ToastrService } from 'ngx-toastr';
+import { NodeTemplateInstance } from '../models/container/node-template-instance.model';
 
 @Injectable()
 export class LiveModelingService {
@@ -281,6 +282,17 @@ export class LiveModelingService {
         } catch (error) {
             this.loggingService.logError(error.message);
             this.handleError();
+        }
+    }
+
+    public fetchNodeTemplateInstanceData(nodeTemplateId: string): Observable<NodeTemplateInstance> {
+        try {
+            if (this.state === LiveModelingStates.DISABLED) {
+                return of(null);
+            }
+            return this.containerService.getNodeTemplateInstance(this.currentCsarId, this.currentServiceTemplateInstanceId, nodeTemplateId);
+        } catch (error) {
+            return of(null);
         }
     }
 

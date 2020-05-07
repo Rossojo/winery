@@ -12,9 +12,12 @@
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
  *******************************************************************************/
 import { Component, OnDestroy, OnInit, } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { of, Subject, Subscription } from 'rxjs';
 import { NgRedux } from '@angular-redux/store';
 import { IWineryState } from '../../redux/store/winery.store';
+import { NodeTemplateInstance } from '../../models/container/node-template-instance.model';
+import { LiveModelingService } from '../../services/live-modeling.service';
+import { distinctUntilChanged, switchMap, tap } from 'rxjs/operators';
 
 @Component({
     selector: 'winery-live-modeling-sidebar-node-template',
@@ -24,11 +27,45 @@ import { IWineryState } from '../../redux/store/winery.store';
 export class NodeTemplateComponent implements OnInit, OnDestroy {
 
     subscriptions: Array<Subscription> = [];
+    fetchingData = false;
+    nodeTemplateInstance: {};
+    nodeSubject = new Subject<string>();
 
-    constructor(private ngRedux: NgRedux<IWineryState>) {
+    objectKeys = Object.keys;
+
+    constructor(private ngRedux: NgRedux<IWineryState>,
+                private liveModelingService: LiveModelingService) {
     }
 
     ngOnInit() {
+        this.subscriptions.push(this.ngRedux.select(state => state.wineryState.sidebarContents)
+            .subscribe(sidebarContents => {
+                if (sidebarContents.nodeClicked && sidebarContents.id) {
+                    this.nodeSubject.next(sidebarContents.id);
+                } else {
+                    this.nodeSubject.next(null);
+                }
+            }));
+
+        this.subscriptions.push(this.nodeSubject.pipe(
+            distinctUntilChanged(),
+            tap(_ => this.fetchingData = true),
+            switchMap(nodeId => {
+                return nodeId ? this.liveModelingService.fetchNodeTemplateInstanceData(nodeId) : of(null);
+            })
+        ).subscribe(resp => {
+            this.fetchingData = false;
+            this.updateNodeInstanceData(resp);
+        }));
+
+    }
+
+    private updateNodeInstanceData(nodeTemplateInstance: NodeTemplateInstance): void {
+        this.nodeTemplateInstance = nodeTemplateInstance ? {
+            Name: nodeTemplateInstance.node_template_id,
+            Id: nodeTemplateInstance.id,
+            State: nodeTemplateInstance.state
+        } : null;
     }
 
     ngOnDestroy() {

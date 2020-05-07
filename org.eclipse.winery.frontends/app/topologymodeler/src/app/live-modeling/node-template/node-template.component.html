@@ -12,12 +12,35 @@
   ~ SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
-<div *ngIf="false; then content else placeholder"></div>
-<ng-template #content>
-    
-</ng-template>
-<ng-template #placeholder>
+<div *ngIf="fetchingData; then loading else content"></div>
+<ng-template #loading>
     <div style="padding: 0.5em; font-size: xx-small; font-style: italic; text-align: center">
-        No node template selected
+        <i class="fas fa-spinner fa-spin"></i>
     </div>
+</ng-template>
+<ng-template #content>
+    <div *ngIf="nodeTemplateInstance; then instanceData else placeholder"></div>
+    <ng-template #instanceData>
+        <div class="table-scrollable">
+            <table class="parameters-table">
+                <thead>
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Value</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr *ngFor="let key of objectKeys(nodeTemplateInstance)">
+                    <td>{{key}}</td>
+                    <td>{{nodeTemplateInstance[key] || '(empty)'}}</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </ng-template>
+    <ng-template #placeholder>
+        <div style="padding: 0.5em; font-size: xx-small; font-style: italic; text-align: center">
+            No node template selected
+        </div>
+    </ng-template>
 </ng-template>

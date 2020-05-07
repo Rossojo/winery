@@ -191,7 +191,7 @@ export class ContainerService {
         );
     }
 
-    private getNodeTemplateInstance(csarId: string, serviceTemplateInstanceId: string, nodeTemplateId: string): Observable<NodeTemplateInstance> {
+    public getNodeTemplateInstance(csarId: string, serviceTemplateInstanceId: string, nodeTemplateId: string): Observable<NodeTemplateInstance> {
         return this.getServiceTemplate(csarId).pipe(
             // concatMap(resp => this.http.get<NodeTemplateResources>(resp._links['nodetemplates'].href, this.headerAcceptJSON)),
             // concatMap(resp => this.http.get<NodeTemplate>(resp.node_templates.find(template => template.id === nodeTemplateId)._links['self'].href,
