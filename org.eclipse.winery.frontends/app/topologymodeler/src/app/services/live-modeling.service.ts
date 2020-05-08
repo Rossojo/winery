@@ -305,7 +305,9 @@ export class LiveModelingService {
             if (this.state === LiveModelingStates.DISABLED) {
                 return of(null);
             }
-            return this.containerService.getNodeTemplateInstance(this.currentCsarId, this.currentServiceTemplateInstanceId, nodeTemplateId);
+            return this.containerService.getNodeTemplateInstance(this.currentCsarId, this.currentServiceTemplateInstanceId, nodeTemplateId).pipe(
+                catchError(_ => of(null))
+            );
         } catch (error) {
             return of(null);
         }
