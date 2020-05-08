@@ -107,6 +107,11 @@ export class ContainerService {
         );
     }
 
+    public deleteApplication(csarId: string): Observable<any> {
+        const url = this.combineURLs(this.combineURLs(this.containerUrl, 'csars'), csarId);
+        return this.http.delete(url);
+    }
+
     public getCsar(csarId: string): Observable<Csar> {
         const csarUrl = this.combineURLs(this.combineURLs(this.containerUrl, 'csars'), csarId);
         return this.http.get<Csar>(csarUrl, this.headerAcceptJSON);
