@@ -13,7 +13,7 @@
  *******************************************************************************/
 
 import { Component, Input, OnDestroy, OnInit } from '@angular/core';
-import { BsModalRef, BsModalService, ProgressbarConfig } from 'ngx-bootstrap';
+import { BsModalRef, BsModalService } from 'ngx-bootstrap';
 import { Subscription } from 'rxjs';
 import { NgRedux } from '@angular-redux/store';
 import { IWineryState } from '../redux/store/winery.store';
@@ -23,22 +23,16 @@ import { LiveModelingService } from '../services/live-modeling.service';
 import { WineryActions } from '../redux/actions/winery.actions';
 import { state, style, trigger } from '@angular/animations';
 import { ResizeEvent } from 'angular-resizable-element';
-import { TTopologyTemplate } from '../models/ttopology-template';
 import { EnableModalComponent } from './modals/enable-modal/enable-modal.component';
 import { SettingsModalComponent } from './modals/settings-modal/settings-modal.component';
 import { DisableModalComponent } from './modals/disable-modal/disable-modal.component';
 import { ConfirmModalComponent } from './modals/confirm-modal/confirm-modal.component';
 import { ReconfigureModalComponent } from './modals/reconfigure-modal/reconfigure-modal.component';
 
-export function getProgressbarConfig(): ProgressbarConfig {
-    return Object.assign(new ProgressbarConfig(), { animate: true, striped: true, max: 100 });
-}
-
 @Component({
     selector: 'winery-live-modeling-sidebar',
     templateUrl: './live-modeling-sidebar.component.html',
     styleUrls: ['./live-modeling-sidebar.component.css'],
-    providers: [{ provide: ProgressbarConfig, useFactory: getProgressbarConfig }],
     animations: [
         trigger('sidebarContentState', [
             state('shrunk', style({
@@ -65,13 +59,10 @@ export class LiveModelingSidebarComponent implements OnInit, OnDestroy {
     sidebarContentState = 'extended';
     sidebarButtonState = 'right';
 
-    showProgressbar: boolean;
-
     liveModelingState: LiveModelingStates;
-    liveModelingStates = LiveModelingStates;
+    LiveModelingStates = LiveModelingStates;
     serviceTemplateInstanceId: string;
     serviceTemplateInstanceState: ServiceTemplateInstanceStates;
-    currentJsonTopology: TTopologyTemplate;
     currentCsarId: string;
 
     subscriptions: Array<Subscription> = [];
@@ -94,7 +85,6 @@ export class LiveModelingSidebarComponent implements OnInit, OnDestroy {
         this.subscriptions.push(this.ngRedux.select(wineryState => wineryState.liveModelingState.state)
             .subscribe(liveModelingState => {
                 this.liveModelingState = liveModelingState;
-                this.toggleProgressbar();
             }));
         this.subscriptions.push(this.ngRedux.select(wineryState => wineryState.liveModelingState.currentServiceTemplateInstanceId)
             .subscribe(serviceTemplateInstanceId => {
@@ -107,10 +97,6 @@ export class LiveModelingSidebarComponent implements OnInit, OnDestroy {
         this.subscriptions.push(this.ngRedux.select(wineryState => wineryState.wineryState.liveModelingSidebarOpenedState)
             .subscribe(sidebarOpened => {
                 this.updateSidebarState(sidebarOpened);
-            }));
-        this.subscriptions.push(this.ngRedux.select(wineryState => wineryState.wineryState.currentJsonTopology)
-            .subscribe(currentJsonTopology => {
-                this.currentJsonTopology = currentJsonTopology;
             }));
         this.subscriptions.push(this.ngRedux.select(wineryState => wineryState.wineryState.unsavedChanges)
             .subscribe(unsavedChanges => {
@@ -157,7 +143,7 @@ export class LiveModelingSidebarComponent implements OnInit, OnDestroy {
     }
 
     isTerminateDisabled() {
-        return this.liveModelingState !== LiveModelingStates.ENABLED && this.liveModelingState !== LiveModelingStates.ERROR;
+        return this.liveModelingState !== LiveModelingStates.ENABLED;
     }
 
     handleRefresh() {
@@ -220,19 +206,6 @@ export class LiveModelingSidebarComponent implements OnInit, OnDestroy {
             case ServiceTemplateInstanceStates.NOT_AVAILABLE:
             default:
                 return '#6c757d';
-        }
-    }
-
-    toggleProgressbar() {
-        switch (this.liveModelingState) {
-            case LiveModelingStates.TERMINATED:
-            case LiveModelingStates.DISABLED:
-            case LiveModelingStates.ENABLED:
-            case LiveModelingStates.ERROR:
-                this.showProgressbar = false;
-                break;
-            default:
-                this.showProgressbar = true;
         }
     }
 

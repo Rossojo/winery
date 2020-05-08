@@ -76,7 +76,7 @@
 .warning-changes {
     text-align: left;
     padding: 0.5em;
-    background-color: #ffc107;
+    background-color: #ffbf00;
 }
 
 .state-information {
@@ -202,14 +202,6 @@ td {
 .disable-icon {
     pointer-events: none;
     color: grey;
-}
-
-.progressbar-container {
-    height: 5px;
-}
-
-progressbar {
-    height: 100%;
 }
 
 .wrapper {

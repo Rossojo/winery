@@ -36,6 +36,7 @@ import { SettingsModalComponent } from './modals/settings-modal/settings-modal.c
 import { CsarInfoComponent } from './csar-info/csar-info.component';
 import { InputParametersModalComponent } from './modals/input-parameters-modal/input-parameters-modal.component';
 import { ReconfigureModalComponent } from './modals/reconfigure-modal/reconfigure-modal.component';
+import { ProgressbarComponent } from './progressbar/progressbar.component';
 
 @NgModule({
     imports: [
@@ -66,7 +67,8 @@ import { ReconfigureModalComponent } from './modals/reconfigure-modal/reconfigur
         ConfirmModalComponent,
         SettingsModalComponent,
         InputParametersModalComponent,
-        ReconfigureModalComponent
+        ReconfigureModalComponent,
+        ProgressbarComponent
     ],
     exports: [
         LiveModelingSidebarComponent

@@ -24,13 +24,13 @@
             (click)="toggleSidebarState()"
             #toggleButton>
         <span>Live-Modeling </span>
-        <span [hidden]="liveModelingState === liveModelingStates.DISABLED" class="fa-stack fa-1x">
+        <span [hidden]="liveModelingState === LiveModelingStates.DISABLED" class="fa-stack fa-1x">
           <i class="fa fa-circle fa-stack-1x" style="color: red; opacity: 0.5; font-size: 1.6em"></i>
           <i class="fa fa-circle fa-stack-1x" style="color: red"></i>
         </span>
     </button>
     <div [@sidebarContentState]="sidebarContentState" class="live-modeling-sidebar-content">
-        <div *ngIf="liveModelingState === liveModelingStates.DISABLED" class="live-modeling-sidebar-page start-page">
+        <div *ngIf="liveModelingState === LiveModelingStates.DISABLED" class="live-modeling-sidebar-page start-page">
             <p style="max-width: 250px">
                 Live modeling is currently disabled.
             </p>
@@ -42,14 +42,15 @@
                 (Unsaved changes detected)
             </p>
         </div>
-        <div *ngIf="liveModelingState !== liveModelingStates.DISABLED" class="live-modeling-sidebar-page live-page">
-            <div *ngIf="unsavedChanges" class="d-flex flex-column warning-changes">
+        <div *ngIf="liveModelingState !== LiveModelingStates.DISABLED" class="live-modeling-sidebar-page live-page">
+            <div *ngIf="deploymentChanges && liveModelingState === LiveModelingStates.ENABLED" class="d-flex flex-column warning-changes">
                 <span>
                     <i class="fa fa-warning mr-2"></i>
                     <b>Warning</b>
                 </span>
                 <div>
-                    There are unsaved changes in your topology.
+                    Your model is out-of-sync with the deployed instance.
+                    Save your changes and reconfigurate to update the instance.
                 </div>
             </div>
             <div class="live-modeling-sidebar-info-panel">
@@ -73,6 +74,7 @@
                         <span>{{serviceTemplateInstanceState || 'NOT AVAILABLE'}}</span>
                     </ng-template>
                 </div>
+                <winery-live-modeling-sidebar-progressbar></winery-live-modeling-sidebar-progressbar>
                 <div class="d-flex mt-2">
                     <button class="btn-live-modeling btn-live-modeling-deploy"
                             [disabled]="isDeployDisabled()"
@@ -151,9 +153,6 @@
                             Hide logs
                         </button>
                     </div>
-                </div>
-                <div *ngIf="!showLogs && showProgressbar" class="progressbar-container">
-                    <progressbar class="progress-striped active" value="100"></progressbar>
                 </div>
                 <button class="btn-live-modeling btn-footer-live-modeling"
                         *ngIf="!showLogs"
