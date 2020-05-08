@@ -236,6 +236,14 @@ export class LiveModelingSidebarComponent implements OnInit, OnDestroy {
         this.sidebarWidth = event.rectangle.width;
     }
 
+    getResizeEdges() {
+        if (this.sidebarButtonState === 'right') {
+            return { bottom: false, right: false, top: false, left: false };
+        } else {
+            return { bottom: false, right: false, top: false, left: true };
+        }
+    }
+
     openModal(modal: any, options?: any) {
         const defaultConfig = { backdrop: 'static' };
         this.modalRef = this.modalService.show(modal, { ...defaultConfig, ...options });
