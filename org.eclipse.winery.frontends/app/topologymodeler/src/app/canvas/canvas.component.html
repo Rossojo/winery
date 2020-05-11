@@ -13,6 +13,7 @@
 -->
 <div id="container" style="height: 100%"
      (mousedown)="showSelectionRange($event)"
+     [class.cursor-move]="this.isMiddleMouseButtonDown"
      (click)="this.revalidateContainer()">
     <div id="grid"
          (mousedown)="trackTimeOfMouseDown()"

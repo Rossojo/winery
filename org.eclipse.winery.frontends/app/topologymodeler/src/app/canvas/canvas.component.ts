@@ -144,6 +144,9 @@ export class CanvasComponent implements OnInit, OnDestroy, OnChanges, AfterViewI
 
     private longPressing: boolean;
 
+    private isMiddleMouseButtonDown = false;
+    private lastMouseEvent: MouseEvent;
+
     constructor(private jsPlumbService: JsPlumbService,
                 private eref: ElementRef,
                 private layoutDirective: LayoutDirective,
@@ -205,9 +208,13 @@ export class CanvasComponent implements OnInit, OnDestroy, OnChanges, AfterViewI
      * Upon detecting a long mouse down the navbar and the palette fade out for maximum dragging space.
      * Resets the values.
      */
-    @HostListener('mouseup')
-    onMouseUp() {
+    @HostListener('mouseup', ['$event'])
+    onMouseUp(event: MouseEvent) {
         this.longPressing = false;
+        if (event.button === 1) {
+            this.isMiddleMouseButtonDown = false;
+            this.updateAllNodes();
+        }
     }
 
     /**
@@ -221,6 +228,26 @@ export class CanvasComponent implements OnInit, OnDestroy, OnChanges, AfterViewI
         if (event.button === 0) {
             this.longPressing = false;
             setTimeout(() => this.longPressing = true, 250);
+        } else if (event.button === 1) {
+            this.isMiddleMouseButtonDown = true;
+            this.lastMouseEvent = event;
+        }
+    }
+
+    @HostListener('mousemove', ['$event'])
+    onMouseMove(event: MouseEvent) {
+        if (this.isMiddleMouseButtonDown) {
+            const x = event.clientX - this.lastMouseEvent.clientX;
+            const y = event.clientY - this.lastMouseEvent.clientY;
+            this.moveNodes(x, y);
+            this.lastMouseEvent = event;
+        }
+    }
+
+    moveNodes(x: number, y: number) {
+        for (const node of this.allNodeTemplates) {
+            node.x += x;
+            node.y += y;
         }
     }
 
@@ -1389,21 +1416,23 @@ export class CanvasComponent implements OnInit, OnDestroy, OnChanges, AfterViewI
      * @param $event
      */
     showSelectionRange($event: any) {
-        this.gridTemplate.crosshair = true;
-        this.ngRedux.dispatch(this.actions.sendPaletteOpened(false));
-        this.hideSidebar();
-        this.clearSelectedNodes();
-        this.nodeChildrenArray.forEach(node => node.makeSelectionVisible = false);
-        this.gridTemplate.pageX = $event.pageX;
-        this.gridTemplate.pageY = $event.pageY;
-        this.gridTemplate.initialW = $event.pageX;
-        this.gridTemplate.initialH = $event.pageY;
-        this.zone.run(() => {
-            this.unbindMouseActions.push(this.renderer.listen(this.eref.nativeElement, 'mousemove', (event) =>
-                this.openSelector(event)));
-            this.unbindMouseActions.push(this.renderer.listen(this.eref.nativeElement, 'mouseup', (event) =>
-                this.selectElements(event)));
-        });
+        if ($event.button === 0) {
+            this.gridTemplate.crosshair = true;
+            this.ngRedux.dispatch(this.actions.sendPaletteOpened(false));
+            this.hideSidebar();
+            this.clearSelectedNodes();
+            this.nodeChildrenArray.forEach(node => node.makeSelectionVisible = false);
+            this.gridTemplate.pageX = $event.pageX;
+            this.gridTemplate.pageY = $event.pageY;
+            this.gridTemplate.initialW = $event.pageX;
+            this.gridTemplate.initialH = $event.pageY;
+            this.zone.run(() => {
+                this.unbindMouseActions.push(this.renderer.listen(this.eref.nativeElement, 'mousemove', (event) =>
+                    this.openSelector(event)));
+                this.unbindMouseActions.push(this.renderer.listen(this.eref.nativeElement, 'mouseup', (event) =>
+                    this.selectElements(event)));
+            });
+        }
     }
 
     /**
