@@ -135,6 +135,17 @@ export class LiveModelingSidebarComponent implements OnInit, OnDestroy {
         return this.serviceTemplateInstanceId || this.liveModelingState !== LiveModelingStates.TERMINATED || this.deploymentChanges;
     }
 
+    async handleRedeploy() {
+        const resp = await this.openConfirmModal('Deploy new Instance', `Do you want to deploy a new instance of type ${this.currentCsarId}?`);
+        if (resp) {
+            this.liveModelingService.redeploy();
+        }
+    }
+
+    isRedeployDisabled() {
+        return this.liveModelingState !== LiveModelingStates.ERROR && this.liveModelingState !== LiveModelingStates.TERMINATED;
+    }
+
     async handleTerminate() {
         const resp = await this.openConfirmModal('Terminate Instance', 'Are you sure you want to terminate the instance?');
         if (resp) {

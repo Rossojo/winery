@@ -35,6 +35,7 @@ import { PlanInstance } from '../models/container/plan-instance.model';
 import { PlanLogEntry } from '../models/container/plan-log-entry.model';
 import { InputParameter } from '../models/container/input-parameter.model';
 import { OutputParameter } from '../models/container/output-parameter.model';
+import { NodeTemplate } from '../models/container/node-template.model';
 
 @Injectable()
 export class ContainerService {
@@ -196,8 +197,15 @@ export class ContainerService {
         );
     }
 
-    public getNodeTemplateInstance(csarId: string, serviceTemplateInstanceId: string, nodeTemplateId: string): Observable<NodeTemplateInstance> {
+    public getNodeTemplates(csarId: string, serviceTemplateInstanceId: string): Observable<Array<NodeTemplate>> {
         return this.getServiceTemplate(csarId).pipe(
+            concatMap(resp => this.http.get<NodeTemplateResources>(resp._links['nodetemplates'].href, this.headerAcceptJSON)),
+            map(resp => resp.node_templates)
+        );
+    }
+
+    public getNodeTemplateInstance(csarId: string, serviceTemplateInstanceId: string, nodeTemplateId: string): Observable<NodeTemplateInstance> {
+        return this.getNodeTemplates(csarId, serviceTemplateInstanceId).pipe(
             // concatMap(resp => this.http.get<NodeTemplateResources>(resp._links['nodetemplates'].href, this.headerAcceptJSON)),
             // concatMap(resp => this.http.get<NodeTemplate>(resp.node_templates.find(template => template.id === nodeTemplateId)._links['self'].href,
             // this.headerAcceptJSON)), concatMap(resp => this.http.get<NodeTemplateInstanceResources>(resp._links['instances'].href, this.headerAcceptJSON)),
@@ -205,9 +213,8 @@ export class ContainerService {
             // this.currentServiceTemplateInstanceId))
 
             // TODO: temporary until parsing error fixed
-            concatMap(resp => this.http.get<NodeTemplateResources>(resp._links['nodetemplates'].href, this.headerAcceptJSON)),
             concatMap(resp => this.http.get<NodeTemplateInstanceResources>(
-                resp.node_templates.find(template => template.id.toString() === nodeTemplateId)._links['self'].href + '/instances', this.headerAcceptJSON)
+                resp.find(template => template.id.toString() === nodeTemplateId)._links['self'].href + '/instances', this.headerAcceptJSON)
             ), // todo temp
             concatMap(resp => this.http.get<NodeTemplateInstance>(
                 resp.node_template_instances.find(instance =>

@@ -76,12 +76,23 @@
                 </div>
                 <winery-live-modeling-sidebar-progressbar></winery-live-modeling-sidebar-progressbar>
                 <div class="d-flex mt-2">
-                    <button class="btn-live-modeling btn-live-modeling-deploy"
-                            [disabled]="isDeployDisabled()"
-                            (click)="handleDeploy()">
-                        <i class="fa fa-plus"></i>
-                        DEPLOY
-                    </button>
+                    <ng-template *ngIf="liveModelingState === LiveModelingStates.ERROR; then redeployButton else deployButton"></ng-template>
+                    <ng-template #deployButton>
+                        <button class="btn-live-modeling btn-live-modeling-deploy"
+                                [disabled]="isDeployDisabled()"
+                                (click)="handleDeploy()">
+                            <i class="fa fa-plus"></i>
+                            DEPLOY
+                        </button>
+                    </ng-template>
+                    <ng-template #redeployButton>
+                        <button class="btn-live-modeling btn-live-modeling-deploy"
+                                [disabled]="isRedeployDisabled()"
+                                (click)="handleRedeploy()">
+                            <i class="fa fa-plus"></i>
+                            REDEPLOY
+                        </button>
+                    </ng-template>
                     <div style="width: 5px"></div>
                     <button class="btn-live-modeling btn-live-modeling-terminate"
                             [disabled]="isTerminateDisabled()"
