@@ -54,7 +54,7 @@
     <winery-enricher class="sidebar">
     </winery-enricher>
 
-    <winery-sidebar (sidebarDeleteButtonClicked)="sidebarDeleteButtonClicked($event)" class="sidebar">
+    <winery-sidebar (sidebarDeleteButtonClicked)="sidebarDeleteButtonClicked($event)" class="sidebar" [top]="this.navbarHeight">
     </winery-sidebar>
 
     <div *ngIf="topologyDifferences" style="position: fixed; right: 0;" class="sidebar-root">
