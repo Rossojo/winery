@@ -31,6 +31,7 @@ export class TopologyRendererActions {
     static TOGGLE_REQUIREMENTS_CAPABILITIES = 'TOGGLE_REQUIREMENTS_CAPABILITIES';
     static TOGGLE_DEPLOYMENT_ARTIFACTS = 'TOGGLE_DEPLOYMENT_ARTIFACTS';
     static TOGGLE_IDS = 'TOGGLE_IDS';
+    static TOGGLE_INTERFACEDEFINITIONS = 'TOGGLE_INTERFACES';
     static TOGGLE_TYPES = 'TOGGLE_TYPES';
     static TOGGLE_EDMM_TRANSFORMATION_CHECK = 'TOGGLE_EDMM_TRANSFORMATION_CHECK';
     static EXECUTE_LAYOUT = 'EXECUTE_LAYOUT';
@@ -74,6 +75,10 @@ export class TopologyRendererActions {
 
     toggleIds(): Action {
         return { type: TopologyRendererActions.TOGGLE_IDS };
+    }
+
+    toggleInterfaceDefinitions(): Action {
+        return { type: TopologyRendererActions.TOGGLE_INTERFACEDEFINITIONS };
     }
 
     toggleTypes(): Action {

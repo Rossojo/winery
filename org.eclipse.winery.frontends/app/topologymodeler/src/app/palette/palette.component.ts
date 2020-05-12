@@ -156,7 +156,9 @@ export class PaletteComponent implements OnDestroy {
             null,
             null,
             null,
-            null
+            null,
+            { artifact: [] },
+            { interface: this.getInterfaceDefinitionsOfNodeType(this.removeVersionIdentifier(child.text)) }
         );
         this.ngRedux.dispatch(this.actions.saveNodeTemplate(newNode));
     }
@@ -247,6 +249,15 @@ export class PaletteComponent implements OnDestroy {
         // if the node doesn't have a picture the URL is "null"
         if (visuals.imageUrl !== 'null') {
             return visuals.imageUrl;
+        }
+    }
+
+    private getInterfaceDefinitionsOfNodeType(nodeTypeId: String) {
+        const nodeType = this.entityTypes.unGroupedNodeTypes.find(value => value.name === nodeTypeId);
+        if (nodeType) {
+            return nodeType.full.serviceTemplateOrNodeTypeOrNodeTypeImplementation[0].interfaceDefinitions;
+        } else {
+            return [];
         }
     }
 }

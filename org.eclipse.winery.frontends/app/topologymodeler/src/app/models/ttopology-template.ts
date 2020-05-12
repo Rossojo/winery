@@ -53,6 +53,7 @@ export class TNodeTemplate extends AbstractTTemplate {
                 public deploymentArtifacts?: any,
                 public policies?: { policy: any[] },
                 public artifacts?: { artifact: Array<TArtifact> },
+                public interfaceDefinitions?: { interface: any[] },
                 public _state?: DifferenceStates) {
         super(documentation, any, otherAttributes);
     }
@@ -68,7 +69,7 @@ export class TNodeTemplate extends AbstractTTemplate {
     generateNewNodeTemplateWithUpdatedAttribute(updatedAttribute: string, updatedValue: any): TNodeTemplate {
         const nodeTemplate = new TNodeTemplate(this.properties, this.id, this.type, this.name, this.minInstances, this.maxInstances,
             this.visuals, this.documentation, this.any, this.otherAttributes, this.x, this.y, this.capabilities,
-            this.requirements, this.deploymentArtifacts, this.policies, this.artifacts);
+            this.requirements, this.deploymentArtifacts, this.policies, this.artifacts, this.interfaceDefinitions);
         if (updatedAttribute === 'coordinates') {
             nodeTemplate.x = updatedValue.x;
             nodeTemplate.y = updatedValue.y;
@@ -96,7 +97,6 @@ export class TNodeTemplate extends AbstractTTemplate {
                 };
                 nodeTemplate.otherAttributes = otherAttributes;
             }
-            console.log(nodeTemplate);
         } else if (updatedAttribute === ('minInstances') || updatedAttribute === ('maxInstances')) {
             if (Number.isNaN(+updatedValue)) {
                 nodeTemplate[updatedAttribute] = updatedValue;

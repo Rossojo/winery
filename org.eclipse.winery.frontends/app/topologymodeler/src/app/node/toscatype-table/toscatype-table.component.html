@@ -128,6 +128,29 @@
     </tbody>
 </table>
 
+<table *ngIf="tableType === tableTypes.InterfaceDefinitions" class="toscatype-table">
+    <thead>
+    <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Artifact</th>
+    </tr>
+    </thead>
+    <tbody *wineryRepositoryShowOnFeature="'yaml'">
+    <tr *ngFor="let interfaceDefinition of currentToscaTypeData">
+        <td class="toscatype-table-td">
+            <div>{{interfaceDefinition.name}}</div>
+        </td>
+        <td class="toscatype-table-td">
+            <div>{{interfaceDefinition.type}}</div>
+        </td>
+        <td class="toscatype-table-td">
+            <!--TODO: ADD display off artifact and adding capabilities.-->
+        </td>
+    </tr>
+    </tbody>
+</table>
+
 <div *ngIf="tableType === tableTypes.Capabilities || tableType === tableTypes.Requirements">
 
     <table *wineryRepositoryHideOnFeature="'yaml'"

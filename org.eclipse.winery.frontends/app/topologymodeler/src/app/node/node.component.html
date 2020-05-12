@@ -251,6 +251,27 @@
             </winery-policies>
         </accordion-group>
 
+        <!--Interface Definitions-->
+        <accordion-group
+            #interfaceDefinitionsgroup
+            panelClass="accordionGroupPanel"
+            *ngIf="navbarButtonsState.buttonsState.interfaceDefinitionsButton">
+            <div accordion-heading>
+                Interface Definitions
+                <i class="pull-sm-0 float-sm-right fa icon-styling padding-top--2px"
+                   [ngClass]="{'fa-chevron-down': interfaceDefinitionsgroup?.isOpen, 'fa-chevron-right': !interfaceDefinitionsgroup?.isOpen}">
+                </i>
+            </div>
+            <winery-interface-definitions *wineryRepositoryShowOnFeature="'yaml'"
+                                          [readonly]="readonly"
+                                          (toggleModalHandler)="sendToggleAction($event)"
+                                          [currentNodeData]="{currentNodeId: nodeTemplate.id,
+                                    currentNodePart: 'INTERFACEDEFINITIONS',
+                                    nodeTemplate: nodeTemplate}"
+                                          [interfaceDefinitions]="nodeTemplate.interfaceDefinitions?.interface">
+            </winery-interface-definitions>
+        </accordion-group>
+
         <!-- TARGET LOCATIONS -->
         <accordion-group
             #targetlocationsgroup

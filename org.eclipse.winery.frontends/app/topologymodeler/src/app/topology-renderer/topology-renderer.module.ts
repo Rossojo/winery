@@ -45,6 +45,7 @@ import { WineryModalModule } from '../../../../tosca-management/src/app/wineryMo
 import { WineryFeatureToggleModule } from '../../../../tosca-management/src/app/wineryFeatureToggleModule/winery-feature-toggle.module';
 import { WineryTableModule } from '../../../../tosca-management/src/app/wineryTableModule/wineryTable.module';
 import { Ng2TableModule } from 'ng2-table';
+import { InterfaceDefinitionsComponent } from '../node/interface-definitions/interface-definitions.component';
 
 @NgModule({
     imports: [
@@ -75,6 +76,7 @@ import { Ng2TableModule } from 'ng2-table';
         RequirementsComponent,
         TargetLocationsComponent,
         PoliciesComponent,
+        InterfaceDefinitionsComponent,
         DeploymentArtifactsComponent,
         CapabilitiesComponent,
         ToscatypeTableComponent,

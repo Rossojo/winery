@@ -254,13 +254,11 @@ export class NodeComponent implements OnInit, AfterViewInit, OnDestroy, DoCheck 
         } else {
             this.nodeClass = 'nodeTemplate';
         }
-
         if (this.configurationService.isYaml()) {
             this.policiesOfNode = this.getAllowedPolicies();
         } else {
             this.setPolicyIcons();
         }
-
         this.addNewVersions(new QName(this.nodeTemplate.type));
     }
 

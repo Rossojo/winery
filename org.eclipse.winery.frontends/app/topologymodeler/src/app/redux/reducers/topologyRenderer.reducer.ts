@@ -25,6 +25,7 @@ export interface TopologyRendererState {
         typesButton?: boolean;
         edmmTransformationCheck?: boolean;
         idsButton?: boolean;
+        interfaceDefinitionsButton?: boolean;
         layoutButton?: boolean;
         alignHButton?: boolean;
         alignVButton?: boolean;
@@ -60,6 +61,7 @@ export const INITIAL_TOPOLOGY_RENDERER_STATE: TopologyRendererState = {
         alignHButton: false,
         alignVButton: false,
         importTopologyButton: false,
+        interfaceDefinitionsButton: false,
         threatModelingButton: false,
         splitTopologyButton: false,
         matchTopologyButton: false,
@@ -127,6 +129,14 @@ export const TopologyRendererReducer =
                     buttonsState: {
                         ...lastState.buttonsState,
                         idsButton: !lastState.buttonsState.idsButton
+                    }
+                };
+            case TopologyRendererActions.TOGGLE_INTERFACEDEFINITIONS:
+                return {
+                    ...lastState,
+                    buttonsState: {
+                        ...lastState.buttonsState,
+                        interfaceDefinitionsButton: !lastState.buttonsState.interfaceDefinitionsButton
                     }
                 };
             case TopologyRendererActions.TOGGLE_TYPES:

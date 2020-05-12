@@ -173,6 +173,10 @@ export class NavbarComponent implements OnDestroy {
                 this.ngRedux.dispatch(this.actions.toggleIds());
                 break;
             }
+            case 'interfaces': {
+                this.ngRedux.dispatch(this.actions.toggleInterfaceDefinitions());
+                break;
+            }
             case 'layout': {
                 this.ngRedux.dispatch(this.actions.executeLayout());
                 break;

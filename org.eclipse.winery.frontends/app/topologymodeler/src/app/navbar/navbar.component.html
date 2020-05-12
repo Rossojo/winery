@@ -107,6 +107,14 @@
                 [style.background-color]="getStyle(navbarButtonsState.buttonsState.policiesButton)">
                 Policies
             </button>
+            <button *wineryRepositoryShowOnFeature="'yaml'"
+                    class="btn btn-sm align-middle dark-button-style"
+                    type="button"
+                    id="interfaces"
+                    (click)="toggleButton($event)"
+                    [style.background-color]="getStyle(navbarButtonsState.buttonsState.interfaceDefinitionsButton)">
+                Interface Definitions
+            </button>
             <!--<button *ngIf="!readonly"
                     class="btn btn-sm align-middle dark-button-style" type="button" style="margin-left: 4px">Print View
             </button>-->

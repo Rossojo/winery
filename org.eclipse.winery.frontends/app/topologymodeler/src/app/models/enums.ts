@@ -40,6 +40,7 @@ export enum TableType {
     Requirements = 'Requirements',
     Capabilities = 'Capabilities',
     Policies = 'Policies',
+    InterfaceDefinitions = 'InterfaceDefinitions',
     DeploymentArtifacts = 'DeploymentArtifacts',
     YamlArtifacts = 'YamlArtifacts'
 }
@@ -49,6 +50,7 @@ export enum toggleModalType {
     Capabilities = 'CAPABILITIES',
     DeploymentArtifacts = 'DEPLOYMENT_ARTIFACTS',
     Policies = 'POLICIES',
+    InterfaceDefinitions = 'INTERFACEDEFINITIONS',
 }
 
 export enum PropertyDefinitionType {
