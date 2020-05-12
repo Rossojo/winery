@@ -17,7 +17,7 @@
         <h3 style="margin-right: .5em;">winery</h3>
         <button *ngIf="!readonly"
                 class="btn btn-sm align-middle btn-success" type="button"
-                (click)="handleSave()">Save<span
+                (click)="saveTopologyTemplateToRepository()">Save<span
             *ngIf="unsavedChanges">*</span>
         </button>
 
@@ -82,6 +82,29 @@
                 (click)="toggleButton($event)"
                 [style.background-color]="getStyle(navbarButtonsState.buttonsState.propertiesButton)">
                 Properties
+                <span *wineryRepositoryFeatureToggle="configEnum.PropertyCheck" >
+                    <ng-template
+                        *ngIf="navbarButtonsState.buttonsState.checkNodePropertiesButton; then squareCheck else square"></ng-template>
+                    <ng-template #square>
+                        <i class="far fa-square"
+                           style="padding-left: .5em;"
+                           [tooltip]="checkNodeTooltip"
+                           containerClass="tooltip-check-properties"
+                           placement="bottom"
+                           [class.disable-icon]="!navbarButtonsState.buttonsState.propertiesButton"
+                           (click)="toggleCheckNodeProperties()"></i>
+                    </ng-template>
+                    <ng-template #squareCheck>
+                        <i class="far fa-check-square"
+                           style="padding-left: .5em;"
+                           [tooltip]="checkNodeTooltip"
+                           containerClass="tooltip-check-properties"
+                           placement="bottom"
+                           [class.disable-icon]="!navbarButtonsState.buttonsState.propertiesButton"
+                           (click)="toggleCheckNodeProperties()"></i>
+                    </ng-template>
+                    <ng-template #checkNodeTooltip><span>Check node properties</span></ng-template>
+                </span>
             </button>
             <button
                 class="btn btn-sm align-middle dark-button-style"
@@ -205,14 +228,6 @@
                     (click)="toggleButton($event)"
                     [style.background-color]="getStyle(navbarButtonsState.buttonsState.refineTopologyWithTestsButton)">
                 Refine Topology with Tests
-            </button>
-        </div>
-        <div *wineryRepositoryFeatureToggle="configEnum.PropertyCheck" class="btn-group button-group"
-             data-toggle="buttons">
-            <button class="btn btn-sm align-middle dark-button-style" id="checkNodeProperties"
-                    (click)="toggleButton($event)"
-                    [style.background-color]="getStyle(navbarButtonsState.buttonsState.checkNodePropertiesButton)">
-                Check Node Properties
             </button>
         </div>
         <div *wineryRepositoryFeatureToggle="configEnum.EdmmModeling" class="btn-group button-group"

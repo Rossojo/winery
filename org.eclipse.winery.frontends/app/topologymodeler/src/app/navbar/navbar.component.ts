@@ -25,8 +25,6 @@ import { TopologyRendererState } from '../redux/reducers/topologyRenderer.reduce
 import { WineryActions } from '../redux/actions/winery.actions';
 import { StatefulAnnotationsService } from '../services/statefulAnnotations.service';
 import { FeatureEnum } from '../../../../tosca-management/src/app/wineryFeatureToggleModule/wineryRepository.feature.direct';
-import { PropertyValidatorService } from '../services/property-validator.service';
-import { LiveModelingButtons, LiveModelingStates } from '../models/enums';
 import { OverlayService } from '../services/overlay.service';
 import { BsModalRef, BsModalService } from 'ngx-bootstrap';
 
@@ -78,7 +76,6 @@ export class NavbarComponent implements OnDestroy {
                 private backendService: BackendService,
                 private statefulService: StatefulAnnotationsService,
                 private hotkeysService: HotkeysService,
-                private propertyValidatorService: PropertyValidatorService,
                 private overlayService: OverlayService,
                 private modalService: BsModalService) {
         this.subscriptions.push(ngRedux.select(state => state.topologyRendererState)
@@ -89,7 +86,7 @@ export class NavbarComponent implements OnDestroy {
             .subscribe(unsavedChanges => this.unsavedChanges = unsavedChanges));
         this.hotkeysService.add(new Hotkey('mod+s', (event: KeyboardEvent): boolean => {
             event.stopPropagation();
-            this.handleSave();
+            this.saveTopologyTemplateToRepository();
             return false; // Prevent bubbling
         }, undefined, 'Save the Topology Template'));
         this.hotkeysService.add(new Hotkey('mod+l', (event: KeyboardEvent): boolean => {
@@ -170,6 +167,7 @@ export class NavbarComponent implements OnDestroy {
             }
             case 'properties': {
                 this.ngRedux.dispatch(this.actions.toggleProperties());
+                this.toggleCheckNodePropertiesIfNecessary();
                 break;
             }
             case 'types': {
@@ -248,20 +246,21 @@ export class NavbarComponent implements OnDestroy {
                 this.ngRedux.dispatch(this.actions.placeComponents());
                 this.placingOngoing = true;
                 break;
-            case 'checkNodeProperties':
-                if (!this.navbarButtonsState.buttonsState.propertiesButton && !this.navbarButtonsState.buttonsState.checkNodePropertiesButton) {
-                    this.ngRedux.dispatch(this.actions.toggleProperties());
-                }
-                this.ngRedux.dispatch(this.actions.toggleCheckNodeProperties());
-                break;
         }
     }
 
-    handleSave() {
-        if (this.propertyValidatorService.isTopologyInvalid()) {
-            this.modalRef = this.modalService.show(this.confirmModalRef, { backdrop: 'static' });
-        } else {
-            this.saveTopologyTemplateToRepository();
+    toggleCheckNodeProperties() {
+        if (this.navbarButtonsState.buttonsState.propertiesButton) {
+            this.ngRedux.dispatch(this.actions.toggleCheckNodeProperties());
+        } else if (!this.navbarButtonsState.buttonsState.propertiesButton && !this.navbarButtonsState.buttonsState.checkNodePropertiesButton) {
+            this.ngRedux.dispatch(this.actions.toggleProperties());
+            this.ngRedux.dispatch(this.actions.toggleCheckNodeProperties());
+        }
+    }
+
+    toggleCheckNodePropertiesIfNecessary() {
+        if (!this.navbarButtonsState.buttonsState.propertiesButton && this.navbarButtonsState.buttonsState.checkNodePropertiesButton) {
+            this.ngRedux.dispatch(this.actions.toggleCheckNodeProperties());
         }
     }
 

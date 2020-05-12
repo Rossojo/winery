@@ -153,10 +153,6 @@
                     </accordion>
                     <div class="d-flex flex-column" *ngIf="showLogs" style="height: 100%">
                         <winery-live-modeling-sidebar-logs class="flex-grow-1"></winery-live-modeling-sidebar-logs>
-                        <div class="progressbar-container">
-                            <progressbar *ngIf="showProgressbar" class="progress-striped active"
-                                         value="100"></progressbar>
-                        </div>
                         <button class="btn-live-modeling btn-footer-live-modeling"
                                 style="flex-grow: 0"
                                 (click)="toggleLogs()">
