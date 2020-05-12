@@ -39,7 +39,7 @@ import { RequirementModel } from '../models/requirementModel';
 import { EntityTypesModel } from '../models/entityTypesModel';
 import { ExistsService } from '../services/exists.service';
 import { ModalVariant, ModalVariantAndState } from './entities-modal/modal-model';
-import { align, toggleModalType } from '../models/enums';
+import { align, LiveModelingStates, toggleModalType } from '../models/enums';
 import { QName } from '../models/qname';
 import { ImportTopologyModalData } from '../models/importTopologyModalData';
 import { ImportTopologyService } from '../services/import-topology.service';
@@ -147,6 +147,8 @@ export class CanvasComponent implements OnInit, OnDestroy, OnChanges, AfterViewI
     private isMiddleMouseButtonDown = false;
     private lastMouseEvent: MouseEvent;
 
+    private liveModelingState: LiveModelingStates;
+
     constructor(private jsPlumbService: JsPlumbService,
                 private eref: ElementRef,
                 private layoutDirective: LayoutDirective,
@@ -181,6 +183,8 @@ export class CanvasComponent implements OnInit, OnDestroy, OnChanges, AfterViewI
         this.gridTemplate = new GridTemplate(100, false, false, 30);
         this.subscriptions.push(this.ngRedux.select(state => state.wineryState.currentPaletteOpenedState)
             .subscribe(currentPaletteOpened => this.setPaletteState(currentPaletteOpened)));
+        this.subscriptions.push(this.ngRedux.select(state => state.liveModelingState.state)
+            .subscribe(state => this.liveModelingState = state));
         this.hotkeysService.add(new Hotkey('mod+a', (event: KeyboardEvent): boolean => {
             event.stopPropagation();
             this.allNodeTemplates.forEach(node => this.enhanceDragSelection(node.id));
@@ -1516,7 +1520,6 @@ export class CanvasComponent implements OnInit, OnDestroy, OnChanges, AfterViewI
                 nameTextFieldValue: '',
                 type: '',
                 properties: '',
-                liveModelingNodeTemplateData: null,
                 source: '',
                 target: ''
             }
@@ -1933,9 +1936,20 @@ export class CanvasComponent implements OnInit, OnDestroy, OnChanges, AfterViewI
      * jsPlumb relationship/label click actions
      */
     onClickJsPlumbConnection(conn: any, rel: any) {
+        const currentRel = this.allRelationshipTemplates.find(con => con.id === rel.id);
+
+        if (this.liveModelingState === LiveModelingStates.DISABLED) {
+            if (currentRel) {
+                const sourceNode = this.allNodeTemplates.find(node => node.id === currentRel.sourceElement.ref);
+                const targetNode = this.allNodeTemplates.find(node => node.id === currentRel.targetElement.ref);
+                if (sourceNode.working && targetNode.working) {
+                    return;
+                }
+            }
+        }
+
         this.clearSelectedNodes();
         this.newJsPlumbInstance.select().removeType('marked');
-        const currentRel = this.allRelationshipTemplates.find(con => con.id === rel.id);
         if (currentRel) {
             this.ngRedux.dispatch(this.actions.openSidebar({
                 sidebarContents: {
@@ -1945,7 +1959,6 @@ export class CanvasComponent implements OnInit, OnDestroy, OnChanges, AfterViewI
                     nameTextFieldValue: currentRel.name,
                     type: currentRel.type,
                     properties: currentRel.properties,
-                    liveModelingNodeTemplateData: null,
                     source: currentRel.sourceElement.ref,
                     target: currentRel.targetElement.ref
                 }
