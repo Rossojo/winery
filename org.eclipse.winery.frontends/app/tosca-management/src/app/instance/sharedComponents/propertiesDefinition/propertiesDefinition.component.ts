@@ -25,6 +25,7 @@ import { WineryValidatorObject } from '../../../wineryValidators/wineryDuplicate
 import { WineryRowData, WineryTableColumn } from '../../../wineryTableModule/wineryTable.component';
 import { ModalDirective } from 'ngx-bootstrap';
 import { HttpErrorResponse, HttpResponse } from '@angular/common/http';
+import * as _ from 'lodash';
 
 @Component({
     templateUrl: 'propertiesDefinition.component.html',
@@ -52,11 +53,14 @@ export class PropertiesDefinitionComponent implements OnInit {
         { title: 'Pattern', name: 'pattern', sort: true },
     ];
     newProperty: PropertiesDefinitionKVElement = new PropertiesDefinitionKVElement();
+    elementToEdit: PropertiesDefinitionKVElement = new PropertiesDefinitionKVElement();
+    editIndex = -1;
 
     validatorObject: WineryValidatorObject;
     @ViewChild('confirmDeleteModal') confirmDeleteModal: ModalDirective;
     @ViewChild('addModal') addModal: ModalDirective;
-    @ViewChild('nameInputForm') nameInputForm: ElementRef;
+    @ViewChild('addNameInputForm') addNameInputForm: ElementRef;
+    @ViewChild('editModal') editModal: ModalDirective;
 
     includePattern = false;
 
@@ -202,6 +206,20 @@ export class PropertiesDefinitionComponent implements OnInit {
         this.addModal.show();
     }
 
+    /**
+     * handler for clicks on the edit button
+     */
+    onEditClick(data: PropertiesDefinitionKVElement) {
+        if (isNullOrUndefined(data)) {
+            return;
+        } else {
+            this.elementToEdit = _.cloneDeep(data);
+            this.editIndex = this.resourceApiData.winerysPropertiesDefinition.propertyDefinitionKVList.findIndex(el => el.key === this.elementToEdit.key);
+            this.validatorObject = new WineryValidatorObject(this.resourceApiData.winerysPropertiesDefinition.propertyDefinitionKVList, 'key');
+            this.editModal.show();
+        }
+    }
+
     // endregion
 
     /**
@@ -217,7 +235,7 @@ export class PropertiesDefinitionComponent implements OnInit {
     }
 
     onCellSelected(data: WineryRowData) {
-        if (isNullOrUndefined(data)) {
+        if (!isNullOrUndefined(data)) {
             this.selectedCell = data;
         }
     }
@@ -248,7 +266,28 @@ export class PropertiesDefinitionComponent implements OnInit {
     }
 
     onAddModalShown() {
-        this.nameInputForm.nativeElement.focus();
+        this.addNameInputForm.nativeElement.focus();
+        this.includePattern = false;
+    }
+
+    editProperty(index: number, propType: string, propName: string, propDescription: string, propPattern: string) {
+        if (index > -1) {
+            this.resourceApiData.winerysPropertiesDefinition.propertyDefinitionKVList[index] = {
+                key: propName,
+                type: propType,
+                description: propDescription,
+                pattern: propPattern
+            };
+
+            // trigger change detection
+            this.resourceApiData.winerysPropertiesDefinition.propertyDefinitionKVList =
+                [].concat(this.resourceApiData.winerysPropertiesDefinition.propertyDefinitionKVList);
+        }
+        this.editModal.hide();
+    }
+
+    onEditModalShown() {
+        this.includePattern = this.elementToEdit.pattern != null;
     }
 
     // endregion

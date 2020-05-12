@@ -58,7 +58,9 @@
                         [columns]="columns"
                         (cellSelected)="onCellSelected($event)"
                         (removeBtnClicked)="onRemoveClick($event)"
-                        (addBtnClicked)="onAddClick();">
+                        (addBtnClicked)="onAddClick();"
+                        [enableEditButton]="true"
+                        (editBtnClicked)="onEditClick($event)">
                     </winery-table>
                 </tab>
                 <tab heading="Wrapper">
@@ -89,32 +91,32 @@
     <winery-modal-body>
         <form #addPropertyFrom="ngForm" id="addPropertyForm">
             <div class="form-group">
-                <label class="control-label" for="key">Name</label>
-                <input #nameInputForm
-                       #propName="ngModel"
-                       id="key"
+                <label class="control-label" for="addKey">Name</label>
+                <input #addNameInputForm
+                       #addPropName="ngModel"
+                       id="addKey"
                        class="form-control"
                        type="text"
-                       name="key"
+                       name="addKey"
                        autocomplete=off
                        required
                        [(ngModel)]="newProperty.key"
                        [wineryDuplicateValidator]="validatorObject"/>
 
-                <div *ngIf="propName.errors && (propName.dirty || propName.touched)"
+                <div *ngIf="addPropName.errors && (addPropName.dirty || addPropName.touched)"
                      class="alert alert-danger">
-                    <div [hidden]="!propName.errors.wineryDuplicateValidator">
+                    <div [hidden]="!addPropName.errors.wineryDuplicateValidator">
                         No duplicates allowed!
                     </div>
-                    <div [hidden]="!propName.errors.required">
+                    <div [hidden]="!addPropName.errors.required">
                         Name is required
                     </div>
                 </div>
             </div>
 
             <div class="form-group">
-                <label class="control-label" for="propType">Type</label>
-                <select #selectProperty name="type" class="form-control" id="propType">
+                <label class="control-label" for="addPropType">Type</label>
+                <select #addSelectProperty name="addPropType" class="form-control" id="addPropType">
                     <option value="xsd:string">xsd:string</option>
                     <option value="xsd:float">xsd:float</option>
                     <option value="xsd:decimal">xsd:decimal</option>
@@ -124,12 +126,12 @@
             </div>
 
             <div class="form-group">
-                <label class="control-label" for="propDescription">Description (optional)</label>
-                <input #propDescription="ngModel"
-                       id="propDescription"
+                <label class="control-label" for="addPropDescription">Description (optional)</label>
+                <input #addPropDescription="ngModel"
+                       id="addPropDescription"
                        class="form-control"
                        type="text"
-                       name="description"
+                       name="addPropDescription"
                        autocomplete=off
                        placeholder="(empty)"
                        [(ngModel)]="newProperty.description"/>
@@ -141,12 +143,12 @@
                 Include Pattern
             </label>
             <div class="form-group" [hidden]="!includePattern">
-                <label class="control-label" for="propPattern">Pattern (Regex)</label>
-                <input #propPattern="ngModel"
-                       id="propPattern"
+                <label class="control-label" for="addPropPattern">Pattern (Regex)</label>
+                <input #addPropPattern="ngModel"
+                       id="addPropPattern"
                        class="form-control"
                        type="text"
-                       name="pattern"
+                       name="addPropPattern"
                        autocomplete=off
                        placeholder="(empty)"
                        [(ngModel)]="newProperty.pattern"/>
@@ -155,10 +157,85 @@
         </form>
     </winery-modal-body>
     <winery-modal-footer
-        (onOk)="addProperty(selectProperty.value, propName.value, propDescription.value,includePattern ? propPattern.value : null); addPropertyFrom.reset();"
+        (onOk)="addProperty(addSelectProperty.value, addPropName.value, addPropDescription.value,includePattern ? addPropPattern.value : null); addPropertyFrom.reset();"
         [closeButtonLabel]="'Cancel'"
         [okButtonLabel]="'Add'"
         [disableOkButton]="!addPropertyFrom?.form.valid">
+    </winery-modal-footer>
+</winery-modal>
+
+<winery-modal bsModal #editModal="bs-modal" [modalRef]="editModal"
+              (onShown)="onEditModalShown();" (onHide)="editPropertyFrom.reset();">
+    <winery-modal-header [title]="'Edit Property'">
+    </winery-modal-header>
+    <winery-modal-body>
+        <form #editPropertyFrom="ngForm" id="editPropertyForm">
+            <div class="form-group">
+                <label class="control-label" for="editKey">Name</label>
+                <input #editPropName="ngModel"
+                       id="editKey"
+                       class="form-control"
+                       type="text"
+                       name="editKey"
+                       autocomplete=off
+                       required
+                       [(ngModel)]="elementToEdit.key"/>
+
+                <div *ngIf="editPropName.errors && (editPropName.dirty || editPropName.touched)"
+                     class="alert alert-danger">
+                    <div [hidden]="!editPropName.errors.required">
+                        Name is required
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="control-label" for="editPropType">Type</label>
+                <select #editSelectProperty name="type" class="form-control" id="editPropType" [(ngModel)]="elementToEdit.type">
+                    <option value="xsd:string">xsd:string</option>
+                    <option value="xsd:float">xsd:float</option>
+                    <option value="xsd:decimal">xsd:decimal</option>
+                    <option value="xsd:anyURI">xsd:anyURI</option>
+                    <option value="xsd:QName">xsd:QName</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="control-label" for="editPropDescription">Description (optional)</label>
+                <input #editPropDescription="ngModel"
+                       id="editPropDescription"
+                       class="form-control"
+                       type="text"
+                       name="editPropDescription"
+                       autocomplete=off
+                       placeholder="(empty)"
+                       [(ngModel)]="elementToEdit.description"/>
+            </div>
+
+            <label>
+                <input style="vertical-align: -2px" type="checkbox" id="editIncludePattern" name="editIncludePattern"
+                       [(ngModel)]="includePattern">
+                Include Pattern
+            </label>
+            <div class="form-group" [hidden]="!includePattern">
+                <label class="control-label" for="editPropPattern">Pattern (Regex)</label>
+                <input #editPropPattern="ngModel"
+                       id="editPropPattern"
+                       class="form-control"
+                       type="text"
+                       name="editPropPattern"
+                       autocomplete=off
+                       placeholder="(empty)"
+                       [(ngModel)]="elementToEdit.pattern"/>
+            </div>
+
+        </form>
+    </winery-modal-body>
+    <winery-modal-footer
+        (onOk)="editProperty(editIndex, editSelectProperty.value, editPropName.value, editPropDescription.value,includePattern ? editPropPattern.value : null); editPropertyFrom.reset();"
+        [closeButtonLabel]="'Cancel'"
+        [okButtonLabel]="'Edit'"
+        [disableOkButton]="!editPropertyFrom?.form.valid">
     </winery-modal-footer>
 </winery-modal>
 
