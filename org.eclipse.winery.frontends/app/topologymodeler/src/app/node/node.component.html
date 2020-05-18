@@ -266,8 +266,8 @@
                                           [readonly]="readonly"
                                           (toggleModalHandler)="sendToggleAction($event)"
                                           [currentNodeData]="{currentNodeId: nodeTemplate.id,
-                                    currentNodePart: 'INTERFACEDEFINITIONS',
-                                    nodeTemplate: nodeTemplate}"
+                                                              currentNodePart: 'INTERFACEDEFINITIONS',
+                                                              nodeTemplate: nodeTemplate}"
                                           [interfaceDefinitions]="nodeTemplate.interfaceDefinitions?.interface">
             </winery-interface-definitions>
         </accordion-group>

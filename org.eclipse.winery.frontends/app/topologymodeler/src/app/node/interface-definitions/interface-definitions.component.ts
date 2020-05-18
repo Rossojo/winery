@@ -31,7 +31,6 @@ export class InterfaceDefinitionsComponent implements OnInit {
     readonly features = FeatureEnum;
 
     @Output() toggleModalHandler: EventEmitter<any>;
-    @Output() showYamlPolicyManagementModal: EventEmitter<void>;
     @Input() readonly: boolean;
     @Input() currentNodeData: any;
     @Input() interfaceDefinitions;
@@ -39,7 +38,6 @@ export class InterfaceDefinitionsComponent implements OnInit {
 
     constructor() {
         this.toggleModalHandler = new EventEmitter();
-        this.showYamlPolicyManagementModal = new EventEmitter();
     }
 
     /**
@@ -51,9 +49,5 @@ export class InterfaceDefinitionsComponent implements OnInit {
     }
 
     ngOnInit() {
-    }
-
-    handleShowYamlPolicyModalEvent() {
-        this.showYamlPolicyManagementModal.emit();
     }
 }

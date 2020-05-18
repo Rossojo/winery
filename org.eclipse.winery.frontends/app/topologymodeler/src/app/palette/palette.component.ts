@@ -26,6 +26,7 @@ import { GroupedNodeTypeModel } from '../models/groupedNodeTypeModel';
 import { Visuals } from '../models/visuals';
 import { BackendService } from '../services/backend.service';
 import { InheritanceUtils } from '../models/InheritanceUtils';
+import { Interface } from '../models/interfaceModel';
 
 /**
  * This is the left sidebar, where nodes can be created from.
@@ -252,7 +253,7 @@ export class PaletteComponent implements OnDestroy {
         }
     }
 
-    private getInterfaceDefinitionsOfNodeType(nodeTypeId: String) {
+    private getInterfaceDefinitionsOfNodeType(nodeTypeId: String): Interface[] {
         const nodeType = this.entityTypes.unGroupedNodeTypes.find(value => value.name === nodeTypeId);
         if (nodeType) {
             return nodeType.full.serviceTemplateOrNodeTypeOrNodeTypeImplementation[0].interfaceDefinitions;

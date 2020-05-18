@@ -54,6 +54,10 @@ tr:nth-child(even) {
     transition: max-width linear 1ms;
 }
 
+.toscatype-table-td div:hover {
+    overflow: visible;
+}
+
 .cell-with-comment {
     position: relative;
 }

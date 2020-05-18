@@ -333,6 +333,10 @@ export class CanvasComponent implements OnInit, OnDestroy, OnChanges, AfterViewI
                 this.modalData.modalVariant = ModalVariant.Policies;
                 this.modalData.modalTitle = 'Policy';
                 break;
+            case toggleModalType.InterfaceDefinitions:
+                this.modalData.modalVariant = ModalVariant.Other;
+                this.modalData.modalVisible = true;
+                break;
             case toggleModalType.Requirements:
                 this.modalData.modalVariant = ModalVariant.Other;
                 this.modalData.modalVisible = false;

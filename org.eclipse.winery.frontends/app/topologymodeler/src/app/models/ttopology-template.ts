@@ -14,6 +14,7 @@
 import { DifferenceStates, VersionUtils } from './ToscaDiff';
 import { Visuals } from './visuals';
 import { TPolicy } from './policiesModalData';
+import { Interface } from './interfaceModel';
 
 export class AbstractTTemplate {
     constructor(public documentation?: any,
@@ -53,7 +54,7 @@ export class TNodeTemplate extends AbstractTTemplate {
                 public deploymentArtifacts?: any,
                 public policies?: { policy: any[] },
                 public artifacts?: { artifact: Array<TArtifact> },
-                public interfaceDefinitions?: { interface: any[] },
+                public interfaceDefinitions?: { interface: Array<Interface> },
                 public _state?: DifferenceStates) {
         super(documentation, any, otherAttributes);
     }
@@ -235,4 +236,3 @@ export class TArtifact extends AbstractTTemplate {
         super(documentation, any, otherAttributes);
     }
 }
-
