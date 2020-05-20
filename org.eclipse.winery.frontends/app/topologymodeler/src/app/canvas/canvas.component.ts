@@ -244,6 +244,7 @@ export class CanvasComponent implements OnInit, OnDestroy, OnChanges, AfterViewI
             const x = event.clientX - this.lastMouseEvent.clientX;
             const y = event.clientY - this.lastMouseEvent.clientY;
             this.moveNodes(x, y);
+            this.revalidateContainer();
             this.lastMouseEvent = event;
         }
     }
