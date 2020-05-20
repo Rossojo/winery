@@ -132,7 +132,8 @@ export class LiveModelingSidebarComponent implements OnInit, OnDestroy {
     }
 
     isDeployDisabled() {
-        return this.serviceTemplateInstanceId || this.liveModelingState !== LiveModelingStates.TERMINATED || this.deploymentChanges;
+        return this.serviceTemplateInstanceId ||
+            this.liveModelingState !== LiveModelingStates.TERMINATED && this.liveModelingState !== LiveModelingStates.ERROR;
     }
 
     async handleRedeploy() {
