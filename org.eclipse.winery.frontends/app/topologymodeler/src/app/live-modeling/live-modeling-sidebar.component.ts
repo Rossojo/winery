@@ -185,9 +185,6 @@ export class LiveModelingSidebarComponent implements OnInit, OnDestroy {
                     this.liveModelingService.transform();
                     return;
                 }
-                case ReconfigureOptions.ADAPT: {
-                    return;
-                }
             }
         }
     }

@@ -130,5 +130,4 @@ export enum ReconfigureOptions {
     NONE,
     REDEPLOY,
     TRANSFORM,
-    ADAPT
 }

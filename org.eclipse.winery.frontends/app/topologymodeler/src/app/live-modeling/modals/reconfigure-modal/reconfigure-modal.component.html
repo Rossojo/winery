@@ -22,31 +22,24 @@
     <div class="d-flex flex-row justify-content-between p-2 px-4">
         <div class="reconfigure-icon-container text-center"
              [class.select-icon-container]="isOptionSelected(ReconfigureOptions.REDEPLOY)"
-             (click)="toggleOption(ReconfigureOptions.REDEPLOY)"
-        >
+             (click)="toggleOption(ReconfigureOptions.REDEPLOY)">
+            <i *ngIf="selectedOption === ReconfigureOptions.REDEPLOY" class="fa fa-check-circle check-icon"></i>
             <div class="reconfigure-icon">
-                <i class="fa fa-cogs"></i>
+                <i class="fa fa-repeat"></i>
             </div>
-            <span>Redeploy</span>
+            <p class="title">Redeploy</p>
+            <p class="desc">Terminate current instance and deploy a new one afterward.</p>
         </div>
+        <div style="width: 20px"></div>
         <div class="reconfigure-icon-container text-center"
              [class.select-icon-container]="isOptionSelected(ReconfigureOptions.TRANSFORM)"
-             (click)="toggleOption(ReconfigureOptions.TRANSFORM)"
-        >
+             (click)="toggleOption(ReconfigureOptions.TRANSFORM)">
+            <i *ngIf="selectedOption === ReconfigureOptions.TRANSFORM" class="fa fa-check-circle check-icon"></i>
             <div class="reconfigure-icon">
-                <i class="fa fa-gear"></i>
+                <i class="fa fa-random"></i>
             </div>
-            <span>Transform</span>
-        </div>
-        <div class="reconfigure-icon-container text-center"
-             [class.select-icon-container]="isOptionSelected(ReconfigureOptions.ADAPT)"
-             [class.disabled-icon-container]="true"
-             (click)="toggleOption(ReconfigureOptions.ADAPT)"
-        >
-            <div class="reconfigure-icon">
-                <i class="fa fa-cog"></i>
-            </div>
-            <span>Adapt</span>
+            <p class="title">Transform</p>
+            <p class="desc">Transform current instance so it matches the current topology.</p>
         </div>
     </div>
 </div>
