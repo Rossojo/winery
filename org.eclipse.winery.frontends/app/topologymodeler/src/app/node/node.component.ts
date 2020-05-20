@@ -115,6 +115,7 @@ export class NodeComponent implements OnInit, AfterViewInit, OnDestroy, DoCheck 
 
     liveModelingEnabled = false;
     subscriptions: Subscription[] = [];
+    NodeTemplateInstanceStates = NodeTemplateInstanceStates;
 
     constructor(private zone: NgZone,
                 private $ngRedux: NgRedux<IWineryState>,
@@ -499,14 +500,25 @@ export class NodeComponent implements OnInit, AfterViewInit, OnDestroy, DoCheck 
 
     getInstanceStateColor() {
         switch (this.nodeTemplate.instanceState) {
-            case NodeTemplateInstanceStates.INITIAL:
-                return 'blue';
             case NodeTemplateInstanceStates.STARTED:
-                return 'green';
+            case NodeTemplateInstanceStates.CREATED:
+                return '#0EFF09';
             case NodeTemplateInstanceStates.STOPPED:
-                return 'red';
+            case NodeTemplateInstanceStates.DELETED:
+                return '#B8B8B6';
+            case NodeTemplateInstanceStates.CONFIGURING:
+            case NodeTemplateInstanceStates.CREATING:
+            case NodeTemplateInstanceStates.DELETING:
+            case NodeTemplateInstanceStates.STARTING:
+            case NodeTemplateInstanceStates.STOPPING:
+                return '#F9CF00';
+            case NodeTemplateInstanceStates.CONFIGURED:
+            case NodeTemplateInstanceStates.MIGRATED:
+                return '#007bff';
+            case NodeTemplateInstanceStates.ERROR:
+                return '#ff090d';
             default:
-                return '';
+                return 'black';
         }
     }
 

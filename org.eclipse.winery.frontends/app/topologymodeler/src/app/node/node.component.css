@@ -208,13 +208,19 @@ button.btn.btn-sm.btn-outline-secondary:hover, button.btn.btn-sm.btn-outline-sec
 
 .live-modeling-column {
     align-self: start;
-    padding: 0;
-    text-align: center;
+    padding: 3px;
 }
 
-.live-modeling-column .status {
+.live-modeling-column .node-instance-status {
     cursor: pointer;
-    font-size: 10px;
+    margin: 0 auto;
+    background-color: black;
+    border: 1px solid black;
+    height: 10px;
+    border-radius: 50%;
+    -moz-border-radius: 50%;
+    -webkit-border-radius: 50%;
+    width: 10px;
 }
 
 .has-error {
