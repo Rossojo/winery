@@ -13,11 +13,12 @@
  *******************************************************************************/
 
 import { Component } from '@angular/core';
-import { BsModalRef } from 'ngx-bootstrap';
+import { BsModalRef, BsModalService } from 'ngx-bootstrap';
 import { LiveModelingService } from '../../../services/live-modeling.service';
 import { BackendService } from '../../../services/backend.service';
 import { HttpClient } from '@angular/common/http';
 import { map } from 'rxjs/operators';
+import { SettingsModalComponent } from '../settings-modal/settings-modal.component';
 
 @Component({
     selector: 'winery-live-modeling-enable-modal',
@@ -34,7 +35,8 @@ export class EnableModalComponent {
     constructor(private bsModalRef: BsModalRef,
                 private liveModelingService: LiveModelingService,
                 private backendService: BackendService,
-                private http: HttpClient
+                private http: HttpClient,
+                private modalService: BsModalService
     ) {
         this.currentCsarId = this.normalizeCsarId(this.backendService.configuration.id);
         this.containerUrl = 'http://' + window.location.hostname + ':1337';
@@ -72,6 +74,15 @@ export class EnableModalComponent {
     resetErrorsAndAnimations() {
         this.testingContainerUrl = undefined;
         this.isContainerUrlInvalid = undefined;
+    }
+
+    handleSettings() {
+        this.openModal(SettingsModalComponent);
+    }
+
+    openModal(modal: any, options?: any) {
+        const defaultConfig = { backdrop: 'static' };
+        this.modalService.show(modal, { ...defaultConfig, ...options });
     }
 
     dismissModal() {

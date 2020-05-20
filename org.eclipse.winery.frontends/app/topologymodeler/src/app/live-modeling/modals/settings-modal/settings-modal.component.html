@@ -21,7 +21,7 @@
 </div>
 <div class="modal-body">
     <div *ngFor="let key of objectKeys(settings)" class="pb-2">
-        <label class="font-weight-normal" [for]="key">{{key}}:</label>
+        <label class="font-weight-normal" [for]="key">{{this.getLabel(key)}}:</label>
         <input class="form-control" type="text" [id]="key"
                [(ngModel)]="settings[key]">
     </div>

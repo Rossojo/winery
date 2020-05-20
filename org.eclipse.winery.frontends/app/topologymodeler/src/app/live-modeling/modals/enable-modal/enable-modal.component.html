@@ -19,7 +19,10 @@
     </button>
 </div>
 <div class="modal-body">
-    <p>Caution! This will enable live-modeling.</p>
+    <div class="d-flex justify-content-end">
+        <i class="fa fa-gear ml-2" style="cursor: pointer;"
+           (click)="handleSettings()"></i>
+    </div>
     <div class="form-group">
         <label for="containerUrlInput">Enter OpenTOSCA container Url:</label>
         <div class="input-wrapper"

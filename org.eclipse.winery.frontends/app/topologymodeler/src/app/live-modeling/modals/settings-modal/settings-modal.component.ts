@@ -48,6 +48,17 @@ export class SettingsModalComponent implements OnInit, OnDestroy {
         this.dismissModal();
     }
 
+    getLabel(settingsKey: string) {
+        switch (settingsKey) {
+            case 'timeout':
+                return 'Timeout (ms)';
+            case 'interval':
+                return 'Interval (ms)';
+            default:
+                return '';
+        }
+    }
+
     dismissModal() {
         this.bsModalRef.hide();
     }
