@@ -66,3 +66,11 @@
 .error-text {
     color: red;
 }
+
+.warning-container {
+    width: 100%;
+    padding: 0.5em;
+    background-color: #F8F4C3;
+    color: #a5893c;
+    margin-bottom: 10px;
+}

@@ -125,7 +125,7 @@ export class LiveModelingSidebarComponent implements OnInit, OnDestroy {
     }
 
     async handleDeploy() {
-        const resp = await this.openConfirmModal('Deploy new Instance', `Do you want to deploy a new instance of type ${this.currentCsarId}?`);
+        const resp = await this.openConfirmModal('Deploy new Instance', `Do you want to deploy a new instance of type ${this.currentCsarId}?`, true);
         if (resp) {
             this.liveModelingService.deploy();
         }
@@ -137,7 +137,7 @@ export class LiveModelingSidebarComponent implements OnInit, OnDestroy {
     }
 
     async handleRedeploy() {
-        const resp = await this.openConfirmModal('Deploy new Instance', `Do you want to deploy a new instance of type ${this.currentCsarId}?`);
+        const resp = await this.openConfirmModal('Redeploy new Instance', `Do you want to redeploy a new instance?`, true);
         if (resp) {
             this.liveModelingService.redeploy();
         }
@@ -258,10 +258,11 @@ export class LiveModelingSidebarComponent implements OnInit, OnDestroy {
         this.modalRef = this.modalService.show(modal, { ...defaultConfig, ...options });
     }
 
-    async openConfirmModal(title: string, content: string): Promise<boolean> {
+    async openConfirmModal(title: string, content: string, showWarning = false): Promise<boolean> {
         const initialState = {
             title: title,
             content: content,
+            showWarning: showWarning
         };
         const modalRef = this.modalService.show(ConfirmModalComponent, { initialState, backdrop: 'static' });
         await new Promise(resolve => {

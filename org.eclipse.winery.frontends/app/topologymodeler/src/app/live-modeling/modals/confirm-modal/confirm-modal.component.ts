@@ -14,6 +14,7 @@
 
 import { Component, OnInit } from '@angular/core';
 import { BsModalRef } from 'ngx-bootstrap';
+import { PropertyValidatorService } from '../../../services/property-validator.service';
 
 @Component({
     selector: 'winery-live-modeling-confirm-modal',
@@ -23,9 +24,11 @@ import { BsModalRef } from 'ngx-bootstrap';
 export class ConfirmModalComponent implements OnInit {
     title: string;
     content: string;
+    showWarning = false;
     confirmed = false;
 
     constructor(private bsModalRef: BsModalRef,
+                private propertyValidatorService: PropertyValidatorService
     ) {
     }
 
@@ -40,6 +43,10 @@ export class ConfirmModalComponent implements OnInit {
     confirm() {
         this.confirmed = true;
         this.dismissModal();
+    }
+
+    isTopologyInvalid(): boolean {
+        return this.propertyValidatorService.isTopologyInvalid();
     }
 
     dismissModal() {

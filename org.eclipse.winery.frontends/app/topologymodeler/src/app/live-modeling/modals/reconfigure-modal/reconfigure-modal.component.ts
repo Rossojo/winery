@@ -15,6 +15,7 @@
 import { Component, OnInit } from '@angular/core';
 import { BsModalRef } from 'ngx-bootstrap';
 import { ReconfigureOptions } from '../../../models/enums';
+import { PropertyValidatorService } from '../../../services/property-validator.service';
 
 @Component({
     selector: 'winery-live-modeling-reconfigure-modal',
@@ -27,6 +28,7 @@ export class ReconfigureModalComponent implements OnInit {
     private ReconfigureOptions = ReconfigureOptions;
 
     constructor(private bsModalRef: BsModalRef,
+                private propertyValidatorService: PropertyValidatorService
     ) {
     }
 
@@ -48,6 +50,10 @@ export class ReconfigureModalComponent implements OnInit {
 
     confirm() {
         this.dismissModal();
+    }
+
+    isTopologyInvalid(): boolean {
+        return this.propertyValidatorService.isTopologyInvalid();
     }
 
     dismissModal() {

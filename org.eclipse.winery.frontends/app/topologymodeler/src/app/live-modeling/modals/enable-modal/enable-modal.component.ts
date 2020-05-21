@@ -19,6 +19,7 @@ import { BackendService } from '../../../services/backend.service';
 import { HttpClient } from '@angular/common/http';
 import { map } from 'rxjs/operators';
 import { SettingsModalComponent } from '../settings-modal/settings-modal.component';
+import { PropertyValidatorService } from '../../../services/property-validator.service';
 
 @Component({
     selector: 'winery-live-modeling-enable-modal',
@@ -36,7 +37,8 @@ export class EnableModalComponent {
                 private liveModelingService: LiveModelingService,
                 private backendService: BackendService,
                 private http: HttpClient,
-                private modalService: BsModalService
+                private modalService: BsModalService,
+                private propertyValidatorService: PropertyValidatorService
     ) {
         this.currentCsarId = this.normalizeCsarId(this.backendService.configuration.id);
         this.containerUrl = 'http://' + window.location.hostname + ':1337';
@@ -83,6 +85,10 @@ export class EnableModalComponent {
     openModal(modal: any, options?: any) {
         const defaultConfig = { backdrop: 'static' };
         this.modalService.show(modal, { ...defaultConfig, ...options });
+    }
+
+    isTopologyInvalid(): boolean {
+        return this.propertyValidatorService.isTopologyInvalid();
     }
 
     dismissModal() {
