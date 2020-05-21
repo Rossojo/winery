@@ -32,15 +32,9 @@ export class PropertiesComponent implements OnInit, OnChanges, OnDestroy {
     @Input() nodeId: string;
     key: string;
     nodeProperties: any;
-    invalidNodeProperties: any = {};
-    kvPatternMap: any;
-    kvDescriptionMap: any;
 
+    dispatchSubject: Subject<any> = new Subject<any>();
     subscriptions: Array<Subscription> = [];
-
-    properties: Subject<any> = new Subject<any>();
-
-    checkEnabled: boolean;
 
     constructor(private ngRedux: NgRedux<IWineryState>,
                 private actions: WineryActions,
@@ -56,8 +50,6 @@ export class PropertiesComponent implements OnInit, OnChanges, OnDestroy {
                 const currentProperties = changes.currentNodeData.currentValue.nodeTemplate.properties;
                 if (this.currentNodeData.propertyDefinitionType === PropertyDefinitionType.KV) {
                     this.nodeProperties = currentProperties.kvproperties;
-                    this.initKVDescriptionMap();
-                    this.initKVPatternMap();
                 } else if (this.currentNodeData.propertyDefinitionType === PropertyDefinitionType.XML) {
                     this.nodeProperties = currentProperties.any;
                 }
@@ -74,8 +66,6 @@ export class PropertiesComponent implements OnInit, OnChanges, OnDestroy {
                 const currentProperties = this.currentNodeData.nodeTemplate.properties;
                 if (this.currentNodeData.propertyDefinitionType === PropertyDefinitionType.KV) {
                     this.nodeProperties = currentProperties.kvproperties;
-                    this.initKVDescriptionMap();
-                    this.initKVPatternMap();
                 } else if (this.currentNodeData.propertyDefinitionType === PropertyDefinitionType.XML) {
                     this.nodeProperties = currentProperties.any;
                 }
@@ -83,100 +73,31 @@ export class PropertiesComponent implements OnInit, OnChanges, OnDestroy {
             }
         }
 
-        this.subscriptions.push(this.properties.pipe(
+        this.subscriptions.push(this.dispatchSubject.pipe(
             debounceTime(500),
-            distinctUntilChanged(),
-        ).subscribe(property => {
-            if (this.currentNodeData.propertyDefinitionType === PropertyDefinitionType.KV) {
-                this.nodeProperties[property.key] = property.value;
-                if (this.checkEnabled) {
-                    this.checkProperty(property.key, property.value);
-                }
-            } else {
-                this.nodeProperties = property;
-            }
-            this.ngRedux.dispatch(this.actions.setProperty({
-                nodeProperty: {
-                    newProperty: this.nodeProperties,
-                    propertyType: this.currentNodeData.propertyDefinitionType,
-                    nodeId: this.currentNodeData.nodeTemplate.id
-                }
-            }));
+        ).subscribe(_ => {
+            this.dispatchRedux();
         }));
-
-        this.subscriptions.push(this.ngRedux.select(state => state.topologyRendererState.buttonsState.checkNodePropertiesButton)
-            .subscribe(checked => {
-                this.checkEnabled = checked;
-                if (this.checkEnabled) {
-                    this.checkAllProperties();
-                } else {
-                    this.invalidNodeProperties = {};
-                    this.ngRedux.dispatch(this.actions.setNodePropertyValidity(this.nodeId, true));
-                }
-            }));
     }
 
-    initKVDescriptionMap() {
-        this.kvDescriptionMap = {};
-        try {
-            const propertyDefinitionKVList =
-                this.currentNodeData.entityType.full.serviceTemplateOrNodeTypeOrNodeTypeImplementation[0].any[0].propertyDefinitionKVList;
-            propertyDefinitionKVList.forEach(prop => {
-                this.kvDescriptionMap[prop.key] = prop['description'];
-            });
-        } catch (e) {
-        }
+    kvPropertyUpdate(event: any) {
+        this.nodeProperties[event.key] = event.value;
+        this.dispatchSubject.next();
     }
 
-    initKVPatternMap() {
-        this.kvPatternMap = {};
-        try {
-            const propertyDefinitionKVList =
-                this.currentNodeData.entityType.full.serviceTemplateOrNodeTypeOrNodeTypeImplementation[0].any[0].propertyDefinitionKVList;
-            propertyDefinitionKVList.forEach(prop => {
-                this.kvPatternMap[prop.key] = prop['pattern'];
-            });
-        } catch (e) {
-        }
+    xmlPropertyUpdate(event: any) {
+        this.nodeProperties = event;
+        this.dispatchSubject.next();
     }
 
-    hasError(key: string): boolean {
-        return !!this.invalidNodeProperties[key];
-    }
-
-    checkForErrors() {
-        if (Object.keys(this.invalidNodeProperties).length > 0) {
-            this.ngRedux.dispatch(this.actions.setNodePropertyValidity(this.nodeId, false));
-        } else {
-            this.ngRedux.dispatch(this.actions.setNodePropertyValidity(this.nodeId, true));
-        }
-    }
-
-    checkAllProperties() {
-        if (this.currentNodeData.propertyDefinitionType === PropertyDefinitionType.KV) {
-            Object.keys(this.nodeProperties).forEach(key => {
-                this.checkProperty(key, this.nodeProperties[key]);
-            });
-            this.checkForErrors();
-        }
-    }
-
-    checkProperty(key: string, value: string) {
-        try {
-            delete this.invalidNodeProperties[key];
-            if (value && this.kvPatternMap[key]) {
-                if (!(value.startsWith('get_input:') || value.startsWith('get_property:'))) {
-                    const pattern = this.kvPatternMap[key];
-                    if (!new RegExp(pattern).test(value)) {
-                        this.invalidNodeProperties[key] = pattern;
-                    }
-                }
+    dispatchRedux() {
+        this.ngRedux.dispatch(this.actions.setProperty({
+            nodeProperty: {
+                newProperty: this.nodeProperties,
+                propertyType: this.currentNodeData.propertyDefinitionType,
+                nodeId: this.currentNodeData.nodeTemplate.id
             }
-        } catch (e) {
-
-        } finally {
-            this.checkForErrors();
-        }
+        }));
     }
 
     ngOnDestroy() {

@@ -15,51 +15,20 @@
      style="display: flex; justify-content: center; align-items: center">
     <i class="fa fa-3x fa-refresh fa-spin" style="max-width: 50%;"></i>
 </div>
-<table *ngIf="currentNodeData.propertyDefinitionType == 'KV'" class="kv-table">
-    <colgroup>
-        <col class="col-key"/>
-        <col class="col-value"/>
-    </colgroup>
-    <tr>
-        <th>
-            Key
-        </th>
-        <th>
-            Values
-        </th>
-    <tr *ngFor="let property of nodeProperties | keysPipe">
-        <td class="">
-            {{property.key}}
-            <i class="fa fa-info-circle" 
-               containerClass="tooltip"
-               *ngIf="checkEnabled && kvDescriptionMap[property.key]" 
-               [tooltip]="kvDescriptionMap[property.key]">
-            </i>
-        </td>
-        <td class="">
-            <input type="text"
-                   style="width: 100%"
-                   placeholder="Edit property"
-                   [value] = "nodeProperties[property.key]"
-                   [disabled]="readonly"
-                   [class.has-error]="hasError(property.key)"
-                   (keyup)="properties.next({key: property.key, value: $event.target.value})"
-            >
-        </td>
-    </tr>
-</table>
 
-<div *ngIf="currentNodeData.propertyDefinitionType == 'XML'">
-    <textarea
-        style="width:100%; overflow-y: scroll;"
-        rows="6"
-        placeholder="Edit your XML here."
-        required
-        [disabled]="readonly"
-        value="{{nodeProperties}}"
-        (keyup)="properties.next($event.target.value)">
-    </textarea>
-</div>
+<winery-properties-kv *ngIf="currentNodeData.propertyDefinitionType == 'KV'"
+                      [nodeId]="nodeId"
+                      [properties]="nodeProperties"
+                      [readonly]="readonly"
+                      [nodeData]="currentNodeData"
+                      (updateProperty)="kvPropertyUpdate($event)"
+></winery-properties-kv>
+
+<winery-properties-xml *ngIf="currentNodeData.propertyDefinitionType == 'XML'"
+                       [properties]="nodeProperties"
+                       [readonly]="readonly"
+                       (updateProperty)="xmlPropertyUpdate($event)"
+></winery-properties-xml>
 
 <div *ngIf="currentNodeData.propertyDefinitionType == 'NONE'" style="color: dimgray; text-align: center">
     <span>No properties defined <br> for this Element.</span></div>
