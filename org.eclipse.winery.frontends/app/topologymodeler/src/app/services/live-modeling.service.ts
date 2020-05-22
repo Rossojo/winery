@@ -15,12 +15,12 @@
 import { Injectable } from '@angular/core';
 import { NgRedux } from '@angular-redux/store';
 import { IWineryState } from '../redux/store/winery.store';
-import { LiveModelingStates, NodeTemplateInstanceStates, ServiceTemplateInstanceStates } from '../models/enums';
+import { AdaptationAction, LiveModelingStates, NodeTemplateInstanceStates, ServiceTemplateInstanceStates } from '../models/enums';
 import { BackendService } from './backend.service';
 import { CsarUpload } from '../models/container/csar-upload.model';
 import { ContainerService } from './container.service';
 import { ErrorHandlerService } from './error-handler.service';
-import { TTopologyTemplate } from '../models/ttopology-template';
+import { TRelationshipTemplate, TTopologyTemplate } from '../models/ttopology-template';
 import { LiveModelingActions } from '../redux/actions/live-modeling.actions';
 import { WineryActions } from '../redux/actions/winery.actions';
 import { BsModalService } from 'ngx-bootstrap';
@@ -38,6 +38,8 @@ import {
     CreateLiveModelingTemplateError, DeployInstanceError, LiveModelingError, RetrieveInputParametersError, TerminateInstanceError, TransformInstanceError,
     UploadCsarError
 } from '../models/customErrors';
+import { AdaptationPayload } from '../models/container/adaptation-payload.model';
+import * as _ from 'lodash';
 
 @Injectable()
 export class LiveModelingService {
@@ -106,7 +108,7 @@ export class LiveModelingService {
                 return;
             }
             this.ngRedux.dispatch(this.liveModelingActions.setState(LiveModelingStates.INIT));
-            const topologyTemplate = this.currentTopologyTemplate;
+            const topologyTemplate = _.cloneDeep(this.currentTopologyTemplate);
             this.clearData();
             this.setAllNodeTemplateWorkingState(true);
             this.ngRedux.dispatch(this.liveModelingActions.setContainerUrl(containerUrl));
@@ -168,7 +170,7 @@ export class LiveModelingService {
             this.ngRedux.dispatch(this.liveModelingActions.setState(LiveModelingStates.RECONFIGURATE));
             const oldCsarId = this.currentCsarId;
             const oldInstanceId = this.currentServiceTemplateInstanceId;
-            const topologyTemplate = this.currentTopologyTemplate;
+            const topologyTemplate = _.cloneDeep(this.currentTopologyTemplate);
             this.setAllNodeTemplateWorkingState(true);
             this.terminateServiceTemplateInstanceInBackground(oldCsarId, oldInstanceId).add(() => {
                 this.deleteApplicationInBackground(oldCsarId);
@@ -197,7 +199,7 @@ export class LiveModelingService {
             this.setAllNodeTemplateWorkingState(true);
             const sourceCsarId = this.currentCsarId;
             const oldInstanceId = this.currentServiceTemplateInstanceId;
-            const topologyTemplate = this.currentTopologyTemplate;
+            const topologyTemplate = _.cloneDeep(this.currentTopologyTemplate);
             const targetCsarId = await this.createLiveModelingServiceTemplate();
             await this.installCsarIfNeeded(targetCsarId);
             const transformationPlanId = await this.containerService.generateTransformationPlan(sourceCsarId, targetCsarId).toPromise();
@@ -258,7 +260,7 @@ export class LiveModelingService {
                 return of(null);
             }
             return this.containerService.getNodeTemplateInstance(this.currentCsarId, this.currentServiceTemplateInstanceId, nodeTemplateId).pipe(
-                catchError(_ => {
+                catchError(error => {
                     this.loggingService.logError('Unable to fetch node template instance');
                     return of(null);
                 })
@@ -266,6 +268,62 @@ export class LiveModelingService {
         } catch (error) {
             return of(null);
         }
+    }
+
+    public async adapt(nodeTemplateId: string, adaptationAction: AdaptationAction) {
+        try {
+            if (this.state !== LiveModelingStates.ENABLED) {
+                return;
+            }
+            const csarId = this.currentCsarId;
+            const serviceTemplateInstanceId = this.currentServiceTemplateInstanceId;
+            const topologyTemplate = _.cloneDeep(this.currentTopologyTemplate);
+            const adaptationPayload = this.generateAdaptationPayload(nodeTemplateId, adaptationAction);
+            const workingNodeIds = _.union(adaptationPayload.source_node_templates, adaptationPayload.target_node_templates);
+
+            for (const nodeId of workingNodeIds) {
+                this.ngRedux.dispatch(this.wineryActions.setNodeWorking(nodeId, true));
+            }
+
+            // MOCK:
+            await this.mockAdaptation(csarId, serviceTemplateInstanceId, topologyTemplate, adaptationPayload);
+            // True adaptation:
+            // await this.trueAdaptation
+
+            for (const nodeId of workingNodeIds) {
+                this.ngRedux.dispatch(this.wineryActions.setNodeWorking(nodeId, false));
+            }
+            this.setAllNodeTemplateWorkingState(true);
+            this.ngRedux.dispatch(this.liveModelingActions.setState(LiveModelingStates.UPDATE));
+            await this.updateLiveModelingData(csarId, serviceTemplateInstanceId);
+            this.setAllNodeTemplateWorkingState(false);
+            this.ngRedux.dispatch(this.liveModelingActions.setState(LiveModelingStates.ENABLED));
+        } catch (error) {
+            this.handleError(error);
+        }
+    }
+
+    private mockAdaptation(csarId: string, serviceTemplateInstanceId: string, topologyTemplate: TTopologyTemplate, adaptationPayload: AdaptationPayload) {
+        const startingNodes = adaptationPayload.target_node_templates;
+        const stoppingNodes = topologyTemplate.nodeTemplates.filter(n => !startingNodes.includes(n.id)).map(n => n.id);
+
+        const observables = [];
+        startingNodes.forEach(nodeId => {
+            observables.push(
+                this.containerService.updateNodeTemplateInstanceState(csarId, serviceTemplateInstanceId, nodeId, NodeTemplateInstanceStates.STARTED));
+        });
+        stoppingNodes.forEach(nodeId => {
+            observables.push(
+                this.containerService.updateNodeTemplateInstanceState(csarId, serviceTemplateInstanceId, nodeId, NodeTemplateInstanceStates.STOPPED));
+        });
+        return Observable.forkJoin(observables).toPromise();
+    }
+
+    private trueAdaptation(adaptationPayload: AdaptationPayload) {
+        // todo
+        // this.containerService.generateAdaptationPlan(this.currentCsarId, this.currentServiceTemplateInstanceId, adaptationPayload);
+        // execute plan
+        // wait for node instance in state
     }
 
     private clearData(): void {
@@ -471,7 +529,7 @@ export class LiveModelingService {
     private updateCsar(csarId: string): Observable<Csar> {
         this.loggingService.logInfo('Fetching csar information');
         return this.containerService.getCsar(csarId).pipe(
-            catchError(_ => {
+            catchError(error => {
                 this.loggingService.logError('Unable to fetch csar information');
                 return of(null);
             })
@@ -481,7 +539,7 @@ export class LiveModelingService {
     private updateBuildPlanInstance(csarId: string, serviceTemplateInstanceId: string): Observable<PlanInstance> {
         this.loggingService.logInfo(`Fetching service template instance build plan instance`);
         return this.containerService.getServiceTemplateInstanceBuildPlanInstance(csarId, serviceTemplateInstanceId).pipe(
-            catchError(_ => {
+            catchError(error => {
                 this.loggingService.logError('Unable to fetch build plan instance');
                 return of(null);
             })
@@ -496,10 +554,10 @@ export class LiveModelingService {
                 for (const nodeTemplate of nodeTemplates) {
                     observables.push(this.containerService.getNodeTemplateInstance(
                         csarId, serviceTemplateInstanceId, nodeTemplate.id).pipe(
-                            tap(resp => {
-                                this.ngRedux.dispatch(this.wineryActions.setNodeInstanceState(resp.node_template_id, NodeTemplateInstanceStates[resp.state]));
-                            }),
-                        catchError(_ => {
+                        tap(resp => {
+                            this.ngRedux.dispatch(this.wineryActions.setNodeInstanceState(resp.node_template_id, NodeTemplateInstanceStates[resp.state]));
+                        }),
+                        catchError(error => {
                             this.loggingService.logError(`Unable to fetch data for node ${nodeTemplate.id}`);
                             return of(null);
                         })
@@ -507,7 +565,7 @@ export class LiveModelingService {
                 }
                 return forkJoin(observables);
             }),
-            catchError(_ => {
+            catchError(error => {
                 this.loggingService.logError('Unable to fetch node templates');
                 return of(null);
             })
@@ -517,7 +575,7 @@ export class LiveModelingService {
     private updateCurrentServiceTemplateInstanceState(csarId: string, serviceTemplateInstanceId: string): Observable<ServiceTemplateInstanceStates> {
         this.loggingService.logInfo(`Fetching service template instance state`);
         return this.containerService.getServiceTemplateInstanceState(csarId, serviceTemplateInstanceId).pipe(
-            catchError(_ => {
+            catchError(error => {
                 this.loggingService.logError('Unable to fetch service template instance state');
                 return of(ServiceTemplateInstanceStates.NOT_AVAILABLE);
             })
@@ -546,17 +604,17 @@ export class LiveModelingService {
     }
 
     private terminateServiceTemplateInstanceInBackground(csarId: string, serviceTemplateInstanceId: string): Subscription {
-        return this.containerService.terminateServiceTemplateInstance(csarId, serviceTemplateInstanceId).subscribe(_ => {
+        return this.containerService.terminateServiceTemplateInstance(csarId, serviceTemplateInstanceId).subscribe(resp => {
             this.toastrService.info('Instance successfully terminated');
-        }, _ => {
+        }, error => {
             this.toastrService.error('There was an error while terminating the service template instance');
         });
     }
 
     private deleteApplicationInBackground(csarId: string): Subscription {
-        return this.containerService.deleteApplication(csarId).subscribe(_ => {
+        return this.containerService.deleteApplication(csarId).subscribe(resp => {
             this.toastrService.info('Application successfully deleted');
-        }, _ => {
+        }, error => {
             this.toastrService.error('There was an error while deleting the application');
         });
     }
@@ -567,7 +625,7 @@ export class LiveModelingService {
         };
         const modalRef = this.modalService.show(InputParametersModalComponent, { initialState, backdrop: 'static' });
         await new Promise(resolve => {
-            this.modalService.onHidden.subscribe(_ => {
+            this.modalService.onHidden.subscribe(resp => {
                 resolve();
             });
         });
@@ -610,77 +668,73 @@ export class LiveModelingService {
         this.setAllNodeTemplateInstanceState(null);
     }
 
-    /*
-    public async startNode(nodeTemplateId: string) {
-        const adaptationArray = this.calculateAdaptationArray(nodeTemplateId, NodeTemplateInstanceStates.STARTED);
-        await this.setNodeTemplateInstanceStates(adaptationArray);
-        this.ngRedux.dispatch(this.liveModelingActions.setState(LiveModelingStates.UPDATE));
-    }
+    private generateAdaptationPayload(nodeTemplateId: string, adaptationAction: AdaptationAction): AdaptationPayload {
+        const topologyTemplate = _.cloneDeep(this.currentTopologyTemplate);
 
-    public async stopNode(nodeTemplateId: string) {
-        const adaptationArray = this.calculateAdaptationArray(nodeTemplateId, NodeTemplateInstanceStates.STOPPED);
-        await this.setNodeTemplateInstanceStates(adaptationArray);
-        this.ngRedux.dispatch(this.liveModelingActions.setState(LiveModelingStates.UPDATE));
-    }
+        // Calculate source node templates
+        const source_node_templates = [];
+        for (const nodeTemplate of topologyTemplate.nodeTemplates) {
+            if (nodeTemplate.instanceState === NodeTemplateInstanceStates.STARTED) {
+                source_node_templates.push(nodeTemplate.id);
+            }
+        }
 
-    private calculateAdaptationArray(
-        nodeTemplateId: string,
-        targetNodeTemplateInstanceState: NodeTemplateInstanceStates): Array<[string, NodeTemplateInstanceStates]> {
-        const topologyTemplate = { ...this.topologyService.lastSavedJsonTopology };
-        const requiredSet: Set<string> = new Set<string>();
-        const workingArray: Array<string> = [];
-        const workingRel: Array<TRelationshipTemplate> = [...topologyTemplate.relationshipTemplates];
-        workingArray.push(nodeTemplateId);
+        // Calculate source relationship templates
+        const source_relationship_templates = [];
+        for (const relationshipTemplate of topologyTemplate.relationshipTemplates) {
+            if (source_node_templates.findIndex(n => n === relationshipTemplate.sourceElement.ref) > -1 &&
+                source_node_templates.findIndex(n => n === relationshipTemplate.targetElement.ref) > -1
+            ) {
+                source_relationship_templates.push(relationshipTemplate.id);
+            }
+        }
 
-        // recursively calculate all nodes that depend on the source node
-        while (workingArray.length > 0) {
-            const nodeId = workingArray.shift();
-            requiredSet.add(nodeId);
+        // Recursively calculate all node templates that are dependent
+        const temp_node_templates = [];
+        temp_node_templates.push(nodeTemplateId);
+        const dependent_node_templates_set = new Set<string>();
+        while (temp_node_templates.length > 0) {
+            const nodeId = temp_node_templates.shift();
+            dependent_node_templates_set.add(nodeId);
             let tempRelationships: TRelationshipTemplate[];
-            if (targetNodeTemplateInstanceState === NodeTemplateInstanceStates.STARTED) {
-                tempRelationships = workingRel.filter(rel => rel.sourceElement.ref === nodeId);
-            } else if (targetNodeTemplateInstanceState === NodeTemplateInstanceStates.STOPPED) {
-                tempRelationships = workingRel.filter(rel => rel.targetElement.ref === nodeId);
+            if (adaptationAction === AdaptationAction.START_NODE) {
+                tempRelationships = topologyTemplate.relationshipTemplates.filter(rel => rel.sourceElement.ref === nodeId);
+            } else {
+                tempRelationships = topologyTemplate.relationshipTemplates.filter(rel => rel.targetElement.ref === nodeId);
             }
             for (const tempRel of tempRelationships) {
-                if (targetNodeTemplateInstanceState === NodeTemplateInstanceStates.STARTED) {
-                    workingArray.push(tempRel.targetElement.ref);
-                } else if (targetNodeTemplateInstanceState === NodeTemplateInstanceStates.STOPPED) {
-                    workingArray.push(tempRel.sourceElement.ref);
+                if (adaptationAction === AdaptationAction.START_NODE) {
+                    temp_node_templates.push(tempRel.targetElement.ref);
+                } else {
+                    temp_node_templates.push(tempRel.sourceElement.ref);
                 }
             }
         }
 
-        // find all other nodes that are already in the same target state (so we do not start/stop nodes that are independent from the source node)
-        const requiredNodes = Array.from(requiredSet);
-        const currentNodes = this.topologyService.lastSavedJsonTopology.nodeTemplates.filter(node =>
-            node.instanceState === targetNodeTemplateInstanceState).map(node => node.id);
-        const mergeArray = Array.from(new Set(requiredNodes.concat(...currentNodes)));
-        const adaptationArray: Array<[string, NodeTemplateInstanceStates]> = [];
+        // Holds all node templates that need to be started/stopped
+        let target_node_templates;
+        const dependent_node_templates = Array.from(dependent_node_templates_set);
+        if (adaptationAction === AdaptationAction.START_NODE) {
+            target_node_templates = _.union(source_node_templates, dependent_node_templates);
+        } else {
+            target_node_templates = source_node_templates.filter(n => !dependent_node_templates.includes(n));
+        }
 
-        // calculate adaptation set which contains all nodes with their respective target state
-        for (const nodeTemplate of topologyTemplate.nodeTemplates) {
-            if (mergeArray.indexOf(nodeTemplate.id) > -1) {
-                adaptationArray.push([nodeTemplate.id, targetNodeTemplateInstanceState]);
-            } else {
-                if (targetNodeTemplateInstanceState === NodeTemplateInstanceStates.STARTED) {
-                    adaptationArray.push([nodeTemplate.id, NodeTemplateInstanceStates.STOPPED]);
-                } else if (targetNodeTemplateInstanceState === NodeTemplateInstanceStates.STOPPED) {
-                    adaptationArray.push([nodeTemplate.id, NodeTemplateInstanceStates.STARTED]);
-                }
+        // Calculate source relationship templates
+        const target_relationship_templates = [];
+        for (const relationshipTemplate of topologyTemplate.relationshipTemplates) {
+            if (target_node_templates.findIndex(n => n === relationshipTemplate.sourceElement.ref) > -1 &&
+                target_node_templates.findIndex(n => n === relationshipTemplate.targetElement.ref) > -1
+            ) {
+                target_relationship_templates.push(relationshipTemplate.id);
             }
         }
 
-        return adaptationArray;
+        return {
+            source_node_templates: source_node_templates,
+            source_relationship_templates: source_relationship_templates,
+            target_node_templates: target_node_templates,
+            target_relationship_templates: target_relationship_templates
+        };
     }
-
-    private async setNodeTemplateInstanceStates(adaptationArray: Array<[string, NodeTemplateInstanceStates]>) {
-        for (const nodeTemplate of adaptationArray) {
-            await this.containerService.updateNodeTemplateInstanceState(
-                nodeTemplate[0],
-                nodeTemplate[1]
-            ).toPromise();
-        }
-    }
-     */
 }

@@ -53,3 +53,53 @@
     background: #292929
 }
 
+.btn-live-modeling {
+    flex: 1 1 0px;
+    border: none;
+    background-color: #353537;
+    border: 1px solid #007BFF;
+    color: #007BFF;
+    letter-spacing: 0.05em;
+    padding: 0.75em;
+    border-radius: 0.25em;
+    font-weight: bold;
+    font-size: x-small;
+}
+
+.btn-live-modeling:hover {
+    cursor: pointer;
+    color: white;
+    background-color: #007BFF;
+}
+
+.btn-live-modeling:active {
+    cursor: pointer;
+    color: white;
+}
+
+.btn-live-modeling-start {
+    border: 1px solid #28a745;
+    color: #28a745;
+}
+
+.btn-live-modeling-start:hover {
+    background-color: #28a745;
+}
+
+.btn-live-modeling-start:active {
+    background-color: #1e7e34;
+}
+
+.btn-live-modeling-stop {
+    border: 1px solid #dc3545;
+    color: #dc3545;
+}
+
+.btn-live-modeling-stop:hover {
+    background-color: #dc3545;
+}
+
+.btn-live-modeling-stop:active {
+    background-color: #bd2130;
+}
+

@@ -18,6 +18,10 @@ import { IWineryState } from '../../redux/store/winery.store';
 import { NodeTemplateInstance } from '../../models/container/node-template-instance.model';
 import { LiveModelingService } from '../../services/live-modeling.service';
 import { distinctUntilChanged, switchMap, tap } from 'rxjs/operators';
+import { AdaptationAction, NodeTemplateInstanceStates } from '../../models/enums';
+import { ConfirmModalComponent } from '../modals/confirm-modal/confirm-modal.component';
+import { BsModalService } from 'ngx-bootstrap';
+import { WineryActions } from '../../redux/actions/winery.actions';
 
 @Component({
     selector: 'winery-live-modeling-sidebar-node-template',
@@ -28,13 +32,16 @@ export class NodeTemplateComponent implements OnInit, OnDestroy {
 
     subscriptions: Array<Subscription> = [];
     fetchingData = false;
-    nodeTemplateInstance: {};
+    nodeTemplateInstance: NodeTemplateInstance;
+    NodeTemplateInstanceStates = NodeTemplateInstanceStates;
     nodeSubject = new Subject<string>();
 
     objectKeys = Object.keys;
 
     constructor(private ngRedux: NgRedux<IWineryState>,
-                private liveModelingService: LiveModelingService) {
+                private liveModelingService: LiveModelingService,
+                private modalService: BsModalService,
+                private wineryActions: WineryActions) {
     }
 
     ngOnInit() {
@@ -61,11 +68,62 @@ export class NodeTemplateComponent implements OnInit, OnDestroy {
     }
 
     private updateNodeInstanceData(nodeTemplateInstance: NodeTemplateInstance): void {
-        this.nodeTemplateInstance = nodeTemplateInstance ? {
-            Name: nodeTemplateInstance.node_template_id,
-            Id: nodeTemplateInstance.id,
-            State: nodeTemplateInstance.state
-        } : null;
+        this.nodeTemplateInstance = nodeTemplateInstance ? nodeTemplateInstance : null;
+    }
+
+    async handleStartNode() {
+        const resp = await this.openConfirmModal(
+            'Start Node Instance',
+            `Are you sure you want to start this node instance ${this.nodeTemplateInstance.node_template_id}?
+            This might affect other node instances' state too.`);
+        if (resp) {
+            this.liveModelingService.adapt(this.nodeTemplateInstance.node_template_id, AdaptationAction.START_NODE);
+            this.unselectNodeTemplate();
+        }
+    }
+
+    async handleStopNode() {
+        const resp = await this.openConfirmModal(
+            'Stop Node Instance',
+            `Are you sure you want to stop the node instance ${this.nodeTemplateInstance.node_template_id}?
+            This might affect other node instances' state too.`);
+        if (resp) {
+            this.liveModelingService.adapt(this.nodeTemplateInstance.node_template_id, AdaptationAction.STOP_NODE);
+            this.unselectNodeTemplate();
+        }
+    }
+
+    async openConfirmModal(title: string, content: string, showWarning = false): Promise<boolean> {
+        const initialState = {
+            title: title,
+            content: content,
+            showWarning: showWarning
+        };
+        const modalRef = this.modalService.show(ConfirmModalComponent, { initialState, backdrop: 'static' });
+        await new Promise(resolve => {
+            const subscription = this.modalService.onHidden.subscribe(_ => {
+                subscription.unsubscribe();
+                resolve();
+            });
+        });
+
+        return modalRef.content.confirmed;
+    }
+
+    unselectNodeTemplate() {
+        this.ngRedux.dispatch(this.wineryActions.openSidebar({
+            sidebarContents: {
+                sidebarVisible: false,
+                nodeClicked: false,
+                id: '',
+                nameTextFieldValue: '',
+                type: '',
+                properties: '',
+                source: '',
+                target: ''
+            }
+        }));
+        this.ngRedux.dispatch(this.wineryActions.sendPaletteOpened(false));
     }
 
     ngOnDestroy() {

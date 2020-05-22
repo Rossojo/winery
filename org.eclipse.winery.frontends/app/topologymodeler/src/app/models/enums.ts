@@ -131,3 +131,8 @@ export enum ReconfigureOptions {
     REDEPLOY,
     TRANSFORM,
 }
+
+export enum AdaptationAction {
+    START_NODE,
+    STOP_NODE
+}

@@ -36,6 +36,7 @@ import { PlanLogEntry } from '../models/container/plan-log-entry.model';
 import { InputParameter } from '../models/container/input-parameter.model';
 import { OutputParameter } from '../models/container/output-parameter.model';
 import { NodeTemplate } from '../models/container/node-template.model';
+import { AdaptationPayload } from '../models/container/adaptation-payload.model';
 
 @Injectable()
 export class ContainerService {
@@ -392,15 +393,8 @@ export class ContainerService {
         );
     }
 
-    public fetchRunningServiceTemplateInstances(containerUrl: string, csarId: string): Observable<string[]> {
-        const csarUrl = this.combineURLs(this.combineURLs(containerUrl, 'csars'), csarId);
-        return this.http.get<Csar>(csarUrl, this.headerAcceptJSON).pipe(
-            concatMap(resp => this.http.get<ServiceTemplate>(resp._links['servicetemplate'].href, this.headerAcceptJSON)),
-            concatMap(resp => this.http.get<ServiceTemplateInstanceResources>(resp._links['instances'].href, this.headerAcceptJSON)),
-            map(resp => resp.service_template_instances.filter(
-                instance => instance.state === ServiceTemplateInstanceStates.CREATED).map(instance => instance.id.toString())
-            )
-        );
+    public generateAdaptationPlan(csarId: string, serviceTemplateInstanceId: string, payload: AdaptationPayload) {
+        // todo
     }
 
     public updateNodeTemplateInstanceState(

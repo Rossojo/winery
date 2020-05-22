@@ -37,6 +37,23 @@
                 </tbody>
             </table>
         </div>
+        <div class="d-flex m-2">
+            <ng-template *ngIf="nodeTemplateInstance.state === NodeTemplateInstanceStates.STOPPED; then startNode else stopNode"></ng-template>
+            <ng-template #startNode>
+                <button class="btn-live-modeling btn-live-modeling-start"
+                        (click)="handleStartNode()">
+                    <i class="fa fa-play-circle"></i>
+                    START NODE
+                </button>
+            </ng-template>
+            <ng-template #stopNode>
+                <button class="btn-live-modeling btn-live-modeling-stop"
+                        (click)="handleStopNode()">
+                    <i class="fa fa-stop-circle"></i>
+                    STOP NODE
+                </button>
+            </ng-template>
+        </div>
     </ng-template>
     <ng-template #placeholder>
         <div style="padding: 0.5em; font-size: xx-small; font-style: italic; text-align: center">
