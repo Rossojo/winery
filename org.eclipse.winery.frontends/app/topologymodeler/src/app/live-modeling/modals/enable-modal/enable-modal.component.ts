@@ -49,7 +49,7 @@ export class EnableModalComponent {
         return csarId.endsWith(csarEnding) ? csarId : csarId + csarEnding;
     }
 
-    private async enableLiveModeling() {
+    async enableLiveModeling() {
         this.resetErrorsAndAnimations();
         this.testingContainerUrl = true;
         try {

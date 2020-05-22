@@ -62,7 +62,7 @@ export class LogsComponent implements OnInit, OnDestroy, AfterViewInit {
         }
     }
 
-    private scrolled() {
+    scrolled() {
         const position = this.scrollContainer.nativeElement.scrollTop + this.scrollContainer.nativeElement.offsetHeight;
         const height = this.scrollContainer.nativeElement.scrollHeight;
         this.isNearBottom = position > height - this.SCROLL_THRESHOLD;

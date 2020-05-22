@@ -24,8 +24,8 @@ import { PropertyValidatorService } from '../../../services/property-validator.s
 })
 export class ReconfigureModalComponent implements OnInit {
 
-    private selectedOption = ReconfigureOptions.NONE;
-    private ReconfigureOptions = ReconfigureOptions;
+    selectedOption = ReconfigureOptions.NONE;
+    ReconfigureOptions = ReconfigureOptions;
 
     constructor(private bsModalRef: BsModalRef,
                 private propertyValidatorService: PropertyValidatorService

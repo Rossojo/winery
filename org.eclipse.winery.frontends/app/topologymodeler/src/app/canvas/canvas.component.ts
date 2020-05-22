@@ -144,7 +144,7 @@ export class CanvasComponent implements OnInit, OnDestroy, OnChanges, AfterViewI
 
     private longPressing: boolean;
 
-    private isMiddleMouseButtonDown = false;
+    isMiddleMouseButtonDown = false;
     private lastMouseEvent: MouseEvent;
 
     private liveModelingState: LiveModelingStates;
