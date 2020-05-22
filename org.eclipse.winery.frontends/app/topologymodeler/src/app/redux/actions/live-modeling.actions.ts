@@ -138,7 +138,7 @@ export class LiveModelingActions {
             buildPlanInstance: buildPlanInstance
         };
     }
-    
+
     setDeployedJsonTopology(topologyTemplate: TTopologyTemplate): SetDeployedJsonTopology {
         return {
             type: LiveModelingActions.SET_DEPLOYED_JSON_TOPOLOGY,

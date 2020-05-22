@@ -50,7 +50,7 @@ import { isNullOrUndefined } from 'util';
 })
 export class SidebarComponent implements OnInit, OnDestroy {
     @Input() top: number;
-    
+
     // ngRedux sidebarSubscription
     sidebarSubscription;
     sidebarState: any;
