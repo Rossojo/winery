@@ -29,15 +29,13 @@
                                             "description":  null,
                                             "pattern": null
                                         }
-                                    ],
-                                    "isDerivedFromXSD": null
+                                    ]
                                 }
                             ],
                             "otherAttributes": {
                                 "{http://www.opentosca.org/winery/extensions/tosca/2013/02/12}bordercolor": "#d4b160"
                             },
                             "propertiesDefinition": {
-                                "element": null,
                                 "type": "{http://plain.winery.opentosca.org/nodetypes/propertiesdefinition/winery}properties"
                             },
                             "name": "NodeTypeWithOneKVProperty",
@@ -126,15 +124,13 @@
                                             "description":  null,
                                             "pattern": null
                                         }
-                                    ],
-                                    "isDerivedFromXSD": null
+                                    ]
                                 }
                             ],
                             "otherAttributes": {
                                 "{http://www.opentosca.org/winery/extensions/tosca/2013/02/12}bordercolor": "#081588"
                             },
                             "propertiesDefinition": {
-                                "element": null,
                                 "type": "{http://plain.winery.opentosca.org/nodetypes/propertiesdefinition/winery}properties"
                             },
                             "name": "NodeTypeWithTwoKVProperties",
@@ -181,8 +177,7 @@
                                 "{http://www.opentosca.org/winery/extensions/tosca/2013/02/12}bordercolor": "#82aedc"
                             },
                             "propertiesDefinition": {
-                                "element": "{https://www.w3schools.com/xml/schema_example.asp}shiporder",
-                                "type": null
+                                "element": "{https://www.w3schools.com/xml/schema_example.asp}shiporder"
                             },
                             "name": "NodeTypeWithXmlElementProperty",
                             "targetNamespace": "http://plain.winery.opentosca.org/nodetypes",

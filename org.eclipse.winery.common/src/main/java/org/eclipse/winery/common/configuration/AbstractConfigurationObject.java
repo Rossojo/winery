@@ -14,7 +14,24 @@
 
 package org.eclipse.winery.common.configuration;
 
-public abstract class AbstractConfigurationObject {
+import org.apache.commons.configuration2.YAMLConfiguration;
 
+public abstract class AbstractConfigurationObject {
+    //Holds a pointer to the configuration used for saving.
+    protected YAMLConfiguration configuration;
+
+    /**
+     * Saves changes to the configuration object
+     */
     abstract void save();
+
+    /**
+     * Updates the configuration object instance when the configuration is changed
+     */
+    abstract void update(YAMLConfiguration updatedConfiguration);
+
+    /**
+     * Does necessary set up for the corresponding part of configuration. Should be called in the constructor.
+     */
+    abstract void initialize();
 }

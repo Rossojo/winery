@@ -33,9 +33,9 @@ export class ToscaComponent {
                 public readonly localName: string,
                 public readonly xsdSchemaType: string = null) {
         this.path = '/' + this.toscaType;
-        if (!isNullOrUndefined(this.namespace)) {
+        if (this.namespace) {
             this.path += '/' + encodeURIComponent(encodeURIComponent(this.namespace));
-            if (!isNullOrUndefined(this.localName)) {
+            if (this.localName) {
                 this.path += '/' + this.localName;
                 this.backendPath = backendBaseURL + this.path;
                 this.xmlPath = this.backendPath + '/?xml';
@@ -43,10 +43,10 @@ export class ToscaComponent {
                 this.xmlCsarPath = this.backendPath + '/?csar';
                 this.provenanceCsarPath = this.xmlCsarPath + '&addToProvenance';
                 this.yamlCsarPath = this.backendPath + '/?yaml&csar';
-                this.edmmExportPath = this.backendPath + '/?edmm';
+                this.edmmExportPath = this.backendPath + '/?edmm&edmmUseAbsolutePaths';
             }
         }
-        if (!isNullOrUndefined(this.localName)) {
+        if (this.localName) {
             this.localNameWithoutVersion = Utils.getNameWithoutVersion(this.localName);
         }
     }

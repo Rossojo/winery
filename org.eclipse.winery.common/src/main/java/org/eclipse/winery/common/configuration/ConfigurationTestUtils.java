@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ConfigurationTestUtils {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigurationTestUtils.class);
     private static final File configDirectory = new File(System.getProperty("user.home") + "/.winery");
     private static final File configFile = new File(configDirectory + "/winery.yml");
@@ -53,7 +54,7 @@ public class ConfigurationTestUtils {
      * This method replaces the current winery.yml file with a test winery.yml file.
      */
     public static void replaceFileWithTestFile() throws IOException {
-        Environment.setConfiguration(null);
+        Environment.getInstance().setConfiguration(null);
         InputStream testConfigInputStream = ConfigurationTestUtils.class.getClassLoader().getResourceAsStream("wineryTest.yml");
         if (testConfigInputStream == null) {
             throw new NullPointerException();
@@ -69,8 +70,8 @@ public class ConfigurationTestUtils {
         if (savedConfig == null) {
             return;
         } else {
-            Environment.setConfiguration(savedConfig);
-            Environment.save();
+            Environment.getInstance().setConfiguration(savedConfig);
+            Environment.getInstance().save();
         }
     }
 }

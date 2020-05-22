@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -76,7 +77,6 @@ import org.eclipse.winery.repository.rest.resources.imports.genericimports.Gener
 import org.eclipse.winery.repository.rest.resources.servicetemplates.ServiceTemplateResource;
 import org.eclipse.winery.repository.rest.resources.tags.TagsResource;
 
-import com.sun.jersey.api.NotFoundException;
 import io.swagger.annotations.ApiParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -258,6 +258,7 @@ public abstract class AbstractComponentInstanceResource implements Comparable<Ab
         @QueryParam(value = "csar") String csar,
         @QueryParam(value = "yaml") String yaml,
         @QueryParam(value = "edmm") String edmm,
+        @QueryParam(value = "edmmUseAbsolutePaths") String edmmUseAbsolutePaths,
         @QueryParam(value = "addToProvenance") String addToProvenance,
         @Context UriInfo uriInfo
     ) {
@@ -267,7 +268,7 @@ public abstract class AbstractComponentInstanceResource implements Comparable<Ab
         }
 
         if (edmm != null && this.element instanceof TServiceTemplate) {
-            return RestUtils.getEdmmModel((TServiceTemplate) this.element);
+            return RestUtils.getEdmmModel((TServiceTemplate) this.element, edmmUseAbsolutePaths != null);
         }
 
         // TODO: It should be possible to specify ?yaml&csar to retrieve a CSAR and ?yaml to retrieve the .yaml representation
@@ -295,16 +296,17 @@ public abstract class AbstractComponentInstanceResource implements Comparable<Ab
         @QueryParam(value = "yaml") String yaml,
         @QueryParam(value = "edmm") String edmm,
         @QueryParam(value = "addToProvenance") String addToProvenance,
+        @QueryParam(value = "edmmUseAbsolutePaths") String edmmUseAbsolutePaths,
         @QueryParam(value = "xml") String xml,
         @Context UriInfo uriInfo) {
         // in case there is an URL requested directly via the browser UI, the accept cannot be put at the link.
         // thus, there is the hack with ?csar and ?yaml
         // the hack is implemented at getDefinitionsAsResponse
         if ((csar != null) || (yaml != null) || (xml != null) || (edmm != null)) {
-            return this.getDefinitionsAsResponse(csar, yaml, edmm, addToProvenance, uriInfo);
+            return this.getDefinitionsAsResponse(csar, yaml, edmm, edmmUseAbsolutePaths, addToProvenance, uriInfo);
         }
-        String repositoryUiUrl = Environments.getUiConfig().getEndpoints().get("repositoryUiUrl");
-        String uiUrl = uriInfo.getAbsolutePath().toString().replaceAll(Environments.getUiConfig().getEndpoints().get("repositoryApiUrl"), repositoryUiUrl);
+        String repositoryUiUrl = Environments.getInstance().getUiConfig().getEndpoints().get("repositoryUiUrl");
+        String uiUrl = uriInfo.getAbsolutePath().toString().replaceAll(Environments.getInstance().getUiConfig().getEndpoints().get("repositoryApiUrl"), repositoryUiUrl);
         return Response.temporaryRedirect(URI.create(uiUrl)).build();
     }
 
@@ -363,14 +365,12 @@ public abstract class AbstractComponentInstanceResource implements Comparable<Ab
         try {
             this.element = this.definitions.getElement();
         } catch (IndexOutOfBoundsException e) {
-            if (this instanceof GenericImportResource) {
-                //noinspection StatementWithEmptyBody
                 // everything allright:
                 // ImportResource is a quick hack using 99% of the functionality offered here
                 // As only 1% has to be "quick hacked", we do that instead of a clean design
                 // Clean design: Introduce a class between this and AbstractComponentInstanceResource, where this class and ImportResource inhertis from
                 // A clean design introducing a super class AbstractDefinitionsBackedResource does not work, as we currently also support PropertiesBackedResources and such a super class would required multi-inheritance
-            } else {
+            if (!(this instanceof GenericImportResource)) {
                 throw new IllegalStateException("Wrong storage format: No ServiceTemplateOrNodeTypeOrNodeTypeImplementation found.");
             }
         }
@@ -521,7 +521,7 @@ public abstract class AbstractComponentInstanceResource implements Comparable<Ab
 
     @Path("tags/")
     public final TagsResource getTags() {
-        TTags tags = null;
+        TTags tags;
         if (this.element instanceof TServiceTemplate) {
             tags = ((TServiceTemplate) this.element).getTags();
             if (tags == null) {

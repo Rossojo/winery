@@ -24,6 +24,7 @@ import { RouterModule } from '@angular/router';
 import { WineryLoaderModule } from '../wineryLoader/wineryLoader.module';
 import { SelectModule } from 'ng2-select';
 import { AlertModule, CollapseModule, TooltipModule } from 'ngx-bootstrap';
+import { WineryAddDataModule } from '../wineryAddComponentDataModule/addComponentData.module';
 
 @NgModule({
     imports: [
@@ -39,6 +40,7 @@ import { AlertModule, CollapseModule, TooltipModule } from 'ngx-bootstrap';
         WineryNotificationModule,
         WineryNamespaceSelectorModule,
         WineryDuplicateValidatorModule,
+        WineryAddDataModule,
     ],
     exports: [WineryAddComponent],
     declarations: [WineryAddComponent],

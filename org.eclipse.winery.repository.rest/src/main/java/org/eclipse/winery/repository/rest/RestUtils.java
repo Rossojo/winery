@@ -35,6 +35,7 @@ import java.util.SortedSet;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -94,6 +95,7 @@ import org.eclipse.winery.repository.backend.xsd.NamespaceAndDefinedLocalNames;
 import org.eclipse.winery.repository.export.CsarExportOptions;
 import org.eclipse.winery.repository.export.CsarExporter;
 import org.eclipse.winery.repository.export.ToscaExportUtil;
+import org.eclipse.winery.repository.rest.datatypes.ComponentId;
 import org.eclipse.winery.repository.rest.datatypes.LocalNameForAngular;
 import org.eclipse.winery.repository.rest.datatypes.NamespaceAndDefinedLocalNamesForAngular;
 import org.eclipse.winery.repository.rest.resources._support.AbstractComponentInstanceResource;
@@ -110,14 +112,11 @@ import org.eclipse.winery.repository.rest.resources.servicetemplates.ServiceTemp
 import org.eclipse.winery.yaml.common.exception.MultiException;
 import org.eclipse.winery.yaml.converter.Converter;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.core.header.ContentDisposition;
-import com.sun.jersey.core.header.FormDataContentDisposition;
-import com.sun.jersey.multipart.FormDataBodyPart;
 import io.github.edmm.core.parser.EntityGraph;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.glassfish.jersey.media.multipart.ContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -287,15 +286,14 @@ public class RestUtils {
                 throw new WebApplicationException(e);
             }
         };
-        StringBuilder sb = new StringBuilder();
-        sb.append("attachment;filename=\"");
-        sb.append(resource.getXmlId().getEncoded());
-        sb.append(Constants.SUFFIX_CSAR);
-        sb.append("\"");
-        return Response.ok().header("Content-Disposition", sb.toString()).type(MimeTypes.MIMETYPE_ZIP).entity(so).build();
+        String sb = "attachment;filename=\"" +
+            resource.getXmlId().getEncoded() +
+            Constants.SUFFIX_CSAR +
+            "\"";
+        return Response.ok().header("Content-Disposition", sb).type(MimeTypes.MIMETYPE_ZIP).entity(so).build();
     }
 
-    public static Response getEdmmModel(TServiceTemplate element) {
+    public static Response getEdmmModel(TServiceTemplate element, boolean useAbsolutPaths) {
         IRepository repository = RepositoryFactory.getRepository();
 
         Map<QName, TNodeType> nodeTypes = repository.getQNameToElementMapping(NodeTypeId.class);
@@ -304,10 +302,8 @@ public class RestUtils {
         Map<QName, TRelationshipTypeImplementation> relationshipTypeImplementations = repository.getQNameToElementMapping(RelationshipTypeImplementationId.class);
         Map<QName, TArtifactTemplate> artifactTemplates = repository.getQNameToElementMapping(ArtifactTemplateId.class);
         EdmmManager edmmManager = repository.getEdmmManager();
-        Map<QName, EdmmType> oneToOneMappings = new HashMap<>();
-        edmmManager.getOneToOneMappings().forEach(m -> oneToOneMappings.put(m.toscaType, m.edmmType));
-        Map<QName, EdmmType> typeMappings = new HashMap<>();
-        edmmManager.getTypeMappings().forEach(m -> typeMappings.put(m.toscaType, m.edmmType));
+        Map<QName, EdmmType> oneToOneMappings = edmmManager.getOneToOneMap();
+        Map<QName, EdmmType> typeMappings = edmmManager.getTypeMap();
 
         if (nodeTypes.isEmpty()) {
             throw new IllegalStateException("No Node Types defined!");
@@ -316,7 +312,7 @@ public class RestUtils {
         }
 
         EdmmConverter edmmConverter = new EdmmConverter(nodeTypes, relationshipTypes, nodeTypeImplementations, relationshipTypeImplementations,
-            artifactTemplates, typeMappings, oneToOneMappings);
+            artifactTemplates, typeMappings, oneToOneMappings, useAbsolutPaths);
         EntityGraph transform = edmmConverter.transform(element);
         StringWriter stringWriter = new StringWriter();
         transform.generateYamlOutput(stringWriter);
@@ -351,11 +347,10 @@ public class RestUtils {
                 throw new WebApplicationException(e);
             }
         };
-        StringBuilder sb = new StringBuilder();
-        sb.append("attachment;filename=\"");
-        sb.append(name);
-        sb.append("\"");
-        return Response.ok().header("Content-Disposition", sb.toString()).type(MimeTypes.MIMETYPE_ZIP).entity(so).build();
+        String sb = "attachment;filename=\"" +
+            name +
+            "\"";
+        return Response.ok().header("Content-Disposition", sb).type(MimeTypes.MIMETYPE_ZIP).entity(so).build();
     }
 
     /**
@@ -384,14 +379,14 @@ public class RestUtils {
      * @return the absolute path for the given id
      */
     public static String getAbsoluteURL(GenericId id) {
-        return Environments.getUiConfig().getEndpoints().get("repositoryApiUrl") + "/" + Util.getUrlPath(id);
+        return Environments.getInstance().getUiConfig().getEndpoints().get("repositoryApiUrl") + "/" + Util.getUrlPath(id);
     }
 
     /**
      * @return the absolute path for the given id
      */
     public static String getAbsoluteURL(RepositoryFileReference ref) {
-        return Environments.getUiConfig().getEndpoints().get("repositoryApiUrl") + "/" + Util.getUrlPath(ref);
+        return Environments.getInstance().getUiConfig().getEndpoints().get("repositoryApiUrl") + "/" + Util.getUrlPath(ref);
     }
 
     public static URI getAbsoluteURI(GenericId id) {
@@ -471,21 +466,16 @@ public class RestUtils {
      * Checks whether a given resource (with absolute URL!) is available with a HEAD request on it.
      */
     public static boolean isResourceAvailable(String path) {
-        Client client = Client.create();
-        WebResource wr = client.resource(path);
-        boolean res;
-        try {
-            ClientResponse response = wr.head();
-            res = (response.getStatusInfo().getFamily().equals(Family.SUCCESSFUL));
-        } catch (com.sun.jersey.api.client.ClientHandlerException ex) {
-            // In the case of a java.net.ConnectException, return false
-            res = false;
-        }
-        return res;
+        Response response = ClientBuilder.newClient()
+            .target(path)
+            .request()
+            .head();
+
+        return response.getStatusInfo().getFamily().equals(Family.SUCCESSFUL);
     }
 
     public static Set<String> clean(Set<String> set) {
-        Set<String> newSet = new HashSet<String>();
+        Set<String> newSet = new HashSet<>();
 
         for (String setItem : set) {
             if (setItem != null && !setItem.trim().isEmpty() && !setItem.equals("null")) {
@@ -497,7 +487,7 @@ public class RestUtils {
     }
 
     public static Set<QName> cleanQNameSet(Set<QName> set) {
-        Set<QName> newSet = new HashSet<QName>();
+        Set<QName> newSet = new HashSet<>();
 
         for (QName setItem : set) {
             if (setItem != null && !setItem.getLocalPart().equals("null")) {
@@ -526,25 +516,27 @@ public class RestUtils {
             }
         }
 
-        oldSTModel.setId(newName);
-        oldSTModel.setName(newName + " generated from Artifact " + artifactName);
+        if (oldSTModel != null) {
+            oldSTModel.setId(newName);
+            oldSTModel.setName(newName + " generated from Artifact " + artifactName);
 
-        // remove xaaspackager tags
-        Collection<TTag> toRemove = new ArrayList<TTag>();
+            // remove xaaspackager tags
+            Collection<TTag> toRemove = new ArrayList<>();
 
-        for (TTag tag : oldSTModel.getTags().getTag()) {
-            switch (tag.getName()) {
-                case "xaasPackageNode":
-                case "xaasPackageArtifactType":
-                case "xaasPackageDeploymentArtifact":
-                    toRemove.add(tag);
-                    break;
-                default:
-                    break;
+            for (TTag tag : oldSTModel.getTags().getTag()) {
+                switch (tag.getName()) {
+                    case "xaasPackageNode":
+                    case "xaasPackageArtifactType":
+                    case "xaasPackageDeploymentArtifact":
+                        toRemove.add(tag);
+                        break;
+                    default:
+                        break;
+                }
             }
-        }
 
-        oldSTModel.getTags().getTag().removeAll(toRemove);
+            oldSTModel.getTags().getTag().removeAll(toRemove);
+        }
 
         JAXBContext context = JAXBContext.newInstance(Definitions.class);
         Marshaller m = context.createMarshaller();
@@ -884,7 +876,10 @@ public class RestUtils {
             return Response.serverError();
         }
         // set filename
-        ContentDisposition contentDisposition = ContentDisposition.type("attachment").fileName(ref.getFileName()).modificationDate(new Date(lastModified.toMillis())).build();
+        ContentDisposition contentDisposition = ContentDisposition.type("attachment")
+            .fileName(ref.getFileName())
+            .modificationDate(new Date(lastModified.toMillis()))
+            .build();
         res.header("Content-Disposition", contentDisposition);
         res.header("Cache-Control", "max-age=0");
         return res;
@@ -1032,5 +1027,40 @@ public class RestUtils {
             .stream()
             .map(id -> adapter.marshal(id.getQName()))
             .collect(Collectors.toList());
+    }
+
+    public static List<ComponentId> getListOfIds(Set<? extends DefinitionsChildId> allDefinitionsChildIds,
+                                                 boolean includeFullDefinitions, boolean includeVersions) {
+        return allDefinitionsChildIds.stream()
+            .sorted()
+            .map(id -> {
+                String name = id.getXmlId().getDecoded();
+                Definitions definitions = null;
+                WineryVersion version = null;
+                if (Util.instanceSupportsNameAttribute(id.getClass())) {
+                    TExtensibleElements element = RepositoryFactory.getRepository().getElement(id);
+                    if (element instanceof IHasName) {
+                        name = ((IHasName) element).getName();
+                    }
+                }
+                if (includeFullDefinitions) {
+                    definitions = getFullComponentData(id);
+                }
+                if (includeVersions) {
+                    version = VersionUtils.getVersion(id.getXmlId().getDecoded());
+                }
+                return new ComponentId(id.getXmlId().getDecoded(), name, id.getNamespace().getDecoded(), id.getQName(), definitions, version);
+            })
+            .collect(Collectors.toList());
+    }
+
+    public static Definitions getFullComponentData(DefinitionsChildId id) {
+        try {
+            return BackendUtils.getDefinitionsHavingCorrectImports(RepositoryFactory.getRepository(), id);
+        } catch (Exception e) {
+            RestUtils.LOGGER.error(e.getMessage(), e);
+        }
+
+        return null;
     }
 }

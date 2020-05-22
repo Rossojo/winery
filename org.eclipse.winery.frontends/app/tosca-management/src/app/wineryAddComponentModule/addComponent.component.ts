@@ -1,5 +1,5 @@
 /********************************************************************************
- * Copyright (c) 2017-2018 Contributors to the Eclipse Foundation
+ * Copyright (c) 2017-2020 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -17,21 +17,16 @@ import { SelectData } from '../model/selectData';
 import { WineryNotificationService } from '../wineryNotificationModule/wineryNotification.service';
 import { ToscaTypes } from '../model/enums';
 import { Router } from '@angular/router';
-import { NgForm } from '@angular/forms';
 import { Utils } from '../wineryUtils/utils';
-import { isNullOrUndefined } from 'util';
 import { SectionData } from '../section/sectionData';
 import { ModalDirective, TooltipConfig } from 'ngx-bootstrap';
-import { WineryNamespaceSelectorComponent } from '../wineryNamespaceSelector/wineryNamespaceSelector.component';
 import { InheritanceService } from '../instance/sharedComponents/inheritance/inheritance.service';
 import { WineryVersion } from '../model/wineryVersion';
 import { AddComponentValidation } from './addComponentValidation';
 import { HttpErrorResponse, HttpResponse } from '@angular/common/http';
 import { ExistService } from '../wineryUtils/existService';
-
-export function getToolTip(): TooltipConfig {
-    return Object.assign(new TooltipConfig(), { placement: 'right' });
-}
+import { backendBaseURL } from '../configuration';
+import { WineryAddComponentDataComponent } from '../wineryAddComponentDataModule/addComponentData.component';
 
 @Component({
     selector: 'winery-add-component',
@@ -39,10 +34,6 @@ export function getToolTip(): TooltipConfig {
     providers: [
         SectionService,
         InheritanceService,
-        {
-            provide: TooltipConfig,
-            useFactory: getToolTip
-        }
     ]
 })
 
@@ -70,13 +61,13 @@ export class WineryAddComponent {
 
     types: SelectData[];
 
-    @ViewChild('addComponentForm') addComponentForm: NgForm;
     @ViewChild('addModal') addModal: ModalDirective;
-    @ViewChild('namespaceInput') namespaceInput: WineryNamespaceSelectorComponent;
+    @ViewChild('addComponentData') addComponentData: WineryAddComponentDataComponent;
     useStartNamespace = true;
 
     private readonly storageKey = 'hideVersionHelp';
     collapseVersioning: boolean;
+    valid: boolean;
 
     constructor(private sectionService: SectionService,
                 private existService: ExistService,
@@ -90,7 +81,7 @@ export class WineryAddComponent {
     onAdd(componentType?: SelectData) {
         const typesUrl = Utils.getTypeOfTemplateOrImplementation(this.toscaType);
         this.addModalType = Utils.getToscaTypeNameFromToscaType(this.toscaType);
-        this.useStartNamespace = !(!isNullOrUndefined(this.namespace) && this.namespace.length > 0);
+        this.useStartNamespace = !(this.namespace && this.namespace.length > 0);
 
         this.sectionService.setPath(this.toscaType);
 
@@ -99,7 +90,7 @@ export class WineryAddComponent {
             this.types = [componentType];
         }
 
-        if (!isNullOrUndefined(typesUrl) && !componentType) {
+        if (typesUrl && !componentType) {
             this.loading = true;
             this.typeRequired = true;
             this.sectionService.getSectionData('/' + typesUrl + '?grouped=angularSelect')
@@ -119,7 +110,6 @@ export class WineryAddComponent {
                     error => this.handleError(error)
                 );
         }
-
         if (!this.loading) {
             this.showModal();
         }
@@ -173,32 +163,29 @@ export class WineryAddComponent {
             this.newComponentNamespace = this.namespace;
         } else {
             this.newComponentNamespace = '';
-
-            if (!isNullOrUndefined(this.addComponentForm)) {
-                this.addComponentForm.reset();
-            }
         }
         this.change.detectChanges();
 
         this.newComponentSelectedType = this.types ?
             this.types[0].children ? this.types[0].children[0] : this.types[0]
             : null;
-        this.namespaceInput.writeValue(this.newComponentNamespace);
-
+        if (this.newComponentSelectedType) {
+            this.addComponentData.createNoteTypeImplementationName(this.newComponentSelectedType);
+        }
         this.addModal.show();
     }
 
     private handleSaveSuccess(data: HttpResponse<any>) {
         this.newComponentName = this.newComponentName.replace(/\s/g, '-');
-        const url = '/' + this.toscaType + '/'
+        const url = this.toscaType + '/'
             + encodeURIComponent(encodeURIComponent(this.newComponentNamespace)) + '/'
             + this.newComponentFinalName;
 
-        if (isNullOrUndefined(this.inheritFrom)) {
+        if (!this.inheritFrom) {
             this.notify.success('Successfully saved component ' + this.newComponentName);
             this.router.navigateByUrl(url);
         } else {
-            this.inheritanceService.saveInheritanceFromString(url, this.inheritFrom)
+            this.inheritanceService.saveInheritanceFromString(backendBaseURL + '/' + url, this.inheritFrom)
                 .subscribe(
                     inheritanceData => this.handleSaveSuccess(inheritanceData),
                     error => this.handleError(error)
@@ -214,51 +201,23 @@ export class WineryAddComponent {
         this.notify.error(error.message, error.statusText);
     }
 
-    onInputChange() {
-        this.validation = new AddComponentValidation();
-        this.newComponentFinalName = this.newComponentName;
-
-        if (this.typeRequired && isNullOrUndefined(this.newComponentSelectedType)) {
-            this.validation.noTypeAvailable = true;
-            return { noTypeAvailable: true };
-        }
-
-        if (!isNullOrUndefined(this.newComponentFinalName) && this.newComponentFinalName.length > 0) {
-            this.newComponentFinalName += WineryVersion.WINERY_NAME_FROM_VERSION_SEPARATOR + this.newComponentVersion.toString();
-            const duplicate = this.componentData.find((component) => component.name.toLowerCase() === this.newComponentFinalName.toLowerCase());
-
-            if (!isNullOrUndefined(duplicate)) {
-                const namespace = this.newComponentNamespace.endsWith('/') ? this.newComponentNamespace.slice(0, -1) : this.newComponentNamespace;
-
-                if (duplicate.namespace === namespace) {
-                    if (duplicate.name === this.newComponentFinalName) {
-                        this.validation.noDuplicatesAllowed = true;
-                        return { noDuplicatesAllowed: true };
-                    } else {
-                        this.validation.differentCaseDuplicateWarning = true;
-                    }
-                } else {
-                    this.validation.differentNamespaceDuplicateWarning = true;
-                }
-            }
-        }
-
-        if (this.newComponentVersion.componentVersion) {
-            this.validation.noUnderscoresAllowed = this.newComponentVersion.componentVersion.includes('_');
-            if (this.validation.noUnderscoresAllowed) {
-                return { noUnderscoresAllowed: true };
-            }
-        }
-
-        this.validation.noVersionProvidedWarning = isNullOrUndefined(this.newComponentVersion.componentVersion)
-            || this.newComponentVersion.componentVersion.length === 0;
-    }
-
     private handleComponentData(data: SectionData[]) {
         this.componentData = data;
 
         if (!this.typeRequired || this.types) {
             this.showModal();
         }
+    }
+
+    setNewComponentName(name: string) {
+        this.newComponentFinalName = name;
+    }
+
+    setNewComponentNamespace(namespace: string) {
+        this.newComponentNamespace = namespace;
+    }
+
+    setValid(valid: boolean) {
+        this.valid = !valid;
     }
 }

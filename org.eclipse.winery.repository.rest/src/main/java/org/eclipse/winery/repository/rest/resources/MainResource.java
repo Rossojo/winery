@@ -22,6 +22,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -33,11 +34,16 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
+import javax.xml.namespace.QName;
 
+import org.eclipse.winery.common.version.VersionUtils;
+import org.eclipse.winery.model.tosca.TServiceTemplate;
+import org.eclipse.winery.repository.export.EdmmUtils;
 import org.eclipse.winery.repository.importing.CsarImportOptions;
 import org.eclipse.winery.repository.importing.CsarImporter;
 import org.eclipse.winery.repository.importing.ImportMetaInformation;
 import org.eclipse.winery.repository.rest.RestUtils;
+import org.eclipse.winery.repository.rest.datatypes.ComponentId;
 import org.eclipse.winery.repository.rest.resources.API.APIResource;
 import org.eclipse.winery.repository.rest.resources.admin.AdminTopResource;
 import org.eclipse.winery.repository.rest.resources.compliancerules.ComplianceRulesResource;
@@ -59,8 +65,6 @@ import org.eclipse.winery.repository.rest.resources.testrefinementmodels.TestRef
 import org.eclipse.winery.repository.rest.resources.threats.ThreatsResource;
 import org.eclipse.winery.repository.rest.resources.yaml.YAMLParserResource;
 
-import com.sun.jersey.core.header.FormDataContentDisposition;
-import com.sun.jersey.multipart.FormDataParam;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -68,6 +72,8 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.ResponseHeader;
 import org.apache.commons.io.FileUtils;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -215,8 +221,8 @@ public class MainResource {
     // @formatter:off
     public Response importCSAR(
         @FormDataParam("file") InputStream uploadedInputStream, @FormDataParam("file") FormDataContentDisposition fileDetail,
-        @FormDataParam("overwrite") @ApiParam(value = "true: content of CSAR overwrites existing content. false (default): existing content is kept") Boolean overwrite,
-        @FormDataParam("validate") @ApiParam(value = "true: validates the hash of the manifest file with the one stored in the accountability layer") Boolean validate,
+        @ApiParam(value = "true: content of CSAR overwrites existing content. false (default): existing content is kept") @FormDataParam("overwrite") Boolean overwrite,
+        @ApiParam(value = "true: validates the hash of the manifest file with the one stored in the accountability layer") @FormDataParam("validate") Boolean validate,
         @Context UriInfo uriInfo) {
         LocalDateTime start = LocalDateTime.now();
         // @formatter:on
@@ -270,5 +276,21 @@ public class MainResource {
         } else {
             return Response.status(Status.BAD_REQUEST).entity(errors).build();
         }
+    }
+
+    @GET
+    @Path("toscaLightModels")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<ComponentId> getToscaLightModels() {
+        return EdmmUtils.getAllToscaLightCompliantModels().entrySet()
+            .stream()
+            .map(entry -> {
+                QName qName = entry.getKey();
+                TServiceTemplate serviceTemplate = entry.getValue();
+                return new ComponentId(qName.getLocalPart(), serviceTemplate.getName(), qName.getNamespaceURI(),
+                    qName, null, VersionUtils.getVersion(qName.getLocalPart())
+                );
+            })
+            .collect(Collectors.toList());
     }
 }
