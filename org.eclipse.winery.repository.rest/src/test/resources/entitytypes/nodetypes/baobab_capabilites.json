@@ -16,33 +16,23 @@
                     "propertyDefinitionKVList": [
                         {
                             "key": "Antioxidants",
-                            "type": "xsd:string",
-                            "description":  null,
-                            "pattern": null
+                            "type": "xsd:string"
                         },
                         {
                             "key": "VitaminC",
-                            "type": "xsd:decimal",
-                            "description":  null,
-                            "pattern": null
+                            "type": "xsd:decimal"
                         },
                         {
                             "key": "Potassium",
-                            "type": "xsd:float",
-                            "description":  null,
-                            "pattern": null
+                            "type": "xsd:float"
                         },
                         {
                             "key": "Superfood",
-                            "type": "xsd:boolean",
-                            "description":  null,
-                            "pattern": null
+                            "type": "xsd:boolean"
                         },
                         {
                             "key": "HarvestedAt",
-                            "type": "xsd:anyURI",
-                            "description":  null,
-                            "pattern": null
+                            "type": "xsd:anyURI"
                         }
                     ]
                 }

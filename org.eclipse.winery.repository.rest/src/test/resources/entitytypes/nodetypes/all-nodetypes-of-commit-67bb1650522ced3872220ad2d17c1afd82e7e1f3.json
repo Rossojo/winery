@@ -25,9 +25,7 @@
                                     "propertyDefinitionKVList": [
                                         {
                                             "key": "key",
-                                            "type": "xsd:string",
-                                            "description":  null,
-                                            "pattern": null
+                                            "type": "xsd:string"
                                         }
                                     ]
                                 }
@@ -114,15 +112,11 @@
                                     "propertyDefinitionKVList": [
                                         {
                                             "key": "key1",
-                                            "type": "xsd:string",
-                                            "description":  null,
-                                            "pattern": null
+                                            "type": "xsd:string"
                                         },
                                         {
                                             "key": "key2",
-                                            "type": "xsd:string",
-                                            "description":  null,
-                                            "pattern": null
+                                            "type": "xsd:string"
                                         }
                                     ]
                                 }
