@@ -20,10 +20,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -31,7 +28,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -40,19 +36,14 @@ import javax.xml.bind.JAXBException;
 import javax.xml.namespace.QName;
 
 import org.eclipse.winery.common.ids.definitions.ArtifactTemplateId;
-import org.eclipse.winery.common.ids.definitions.DefinitionsChildId;
 import org.eclipse.winery.common.ids.definitions.ServiceTemplateId;
-import org.eclipse.winery.common.version.WineryVersion;
 import org.eclipse.winery.model.tosca.TTag;
 import org.eclipse.winery.model.tosca.TTags;
-import org.eclipse.winery.model.tosca.TTopologyTemplate;
-import org.eclipse.winery.model.tosca.utils.ModelUtilities;
 import org.eclipse.winery.repository.backend.BackendUtils;
 import org.eclipse.winery.repository.rest.RestUtils;
 import org.eclipse.winery.repository.rest.resources._support.AbstractComponentInstanceResource;
 import org.eclipse.winery.repository.rest.resources._support.AbstractComponentsWithoutTypeReferenceResource;
 import org.eclipse.winery.repository.rest.resources._support.CreateFromArtifactApiData;
-import org.eclipse.winery.repository.rest.resources._support.ResourceResult;
 
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
@@ -108,7 +99,7 @@ public class ServiceTemplatesResource extends AbstractComponentsWithoutTypeRefer
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public Response createFromArtifact(@FormDataParam("file") InputStream uploadedInputStream,
                                        @FormDataParam("file") FormDataContentDisposition fileDetail,
-                                       @FormDataParam("file") FormDataBodyPart body, 
+                                       @FormDataParam("file") FormDataBodyPart body,
                                        @FormDataParam("artifactType") QName artifactType,
                                        @FormDataParam("nodeTypes") List<FormDataBodyPart> nodeTypesList,
                                        @FormDataParam("infrastructureNodeType") QName infrastructureNodeType,
@@ -234,55 +225,6 @@ public class ServiceTemplatesResource extends AbstractComponentsWithoutTypeRefer
             }
         }
         return xaasPackages;
-    }
-    
-    @Path("createtemporaryclone")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @POST
-    public ServiceTemplateId createTemporaryClone(
-        TTopologyTemplate topologyTemplate,
-        @QueryParam("namespace") String namespace,
-        @QueryParam("id") String id
-    ) throws Exception {
-        ServiceTemplateResource sourceTemplate = this.getComponentInstanceResource(namespace, id);
-        String oldId = sourceTemplate.getId().getXmlId().getDecoded();
-        final String tempPrefix = "temp";
-
-        final Pattern TEMP_PATTERN = Pattern.compile("^(.*?)(_temp([0-9]+))?$");
-        final int BASE_ID_GROUP = 1;
-        final int TEMP_VERSION_GROUP_EXISTS = 2;
-        final int TEMP_VERSION_GROUP = 3;
-        Matcher m = TEMP_PATTERN.matcher(oldId);
-        int tempVersion = 0;
-        String newId = oldId;
-
-        if (m.find() && Objects.nonNull(m.group(TEMP_VERSION_GROUP_EXISTS))) {
-            tempVersion = Integer.parseInt(m.group(TEMP_VERSION_GROUP)) + 1;
-            newId = m.group(BASE_ID_GROUP) + WineryVersion.WINERY_NAME_FROM_VERSION_SEPARATOR + tempPrefix + tempVersion;
-        } else {
-            newId += WineryVersion.WINERY_NAME_FROM_VERSION_SEPARATOR + tempPrefix + tempVersion;
-        }
-
-        DefinitionsChildId newComponent = BackendUtils.getDefinitionsChildId(sourceTemplate.getId().getClass(), sourceTemplate.getId().getNamespace().getDecoded(), newId, false);
-        ResourceResult creationResult = RestUtils.duplicate(sourceTemplate.getId(), newComponent);
-
-        // If service template with tempX id already exists, increment number and try again
-        while (creationResult.getStatus() == Response.Status.CONFLICT) {
-            tempVersion++;
-            newId = m.group(BASE_ID_GROUP) + WineryVersion.WINERY_NAME_FROM_VERSION_SEPARATOR + tempPrefix + tempVersion;
-            newComponent = BackendUtils.getDefinitionsChildId(sourceTemplate.getId().getClass(), sourceTemplate.getId().getNamespace().getDecoded(), newId, false);
-            creationResult = RestUtils.duplicate(sourceTemplate.getId(), newComponent);
-        }
-
-        // set topology template
-        ServiceTemplateResource cloneTemplate = this.getComponentInstanceResource(sourceTemplate.getId().getNamespace().getEncoded(), creationResult.getId().getXmlId().getEncoded());
-        ModelUtilities.patchAnyAttributes(topologyTemplate.getNodeTemplates());
-        ModelUtilities.patchAnyAttributes(topologyTemplate.getRelationshipTemplates());
-        cloneTemplate.setTopology(topologyTemplate, null);
-        RestUtils.persist(cloneTemplate);
-
-        return (ServiceTemplateId) creationResult.getId();
     }
 
     @Path("{namespace}/{id}/")

@@ -297,28 +297,14 @@ export class BackendService {
         }
     }
 
+    /**
+     * Creates new service template version for live-modeling.
+     */
     createLiveModelingServiceTemplate(): Observable<any> {
         if (this.configuration) {
             const headers = new HttpHeaders().set('Content-Type', 'application/json');
             return this.http.post(this.configuration.parentElementUrl + 'createlivemodelingversion',
                 null,
-                { headers: headers }
-            );
-        }
-    }
-
-    /**
-     * Clones current service template and replaces its topology template. Used for live-modeling.
-     */
-    createTemporaryServiceTemplate(topologyTemplate: any): Observable<ServiceTemplateId> {
-        if (this.configuration) {
-            const topologyToBeSaved = this.prepareTopologyTemplateForExport(topologyTemplate);
-            const ns = encodeURIComponent(encodeURIComponent(this.configuration.definitionsElement.nameSpace));
-            const id = this.configuration.definitionsElement.localName;
-            const queryParams = '?namespace=' + ns + '&id=' + id;
-            const headers = new HttpHeaders().set('Content-Type', 'application/json');
-            return this.http.post<ServiceTemplateId>(this.configuration.parentUrl + 'createtemporaryclone' + queryParams,
-                topologyToBeSaved,
                 { headers: headers }
             );
         }
