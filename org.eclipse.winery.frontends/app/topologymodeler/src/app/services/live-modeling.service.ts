@@ -35,7 +35,10 @@ import { InputParametersModalComponent } from '../live-modeling/modals/input-par
 import { ToastrService } from 'ngx-toastr';
 import { NodeTemplateInstance } from '../models/container/node-template-instance.model';
 import {
-    CreateLiveModelingTemplateError, DeployInstanceError, LiveModelingError, RetrieveInputParametersError, TerminateInstanceError, TransformInstanceError,
+    CreateLiveModelingTemplateError, DeployInstanceError, LiveModelingError, NodeTemplateInstanceError, RetrieveInputParametersError,
+    ServiceTemplateInstanceError, TerminateInstanceError,
+    TimeoutError,
+    TransformInstanceError,
     UploadCsarError
 } from '../models/customErrors';
 import { AdaptationPayload } from '../models/container/adaptation-payload.model';
@@ -278,7 +281,7 @@ export class LiveModelingService {
             const csarId = this.currentCsarId;
             const serviceTemplateInstanceId = this.currentServiceTemplateInstanceId;
             const topologyTemplate = _.cloneDeep(this.currentTopologyTemplate);
-            const adaptationPayload = this.generateAdaptationPayload(nodeTemplateId, adaptationAction);
+            const adaptationPayload = this.generateAdaptationPayload(topologyTemplate, nodeTemplateId, adaptationAction);
             const workingNodeIds = _.union(adaptationPayload.source_node_templates, adaptationPayload.target_node_templates);
 
             for (const nodeId of workingNodeIds) {
@@ -286,9 +289,9 @@ export class LiveModelingService {
             }
 
             // MOCK:
-            await this.mockAdaptation(csarId, serviceTemplateInstanceId, topologyTemplate, adaptationPayload);
+            // await this.mockAdaptation(csarId, serviceTemplateInstanceId, topologyTemplate, adaptationPayload);
             // True adaptation:
-            // await this.trueAdaptation
+            await this.trueAdaptation(csarId, serviceTemplateInstanceId, nodeTemplateId, adaptationAction, adaptationPayload);
 
             for (const nodeId of workingNodeIds) {
                 this.ngRedux.dispatch(this.wineryActions.setNodeWorking(nodeId, false));
@@ -319,11 +322,26 @@ export class LiveModelingService {
         return Observable.forkJoin(observables).toPromise();
     }
 
-    private trueAdaptation(adaptationPayload: AdaptationPayload) {
-        // todo
-        // this.containerService.generateAdaptationPlan(this.currentCsarId, this.currentServiceTemplateInstanceId, adaptationPayload);
-        // execute plan
-        // wait for node instance in state
+    private async trueAdaptation(
+        csarId: string,
+        serviceTemplateInstanceId: string,
+        nodeTemplateId: string,
+        adaptationAction: AdaptationAction,
+        adaptationPayload: AdaptationPayload) {
+        const adaptationPlan = await this.containerService.generateAdaptationPlan(csarId, adaptationPayload).toPromise();
+        let parameterPayload = [];
+        if (adaptationPlan.input_parameters.length > 0) {
+            parameterPayload = await this.requestInputParameters(adaptationPlan.input_parameters);
+        }
+        const correlationId = await this.containerService.executeManagementPlan(
+            csarId, serviceTemplateInstanceId, adaptationPlan.id, parameterPayload).toPromise();
+
+        await this.waitUntilNodeTemplateInstanceIsInState(
+            csarId,
+            serviceTemplateInstanceId,
+            nodeTemplateId,
+            adaptationAction === AdaptationAction.START_NODE ? NodeTemplateInstanceStates.STARTED : NodeTemplateInstanceStates.STOPPED
+        );
     }
 
     private clearData(): void {
@@ -336,7 +354,7 @@ export class LiveModelingService {
             const resp = await this.backendService.createLiveModelingServiceTemplate().toPromise();
             this.overlayService.hideOverlay();
             return this.normalizeCsarId(resp.localname);
-        } catch (_) {
+        } catch (error) {
             throw new CreateLiveModelingTemplateError();
         }
     }
@@ -351,7 +369,7 @@ export class LiveModelingService {
             } else {
                 this.loggingService.logInfo('App found. Skipping installation');
             }
-        } catch (_) {
+        } catch (error) {
             throw new UploadCsarError();
         }
     }
@@ -410,7 +428,7 @@ export class LiveModelingService {
 
             this.loggingService.logInfo('Waiting for deployment of service template instance with id ' + newInstanceId);
 
-            await this.waitUntilInstanceIsInState(csarId, newInstanceId, ServiceTemplateInstanceStates.CREATED);
+            await this.waitUntilServiceTemplateInstanceIsInState(csarId, newInstanceId, ServiceTemplateInstanceStates.CREATED);
 
             this.loggingService.logSuccess('Successfully deployed service template instance with Id ' + newInstanceId);
             return newInstanceId;
@@ -440,7 +458,7 @@ export class LiveModelingService {
 
             this.loggingService.logInfo('Executing transformation plan with correlation id ' + correlationId);
 
-            await this.waitUntilInstanceIsInState(sourceCsarId, serviceTemplateInstanceId, ServiceTemplateInstanceStates.MIGRATED);
+            await this.waitUntilServiceTemplateInstanceIsInState(sourceCsarId, serviceTemplateInstanceId, ServiceTemplateInstanceStates.MIGRATED);
 
             const newInstanceId = await this.containerService.waitForServiceTemplateInstanceIdAfterMigration(
                 sourceCsarId, serviceTemplateInstanceId, correlationId, sourceCsarId, targetCsarId, this.pollInterval, this.pollTimeout).toPromise();
@@ -448,7 +466,7 @@ export class LiveModelingService {
             this.ngRedux.dispatch(this.liveModelingActions.setCurrentServiceTemplateInstanceId(newInstanceId));
             this.loggingService.logInfo('Waiting for transformation of service template instance with id ' + newInstanceId);
 
-            await this.waitUntilInstanceIsInState(targetCsarId, newInstanceId, ServiceTemplateInstanceStates.CREATED);
+            await this.waitUntilServiceTemplateInstanceIsInState(targetCsarId, newInstanceId, ServiceTemplateInstanceStates.CREATED);
 
             this.loggingService.logSuccess(`Successfully transformed service template instance from ${prevServiceTemplateInstanceId} to ${newInstanceId}`);
             return newInstanceId;
@@ -587,11 +605,11 @@ export class LiveModelingService {
 
             this.loggingService.logInfo(`Terminating service template instance ${serviceTemplateInstanceId}`);
 
-            await this.containerService.terminateServiceTemplateInstance(csarId, serviceTemplateInstanceId).toPromise();
+            await this.containerService.executeTerminationPlan(csarId, serviceTemplateInstanceId).toPromise();
 
             this.loggingService.logInfo(`Waiting for deletion of service template instance with instance id ${serviceTemplateInstanceId}`);
 
-            await this.waitUntilInstanceIsInState(csarId, serviceTemplateInstanceId, ServiceTemplateInstanceStates.DELETED);
+            await this.waitUntilServiceTemplateInstanceIsInState(csarId, serviceTemplateInstanceId, ServiceTemplateInstanceStates.DELETED);
 
             this.setAllNodeTemplateInstanceState(null);
             this.ngRedux.dispatch(this.liveModelingActions.setCurrentServiceTemplateInstanceId(null));
@@ -604,7 +622,7 @@ export class LiveModelingService {
     }
 
     private terminateServiceTemplateInstanceInBackground(csarId: string, serviceTemplateInstanceId: string): Subscription {
-        return this.containerService.terminateServiceTemplateInstance(csarId, serviceTemplateInstanceId).subscribe(resp => {
+        return this.containerService.executeTerminationPlan(csarId, serviceTemplateInstanceId).subscribe(resp => {
             this.toastrService.info('Instance successfully terminated');
         }, error => {
             this.toastrService.error('There was an error while terminating the service template instance');
@@ -637,7 +655,11 @@ export class LiveModelingService {
         return modalRef.content.inputParameters;
     }
 
-    private waitUntilInstanceIsInState(csarId: string, serviceTemplateInstanceId: string, desiredInstanceState: ServiceTemplateInstanceStates): Promise<any> {
+    private waitUntilServiceTemplateInstanceIsInState(
+        csarId: string,
+        serviceTemplateInstanceId: string,
+        desiredInstanceState: ServiceTemplateInstanceStates
+    ): Promise<any> {
         return new Promise<any>((resolve, reject) => {
             Observable.timer(0, this.pollInterval).pipe(
                 concatMap(() => this.containerService.getServiceTemplateInstanceState(csarId, serviceTemplateInstanceId)),
@@ -647,11 +669,34 @@ export class LiveModelingService {
             ).subscribe(state => {
                 this.ngRedux.dispatch(this.liveModelingActions.setCurrentServiceTemplateInstanceState(state));
                 if (state === ServiceTemplateInstanceStates.ERROR) {
-                    reject(new Error('There was an error during the operation'));
+                    reject(new ServiceTemplateInstanceError());
                 }
             }, () => {
-                this.loggingService.logError('There was an error while polling service template state');
-                reject(new Error('Timeout when waiting for instance state'));
+                reject(new TimeoutError());
+            }, () => {
+                resolve();
+            });
+        });
+    }
+
+    private waitUntilNodeTemplateInstanceIsInState(
+        csarId: string,
+        serviceTemplateInstanceId: string,
+        nodeTemplateId: string,
+        desiredInstanceState: NodeTemplateInstanceStates
+    ): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+            Observable.timer(0, this.pollInterval).pipe(
+                concatMap(() => this.containerService.getNodeTemplateInstanceState(csarId, serviceTemplateInstanceId, nodeTemplateId)),
+                distinctUntilChanged(),
+                timeout(this.pollTimeout),
+                takeWhile(state => state !== desiredInstanceState && state !== NodeTemplateInstanceStates.ERROR, true),
+            ).subscribe(state => {
+                if (state === NodeTemplateInstanceStates.ERROR) {
+                    reject(new NodeTemplateInstanceError());
+                }
+            }, () => {
+                reject(new TimeoutError());
             }, () => {
                 resolve();
             });
@@ -668,9 +713,7 @@ export class LiveModelingService {
         this.setAllNodeTemplateInstanceState(null);
     }
 
-    private generateAdaptationPayload(nodeTemplateId: string, adaptationAction: AdaptationAction): AdaptationPayload {
-        const topologyTemplate = _.cloneDeep(this.currentTopologyTemplate);
-
+    private generateAdaptationPayload(topologyTemplate: TTopologyTemplate, nodeTemplateId: string, adaptationAction: AdaptationAction): AdaptationPayload {
         // Calculate source node templates
         const source_node_templates = [];
         for (const nodeTemplate of topologyTemplate.nodeTemplates) {

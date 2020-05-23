@@ -67,3 +67,26 @@ export class TerminateInstanceError extends LiveModelingError {
     }
 }
 
+export class ServiceTemplateInstanceError extends LiveModelingError {
+    constructor() {
+        super();
+        Object.setPrototypeOf(this, ServiceTemplateInstanceError.prototype);
+        this.message = 'The service template instance encountered an error';
+    }
+}
+
+export class NodeTemplateInstanceError extends LiveModelingError {
+    constructor() {
+        super();
+        Object.setPrototypeOf(this, NodeTemplateInstanceError.prototype);
+        this.message = 'The node template instance encountered an error';
+    }
+}
+
+export class TimeoutError extends LiveModelingError {
+    constructor() {
+        super();
+        Object.setPrototypeOf(this, TimeoutError.prototype);
+        this.message = 'The operation has timed out';
+    }
+}

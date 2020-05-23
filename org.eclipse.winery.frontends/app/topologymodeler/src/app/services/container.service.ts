@@ -63,7 +63,7 @@ export class ContainerService {
         { 'name': 'csarEntrypoint', 'type': 'String', 'required': 'YES' },
         { 'name': 'CorrelationID', 'type': 'String', 'required': 'YES' }
     ];
-    private readonly baseTerminationPayload = [
+    private readonly baseManagementPayload = [
         { 'name': 'instanceDataAPIUrl', 'type': 'String', 'required': 'YES' },
         { 'name': 'OpenTOSCAContainerAPIServiceInstanceURL', 'type': 'String', 'required': 'YES' },
         { 'name': 'CorrelationID', 'type': 'String', 'required': 'YES' }
@@ -224,9 +224,9 @@ export class ContainerService {
         );
     }
 
-    public terminateServiceTemplateInstance(csarId: string, serviceTemplateInstanceId: string): Observable<string> {
+    public executeTerminationPlan(csarId: string, serviceTemplateInstanceId: string): Observable<string> {
         return this.getTerminationPlan(csarId, serviceTemplateInstanceId).pipe(
-            concatMap(resp => this.http.post(resp._links['instances'].href, this.baseTerminationPayload, {
+            concatMap(resp => this.http.post(resp._links['instances'].href, this.baseManagementPayload, {
                 headers: new HttpHeaders({
                     'Content-Type': 'application/json'
                 }),
@@ -387,14 +387,42 @@ export class ContainerService {
         );
     }
 
+    public executeManagementPlan(
+        csarId: string,
+        serviceTemplateInstanceId: string,
+        planId: string,
+        inputParameters: InputParameter[]
+    ): Observable<string> {
+        const payload = [...inputParameters, ...this.baseManagementPayload];
+
+        return this.getManagementPlan(csarId, serviceTemplateInstanceId, planId).pipe(
+            concatMap(resp => this.http.post(resp._links['instances'].href,
+                payload,
+                {
+                    headers: new HttpHeaders({
+                        'Content-Type': 'application/json'
+                    }),
+                    responseType: 'text'
+                }))
+        );
+    }
+
     private getTerminationPlan(csarId: string, serviceTemplateInstanceId: string): Observable<Plan> {
         return this.getManagementPlans(csarId, serviceTemplateInstanceId).pipe(
             map(resp => resp.find(plan => plan.plan_type === PlanTypes.TerminationPlan))
         );
     }
 
-    public generateAdaptationPlan(csarId: string, serviceTemplateInstanceId: string, payload: AdaptationPayload) {
-        // todo
+    public generateAdaptationPlan(csarId: string, payload: AdaptationPayload): Observable<Plan> {
+        return this.getCsar(csarId).pipe(
+            concatMap(resp => this.http.post<Plan>(this.combineURLs(resp._links['servicetemplate'].href, 'transform'), payload, this.headerContentJSON)),
+            map(resp => {
+                return {
+                    ...resp,
+                    input_parameters: resp.input_parameters.filter(input => this.hidden_input_parameters.indexOf(input.name) === -1)
+                };
+            })
+        );
     }
 
     public updateNodeTemplateInstanceState(
