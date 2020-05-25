@@ -125,45 +125,54 @@ export class LiveModelingSidebarComponent implements OnInit, OnDestroy {
     }
 
     async handleDeploy() {
-        const resp = await this.openConfirmModal('Deploy new Instance', `Do you want to deploy a new instance of type ${this.currentCsarId}?`, true);
-        if (resp) {
-            this.liveModelingService.deploy();
+        const resp = await this.openConfirmModal(
+            'Deploy new Instance',
+            `Are you sure you want to deploy a new instance?`,
+            true,
+            true
+        );
+        if (resp.confirmed) {
+            this.liveModelingService.deploy(resp.deployInstance);
         }
     }
 
-    isDeployDisabled() {
-        return this.serviceTemplateInstanceId ||
-            this.liveModelingState !== LiveModelingStates.TERMINATED && this.liveModelingState !== LiveModelingStates.ERROR;
+    isDeployEnabled() {
+        return this.liveModelingState === LiveModelingStates.TERMINATED || this.liveModelingState === LiveModelingStates.ERROR;
     }
 
     async handleRedeploy() {
-        const resp = await this.openConfirmModal('Redeploy new Instance', `Do you want to redeploy a new instance?`, true);
-        if (resp) {
-            this.liveModelingService.redeploy();
+        const resp = await this.openConfirmModal(
+            'Redeploy new Instance',
+            `Are you sure you want to redeploy a new instance?`,
+            true,
+            true
+        );
+        if (resp.confirmed) {
+            this.liveModelingService.redeploy(resp.deployInstance);
         }
     }
 
-    isRedeployDisabled() {
-        return this.liveModelingState !== LiveModelingStates.ERROR && this.liveModelingState !== LiveModelingStates.TERMINATED;
+    isRedeployEnabled() {
+        return this.liveModelingState === LiveModelingStates.TERMINATED || this.liveModelingState === LiveModelingStates.ERROR;
     }
 
     async handleTerminate() {
         const resp = await this.openConfirmModal('Terminate Instance', 'Are you sure you want to terminate the instance?');
-        if (resp) {
+        if (resp.confirmed) {
             this.liveModelingService.terminate();
         }
     }
 
-    isTerminateDisabled() {
-        return this.liveModelingState !== LiveModelingStates.ENABLED;
+    isTerminateEnabled() {
+        return this.liveModelingState === LiveModelingStates.ENABLED;
     }
 
     handleRefresh() {
         this.liveModelingService.update();
     }
 
-    isRefreshDisabled() {
-        return this.liveModelingState !== LiveModelingStates.ENABLED;
+    isRefreshEnabled() {
+        return this.liveModelingState === LiveModelingStates.ENABLED;
     }
 
     async handleReconfiguration() {
@@ -178,7 +187,7 @@ export class LiveModelingSidebarComponent implements OnInit, OnDestroy {
         if (modalRef.content.selectedOption !== ReconfigureOptions.NONE) {
             switch (modalRef.content.selectedOption) {
                 case ReconfigureOptions.REDEPLOY: {
-                    this.liveModelingService.redeploy();
+                    this.liveModelingService.redeploy(modalRef.content.deployInstance);
                     return;
                 }
                 case ReconfigureOptions.TRANSFORM: {
@@ -189,10 +198,8 @@ export class LiveModelingSidebarComponent implements OnInit, OnDestroy {
         }
     }
 
-    isReconfigurationDisabled() {
-        return !(this.liveModelingState === LiveModelingStates.ENABLED &&
-            !this.unsavedChanges &&
-            this.deploymentChanges);
+    isReconfigurationEnabled() {
+        return this.liveModelingState === LiveModelingStates.ENABLED && !this.unsavedChanges && this.deploymentChanges;
     }
 
     toggleLogs() {
@@ -258,11 +265,12 @@ export class LiveModelingSidebarComponent implements OnInit, OnDestroy {
         this.modalRef = this.modalService.show(modal, { ...defaultConfig, ...options });
     }
 
-    async openConfirmModal(title: string, content: string, showWarning = false): Promise<boolean> {
+    async openConfirmModal(title: string, content: string, showWarning = false, showDeployOption = false): Promise<any> {
         const initialState = {
             title: title,
             content: content,
-            showWarning: showWarning
+            showWarning: showWarning,
+            showDeployOption: showDeployOption
         };
         const modalRef = this.modalService.show(ConfirmModalComponent, { initialState, backdrop: 'static' });
         await new Promise(resolve => {
@@ -272,7 +280,7 @@ export class LiveModelingSidebarComponent implements OnInit, OnDestroy {
             });
         });
 
-        return modalRef.content.confirmed;
+        return { 'confirmed': modalRef.content.confirmed, 'deployInstance': modalRef.content.deployInstance };
     }
 
     dismissModal() {

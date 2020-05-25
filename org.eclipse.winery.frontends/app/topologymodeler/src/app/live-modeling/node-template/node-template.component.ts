@@ -18,7 +18,7 @@ import { IWineryState } from '../../redux/store/winery.store';
 import { NodeTemplateInstance } from '../../models/container/node-template-instance.model';
 import { LiveModelingService } from '../../services/live-modeling.service';
 import { distinctUntilChanged, switchMap, tap } from 'rxjs/operators';
-import { AdaptationAction, NodeTemplateInstanceStates } from '../../models/enums';
+import { AdaptationAction, LiveModelingStates, NodeTemplateInstanceStates } from '../../models/enums';
 import { ConfirmModalComponent } from '../modals/confirm-modal/confirm-modal.component';
 import { BsModalService } from 'ngx-bootstrap';
 import { WineryActions } from '../../redux/actions/winery.actions';
@@ -32,11 +32,18 @@ export class NodeTemplateComponent implements OnInit, OnDestroy {
 
     subscriptions: Array<Subscription> = [];
     fetchingData = false;
-    nodeTemplateInstance: NodeTemplateInstance;
-    NodeTemplateInstanceStates = NodeTemplateInstanceStates;
+
+    selectedNodeId: string;
+    selectedNodeState: string;
+    nodeTemplateInstanceData: NodeTemplateInstance;
+
+    liveModelingState: LiveModelingStates;
+    deploymentChanges: boolean;
+
     nodeSubject = new Subject<string>();
 
     objectKeys = Object.keys;
+    NodeTemplateInstanceStates = NodeTemplateInstanceStates;
 
     constructor(private ngRedux: NgRedux<IWineryState>,
                 private liveModelingService: LiveModelingService,
@@ -54,30 +61,62 @@ export class NodeTemplateComponent implements OnInit, OnDestroy {
                 }
             }));
 
+        this.subscriptions.push(this.ngRedux.select(state => state.liveModelingState.state)
+            .subscribe(state => {
+                this.liveModelingState = state;
+            }));
+
+        this.subscriptions.push(this.ngRedux.select(state => state.liveModelingState.deploymentChanges)
+            .subscribe(deploymentChanges => {
+                this.deploymentChanges = deploymentChanges;
+            }));
+
         this.subscriptions.push(this.nodeSubject.pipe(
             distinctUntilChanged(),
+            tap(nodeId => {
+                this.selectedNodeId = nodeId;
+                this.selectedNodeState = NodeTemplateInstanceStates.NOT_AVAILABLE;
+            }),
             tap(_ => this.fetchingData = true),
             switchMap(nodeId => {
                 return nodeId ? this.liveModelingService.fetchNodeTemplateInstanceData(nodeId) : of(null);
             })
         ).subscribe(resp => {
-            this.fetchingData = false;
             this.updateNodeInstanceData(resp);
+            this.fetchingData = false;
         }));
 
     }
 
-    private updateNodeInstanceData(nodeTemplateInstance: NodeTemplateInstance): void {
-        this.nodeTemplateInstance = nodeTemplateInstance ? nodeTemplateInstance : null;
+    private updateNodeInstanceData(nodeTemplateInstanceData: NodeTemplateInstance): void {
+        if (nodeTemplateInstanceData) {
+            this.nodeTemplateInstanceData = nodeTemplateInstanceData;
+            this.selectedNodeState = nodeTemplateInstanceData.state;
+        } else {
+            this.nodeTemplateInstanceData = null;
+            this.selectedNodeState = NodeTemplateInstanceStates.NOT_AVAILABLE;
+        }
+    }
+
+    enableControlButtons(): boolean {
+        return this.selectedNodeId &&
+            !this.fetchingData &&
+            this.liveModelingState === LiveModelingStates.ENABLED &&
+            !this.deploymentChanges && (
+                this.selectedNodeState === NodeTemplateInstanceStates.NOT_AVAILABLE ||
+                this.selectedNodeState === NodeTemplateInstanceStates.STARTED ||
+                this.selectedNodeState === NodeTemplateInstanceStates.STOPPED ||
+                this.selectedNodeState === NodeTemplateInstanceStates.DELETED
+            );
     }
 
     async handleStartNode() {
         const resp = await this.openConfirmModal(
             'Start Node Instance',
-            `Are you sure you want to start this node instance ${this.nodeTemplateInstance.node_template_id}?
+            `Are you sure you want to start this node instance ${this.selectedNodeId}?
             This might affect other node instances' state too.`);
         if (resp) {
-            this.liveModelingService.adapt(this.nodeTemplateInstance.node_template_id, AdaptationAction.START_NODE);
+            this.liveModelingService.adapt(this.selectedNodeId, AdaptationAction.START_NODE);
             this.unselectNodeTemplate();
         }
     }
@@ -85,10 +124,10 @@ export class NodeTemplateComponent implements OnInit, OnDestroy {
     async handleStopNode() {
         const resp = await this.openConfirmModal(
             'Stop Node Instance',
-            `Are you sure you want to stop the node instance ${this.nodeTemplateInstance.node_template_id}?
+            `Are you sure you want to stop the node instance ${this.selectedNodeId}?
             This might affect other node instances' state too.`);
         if (resp) {
-            this.liveModelingService.adapt(this.nodeTemplateInstance.node_template_id, AdaptationAction.STOP_NODE);
+            this.liveModelingService.adapt(this.selectedNodeId, AdaptationAction.STOP_NODE);
             this.unselectNodeTemplate();
         }
     }

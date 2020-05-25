@@ -19,7 +19,7 @@
     </div>
 </ng-template>
 <ng-template #content>
-    <div *ngIf="nodeTemplateInstance; then instanceData else placeholder"></div>
+    <div *ngIf="nodeTemplateInstanceData; then instanceData else placeholder"></div>
     <ng-template #instanceData>
         <div class="table-scrollable">
             <table class="parameters-table">
@@ -30,31 +30,32 @@
                 </tr>
                 </thead>
                 <tbody>
-                <tr *ngFor="let key of objectKeys(nodeTemplateInstance)">
+                <tr *ngFor="let key of objectKeys(nodeTemplateInstanceData)">
                     <td>{{key}}</td>
-                    <td>{{nodeTemplateInstance[key] || '(empty)'}}</td>
+                    <td>{{nodeTemplateInstanceData[key] || '(empty)'}}</td>
                 </tr>
                 </tbody>
             </table>
         </div>
-        <div class="d-flex m-2">
-            <ng-template *ngIf="nodeTemplateInstance.state === NodeTemplateInstanceStates.STOPPED; then startNode else stopNode"></ng-template>
-            <ng-template #startNode>
-                <button class="btn-live-modeling btn-live-modeling-start"
-                        (click)="handleStartNode()">
-                    <i class="fa fa-play-circle"></i>
-                    START NODE
-                </button>
-            </ng-template>
-            <ng-template #stopNode>
-                <button class="btn-live-modeling btn-live-modeling-stop"
-                        (click)="handleStopNode()">
-                    <i class="fa fa-stop-circle"></i>
-                    STOP NODE
-                </button>
-            </ng-template>
-        </div>
     </ng-template>
+    <div *ngIf="enableControlButtons()" class="d-flex m-2">
+        <ng-template
+            *ngIf="selectedNodeState === NodeTemplateInstanceStates.STARTED; then stopNode else startNode"></ng-template>
+        <ng-template #startNode>
+            <button class="btn-live-modeling btn-live-modeling-start"
+                    (click)="handleStartNode()">
+                <i class="fa fa-play-circle"></i>
+                START NODE
+            </button>
+        </ng-template>
+        <ng-template #stopNode>
+            <button class="btn-live-modeling btn-live-modeling-stop"
+                    (click)="handleStopNode()">
+                <i class="fa fa-stop-circle"></i>
+                STOP NODE
+            </button>
+        </ng-template>
+    </div>
     <ng-template #placeholder>
         <div style="padding: 0.5em; font-size: xx-small; font-style: italic; text-align: center">
             No node template selected or found

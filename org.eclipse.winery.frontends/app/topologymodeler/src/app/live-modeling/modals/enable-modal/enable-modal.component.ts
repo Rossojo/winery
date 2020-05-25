@@ -33,6 +33,8 @@ export class EnableModalComponent {
     testingContainerUrl = false;
     isContainerUrlInvalid: boolean;
 
+    deployInstance = true;
+
     constructor(private bsModalRef: BsModalRef,
                 private liveModelingService: LiveModelingService,
                 private backendService: BackendService,
@@ -55,7 +57,7 @@ export class EnableModalComponent {
         try {
             const isContainerUrlValid = await this.checkContainerUrl();
             if (isContainerUrlValid) {
-                this.liveModelingService.enable(this.containerUrl);
+                this.liveModelingService.enable(this.containerUrl, this.deployInstance);
                 this.dismissModal();
             } else {
                 this.isContainerUrlInvalid = true;

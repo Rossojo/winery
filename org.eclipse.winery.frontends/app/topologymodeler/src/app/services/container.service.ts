@@ -138,6 +138,20 @@ export class ContainerService {
         );
     }
 
+    public initializeServiceTemplateInstance(csarId: string, correlationId: string): Observable<string> {
+        return this.getServiceTemplate(csarId).pipe(
+            concatMap(resp => this.http.post(resp._links['instances'].href, { 'correlation_id': correlationId }, {
+                headers: new HttpHeaders({
+                    'Content-Type': 'application/json'
+                }),
+                responseType: 'text'
+            })),
+            map(resp => resp.replace(/"|%22/g, '')),
+            concatMap(resp => this.http.get<ServiceTemplateInstance>(resp)),
+            map(resp => resp.id.toString())
+        );
+    }
+
     public waitForServiceTemplateInstanceIdAfterDeployment(csarId: string, correlationId: string, interval: number, timeout: number): Observable<string> {
         return Observable.timer(0, interval)
             .concatMap(() => this.getServiceTemplateInstanceIdAfterDeployment(csarId, correlationId))
@@ -194,7 +208,8 @@ export class ContainerService {
 
     public getNodeTemplateInstanceState(csarId: string, serviceTemplateInstanceId: string, nodeTemplateId: string): Observable<NodeTemplateInstanceStates> {
         return this.getNodeTemplateInstance(csarId, serviceTemplateInstanceId, nodeTemplateId).pipe(
-            map(resp => NodeTemplateInstanceStates[resp.state])
+            map(resp => NodeTemplateInstanceStates[resp.state]),
+            catchError(() => of(NodeTemplateInstanceStates.NOT_AVAILABLE))
         );
     }
 
@@ -216,10 +231,9 @@ export class ContainerService {
             // TODO: temporary until parsing error fixed
             concatMap(resp => this.http.get<NodeTemplateInstanceResources>(
                 resp.find(template => template.id.toString() === nodeTemplateId)._links['self'].href + '/instances', this.headerAcceptJSON)
-            ), // todo temp
+            ),
             concatMap(resp => this.http.get<NodeTemplateInstance>(
-                resp.node_template_instances.find(instance =>
-                    instance.service_template_instance_id.toString() === serviceTemplateInstanceId)._links['self'].href, this.headerAcceptJSON)
+                resp.node_template_instances[resp.node_template_instances.length - 1]._links['self'].href, this.headerAcceptJSON)
             )
         );
     }

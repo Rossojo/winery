@@ -76,10 +76,10 @@
                 </div>
                 <winery-live-modeling-sidebar-progressbar></winery-live-modeling-sidebar-progressbar>
                 <div class="d-flex mt-2">
-                    <ng-template *ngIf="this.deploymentChanges; then redeployButton else deployButton"></ng-template>
+                    <ng-template *ngIf="this.deploymentChanges || !this.currentCsarId; then redeployButton else deployButton"></ng-template>
                     <ng-template #deployButton>
                         <button class="btn-live-modeling btn-live-modeling-deploy"
-                                [disabled]="isDeployDisabled()"
+                                [disabled]="!isDeployEnabled()"
                                 (click)="handleDeploy()">
                             <i class="fa fa-plus"></i>
                             DEPLOY
@@ -87,7 +87,7 @@
                     </ng-template>
                     <ng-template #redeployButton>
                         <button class="btn-live-modeling btn-live-modeling-deploy"
-                                [disabled]="isRedeployDisabled()"
+                                [disabled]="!isRedeployEnabled()"
                                 (click)="handleRedeploy()">
                             <i class="fa fa-plus"></i>
                             REDEPLOY
@@ -95,7 +95,7 @@
                     </ng-template>
                     <div style="width: 5px"></div>
                     <button class="btn-live-modeling btn-live-modeling-terminate"
-                            [disabled]="isTerminateDisabled()"
+                            [disabled]="!isTerminateEnabled()"
                             (click)="handleTerminate()">
                         <i class="fa fa-times"></i>
                         TERMINATE
@@ -103,14 +103,14 @@
                 </div>
                 <div class="d-flex mt-2">
                     <button class="btn-live-modeling"
-                            [disabled]="isRefreshDisabled()"
+                            [disabled]="!isRefreshEnabled()"
                             (click)="handleRefresh()">
                         <i class="fa fa-refresh"></i>
                         REFRESH
                     </button>
                     <div style="width: 5px"></div>
                     <button class="btn-live-modeling"
-                            [disabled]="isReconfigurationDisabled()"
+                            [disabled]="!isReconfigurationEnabled()"
                             (click)="handleReconfiguration()">
                         <i class="fa fa-cogs"></i>
                         RECONFIGURATE

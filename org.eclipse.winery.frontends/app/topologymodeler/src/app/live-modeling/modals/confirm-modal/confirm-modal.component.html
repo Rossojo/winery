@@ -28,12 +28,20 @@
             <span>There are misconfigurations in the current topology</span>
         </div>
     </div>
-    <div class="px-2">
-        <span>{{content}}</span>
+    <p>{{content}}</p>
+    <div *ngIf="this.showDeployOption">
+        <label style="font-weight: normal; font-style: oblique; cursor: pointer">
+            <input
+                style="cursor: pointer"
+                type="checkbox"
+                name="deployInstance"
+                [(ngModel)]="deployInstance"/>
+            Deploy instance after model upload
+        </label>
     </div>
 </div>
 <div class="modal-footer">
-    <button type="button" class="btn btn-info"
+    <button type="button" class="btn btn-default"
             (click)="cancel()">
         No
     </button>

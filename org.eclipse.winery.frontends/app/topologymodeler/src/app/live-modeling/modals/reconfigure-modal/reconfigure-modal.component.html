@@ -50,9 +50,19 @@
             <p class="desc">Transform current instance so it matches the current topology.</p>
         </div>
     </div>
+    <div *ngIf="this.selectedOption === ReconfigureOptions.REDEPLOY">
+        <label style="font-weight: normal; font-style: oblique; cursor: pointer">
+            <input
+                style="cursor: pointer"
+                type="checkbox"
+                name="deployInstance"
+                [(ngModel)]="deployInstance"/>
+            Deploy instance after model upload
+        </label>
+    </div>
 </div>
 <div class="modal-footer">
-    <button type="button" class="btn btn-danger"
+    <button type="button" class="btn btn-default"
             (click)="cancel()">
         Cancel
     </button>

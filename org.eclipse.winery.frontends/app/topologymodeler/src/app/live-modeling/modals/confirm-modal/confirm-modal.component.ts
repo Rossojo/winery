@@ -25,6 +25,9 @@ export class ConfirmModalComponent implements OnInit {
     title: string;
     content: string;
     showWarning = false;
+    showDeployOption = false;
+
+    deployInstance = true;
     confirmed = false;
 
     constructor(private bsModalRef: BsModalRef,
