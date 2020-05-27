@@ -132,7 +132,7 @@ export class LiveModelingSidebarComponent implements OnInit, OnDestroy {
             true
         );
         if (resp.confirmed) {
-            this.liveModelingService.deploy(resp.deployInstance);
+            this.liveModelingService.deploy(resp.startInstance);
         }
     }
 
@@ -148,7 +148,7 @@ export class LiveModelingSidebarComponent implements OnInit, OnDestroy {
             true
         );
         if (resp.confirmed) {
-            this.liveModelingService.redeploy(resp.deployInstance);
+            this.liveModelingService.redeploy(resp.startInstance);
         }
     }
 
@@ -187,7 +187,7 @@ export class LiveModelingSidebarComponent implements OnInit, OnDestroy {
         if (modalRef.content.selectedOption !== ReconfigureOptions.NONE) {
             switch (modalRef.content.selectedOption) {
                 case ReconfigureOptions.REDEPLOY: {
-                    this.liveModelingService.redeploy(modalRef.content.deployInstance);
+                    this.liveModelingService.redeploy(modalRef.content.startInstance);
                     return;
                 }
                 case ReconfigureOptions.TRANSFORM: {
@@ -265,12 +265,12 @@ export class LiveModelingSidebarComponent implements OnInit, OnDestroy {
         this.modalRef = this.modalService.show(modal, { ...defaultConfig, ...options });
     }
 
-    async openConfirmModal(title: string, content: string, showWarning = false, showDeployOption = false): Promise<any> {
+    async openConfirmModal(title: string, content: string, showWarning = false, showStartOption = false): Promise<any> {
         const initialState = {
             title: title,
             content: content,
             showWarning: showWarning,
-            showDeployOption: showDeployOption
+            showStartOption: showStartOption
         };
         const modalRef = this.modalService.show(ConfirmModalComponent, { initialState, backdrop: 'static' });
         await new Promise(resolve => {
@@ -280,7 +280,7 @@ export class LiveModelingSidebarComponent implements OnInit, OnDestroy {
             });
         });
 
-        return { 'confirmed': modalRef.content.confirmed, 'deployInstance': modalRef.content.deployInstance };
+        return { 'confirmed': modalRef.content.confirmed, 'startInstance': modalRef.content.startInstance };
     }
 
     dismissModal() {

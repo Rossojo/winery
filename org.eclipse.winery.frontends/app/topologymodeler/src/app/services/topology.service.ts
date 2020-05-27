@@ -20,6 +20,7 @@ import { TTopologyTemplate } from '../models/ttopology-template';
 import { WineryActions } from '../redux/actions/winery.actions';
 import { LiveModelingStates } from '../models/enums';
 import { LiveModelingActions } from '../redux/actions/live-modeling.actions';
+import { BackendService } from './backend.service';
 
 @Injectable()
 export class TopologyService {
@@ -31,7 +32,8 @@ export class TopologyService {
 
     constructor(private ngRedux: NgRedux<IWineryState>,
                 private wineryActions: WineryActions,
-                private liveModelingActions: LiveModelingActions) {
+                private liveModelingActions: LiveModelingActions,
+                private backendService: BackendService) {
         this.ngRedux.select(state => state.wineryState.currentJsonTopology)
             .subscribe(topologyTemplate => {
                 this.currentJsonTopologyTemplate = topologyTemplate;
@@ -68,7 +70,9 @@ export class TopologyService {
         if (this.liveModelingState === LiveModelingStates.DISABLED || this.liveModelingState == null) {
             return;
         }
-        const changed = TopologyTemplateUtil.hasTopologyTemplateChanged(this.currentJsonTopologyTemplate, this.deployedJsonTopologyTemplate);
-        this.ngRedux.dispatch(this.liveModelingActions.setDeploymentChanges(changed));
+        this.backendService.requestTopologyTemplate().subscribe(resp => {
+            const changed = TopologyTemplateUtil.hasTopologyTemplateChanged(resp, this.deployedJsonTopologyTemplate);
+            this.ngRedux.dispatch(this.liveModelingActions.setDeploymentChanges(changed));
+        });
     }
 }

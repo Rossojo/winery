@@ -43,7 +43,8 @@
             </p>
         </div>
         <div *ngIf="liveModelingState !== LiveModelingStates.DISABLED" class="live-modeling-sidebar-page live-page">
-            <div *ngIf="deploymentChanges && liveModelingState === LiveModelingStates.ENABLED" class="d-flex flex-column warning-changes">
+            <div *ngIf="(deploymentChanges || unsavedChanges) && liveModelingState === LiveModelingStates.ENABLED"
+                 class="d-flex flex-column warning-changes">
                 <span>
                     <i class="fa fa-warning mr-2"></i>
                     <b>Warning</b>
@@ -76,7 +77,8 @@
                 </div>
                 <winery-live-modeling-sidebar-progressbar></winery-live-modeling-sidebar-progressbar>
                 <div class="d-flex mt-2">
-                    <ng-template *ngIf="this.deploymentChanges || !this.currentCsarId; then redeployButton else deployButton"></ng-template>
+                    <ng-template
+                        *ngIf="this.deploymentChanges || !this.currentCsarId; then redeployButton else deployButton"></ng-template>
                     <ng-template #deployButton>
                         <button class="btn-live-modeling btn-live-modeling-deploy"
                                 [disabled]="!isDeployEnabled()"

@@ -25,7 +25,7 @@ import { PropertyValidatorService } from '../../../services/property-validator.s
 export class ReconfigureModalComponent implements OnInit {
 
     selectedOption = ReconfigureOptions.NONE;
-    deployInstance = true;
+    startInstance = true;
     ReconfigureOptions = ReconfigureOptions;
 
     constructor(private bsModalRef: BsModalRef,

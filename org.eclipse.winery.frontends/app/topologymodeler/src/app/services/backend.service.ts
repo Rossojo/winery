@@ -31,12 +31,10 @@ import { Threat, ThreatAssessmentApiData } from '../models/threatModelingModalDa
 import { Visuals } from '../models/visuals';
 import { VersionElement } from '../models/versionElement';
 import { WineryRepositoryConfigurationService } from '../../../../tosca-management/src/app/wineryFeatureToggleModule/WineryRepositoryConfiguration.service';
-import { concatMap } from 'rxjs/operators';
-import { TopologyService } from './topology.service';
+import { tap } from 'rxjs/operators';
 import { NgRedux } from '@angular-redux/store';
 import { IWineryState } from '../redux/store/winery.store';
 import { WineryActions } from '../redux/actions/winery.actions';
-import { TopologyTemplateUtil } from '../models/topologyTemplateUtil';
 
 /**
  * Responsible for interchanging data between the app and the server.
@@ -60,7 +58,6 @@ export class BackendService {
                 private alert: ToastrService,
                 private errorHandler: ErrorHandlerService,
                 private configurationService: WineryRepositoryConfigurationService,
-                private topologyService: TopologyService,
                 private ngRedux: NgRedux<IWineryState>,
                 private wineryActions: WineryActions) {
         this.endpointConfiguration$.subscribe((params: TopologyModelerConfiguration) => {
@@ -277,6 +274,23 @@ export class BackendService {
     }
 
     /**
+     * This method retrieves a Topology Template from the backend.
+     */
+    requestTopologyTemplate(serviceTemplateId?: string): Observable<TTopologyTemplate> {
+        if (this.configuration) {
+            if (serviceTemplateId) {
+                const url = this.configuration.parentUrl
+                    + encodeURIComponent(encodeURIComponent(this.configuration.ns)) + '/'
+                    + serviceTemplateId + '/topologytemplate';
+                return this.http.get<TTopologyTemplate>(url);
+            } else {
+                return this.http.get<TTopologyTemplate>(this.configuration.elementUrl);
+            }
+        }
+        return null;
+    }
+
+    /**
      * Saves the topologyTemplate back to the repository
      */
     saveTopologyTemplate(topologyTemplate: TTopologyTemplate): Observable<HttpResponse<string>> {
@@ -286,14 +300,13 @@ export class BackendService {
             return this.http.put(this.configuration.elementUrl,
                 topologyToBeSaved,
                 { headers: headers, responseType: 'text', observe: 'response' }
-            ).map(res => {
-                if (res.ok) {
-                    this.ngRedux.dispatch(this.wineryActions.setLastSavedJsonTopology(topologyTemplate));
-                }
-                return res;
-            }).finally(() => {
-                this.topologyService.checkForSaveChanges();
-            });
+            ).pipe(
+                tap(resp => {
+                    if (resp.ok) {
+                        this.ngRedux.dispatch(this.wineryActions.setLastSavedJsonTopology(topologyTemplate));
+                    }
+                })
+            );
         }
     }
 

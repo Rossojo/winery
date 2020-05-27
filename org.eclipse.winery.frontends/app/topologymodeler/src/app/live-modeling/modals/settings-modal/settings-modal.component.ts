@@ -19,6 +19,7 @@ import { IWineryState } from '../../../redux/store/winery.store';
 import { LiveModelingActions } from '../../../redux/actions/live-modeling.actions';
 import { LiveModelingStates } from '../../../models/enums';
 import { Subscription } from 'rxjs';
+import { LiveModelingSettings } from '../../../models/liveModelingSettings';
 
 @Component({
     selector: 'winery-live-modeling-settings-modal',
@@ -27,7 +28,7 @@ import { Subscription } from 'rxjs';
 })
 export class SettingsModalComponent implements OnInit, OnDestroy {
     objectKeys = Object.keys;
-    settings: any;
+    settings: LiveModelingSettings;
     subscriptions: Array<Subscription> = [];
 
     constructor(private bsModalRef: BsModalRef,

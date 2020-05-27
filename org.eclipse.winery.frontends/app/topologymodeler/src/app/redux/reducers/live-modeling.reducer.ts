@@ -24,6 +24,7 @@ import { Csar } from '../../models/container/csar.model';
 import { PlanInstance } from '../../models/container/plan-instance.model';
 import { TTopologyTemplate } from '../../models/ttopology-template';
 import { TopologyTemplateUtil } from '../../models/topologyTemplateUtil';
+import { LiveModelingSettings } from '../../models/liveModelingSettings';
 
 export interface LiveModelingState {
     state: LiveModelingStates;
@@ -32,7 +33,7 @@ export interface LiveModelingState {
     currentCsar: Csar;
     currentServiceTemplateInstanceId: string;
     currentServiceTemplateInstanceState: ServiceTemplateInstanceStates;
-    settings: any;
+    settings: LiveModelingSettings;
     deploymentChanges: boolean;
     currentBuildPlanInstance: PlanInstance;
     deployedJsonTopology: TTopologyTemplate;
@@ -45,7 +46,7 @@ export const INITIAL_LIVE_MODELING_STATE: LiveModelingState = {
     currentCsar: null,
     currentServiceTemplateInstanceId: null,
     currentServiceTemplateInstanceState: ServiceTemplateInstanceStates.INITIAL,
-    settings: { timeout: 60000, interval: 1000 },
+    settings: LiveModelingSettings.initial(),
     deploymentChanges: false,
     currentBuildPlanInstance: null,
     deployedJsonTopology: null

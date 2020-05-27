@@ -23,7 +23,7 @@ export class CreateLiveModelingTemplateError extends LiveModelingError {
     constructor() {
         super();
         Object.setPrototypeOf(this, CreateLiveModelingTemplateError.prototype);
-        this.message = 'There was an error while creating a temporary service template';
+        this.message = 'There was an error while creating the temporary service template';
     }
 }
 
@@ -47,7 +47,7 @@ export class DeployInstanceError extends LiveModelingError {
     constructor() {
         super();
         Object.setPrototypeOf(this, DeployInstanceError.prototype);
-        this.message = 'There was an error while deploying service template instance';
+        this.message = 'There was an error while deploying the service template instance';
     }
 }
 
@@ -55,7 +55,15 @@ export class TransformInstanceError extends LiveModelingError {
     constructor() {
         super();
         Object.setPrototypeOf(this, TransformInstanceError.prototype);
-        this.message = 'There was an error while transforming service template instance';
+        this.message = 'There was an error while transforming the service template instance';
+    }
+}
+
+export class AdaptInstanceError extends LiveModelingError {
+    constructor() {
+        super();
+        Object.setPrototypeOf(this, AdaptInstanceError.prototype);
+        this.message = 'There was an error while adapting the service template instance';
     }
 }
 
@@ -88,5 +96,13 @@ export class TimeoutError extends LiveModelingError {
         super();
         Object.setPrototypeOf(this, TimeoutError.prototype);
         this.message = 'The operation has timed out';
+    }
+}
+
+export class UnauthorizedActionError extends LiveModelingError {
+    constructor() {
+        super();
+        Object.setPrototypeOf(this, UnauthorizedActionError.prototype);
+        this.message = 'You are currently not allowed to perform this action';
     }
 }

@@ -26,7 +26,7 @@ import { WineryActions } from '../redux/actions/winery.actions';
 import { BsModalService } from 'ngx-bootstrap';
 import { OverlayService } from './overlay.service';
 import { LoggingService } from './logging.service';
-import { catchError, concatMap, distinctUntilChanged, switchMap, takeWhile, tap, timeout } from 'rxjs/operators';
+import { catchError, concatMap, distinctUntilChanged, first, switchMap, takeWhile, tap, timeout } from 'rxjs/operators';
 import { forkJoin, Observable, of, Subscription } from 'rxjs';
 import { Csar } from '../models/container/csar.model';
 import { PlanInstance } from '../models/container/plan-instance.model';
@@ -35,25 +35,22 @@ import { InputParametersModalComponent } from '../live-modeling/modals/input-par
 import { ToastrService } from 'ngx-toastr';
 import { NodeTemplateInstance } from '../models/container/node-template-instance.model';
 import {
-    CreateLiveModelingTemplateError, DeployInstanceError, LiveModelingError, NodeTemplateInstanceError, RetrieveInputParametersError,
+    AdaptInstanceError, CreateLiveModelingTemplateError, DeployInstanceError, LiveModelingError, NodeTemplateInstanceError, RetrieveInputParametersError,
     ServiceTemplateInstanceError, TerminateInstanceError, TimeoutError, TransformInstanceError, UploadCsarError
 } from '../models/customErrors';
 import { AdaptationPayload } from '../models/container/adaptation-payload.model';
 import * as _ from 'lodash';
+import { LiveModelingSettings } from '../models/liveModelingSettings';
 
 @Injectable()
 export class LiveModelingService {
     private currentCsarId: string;
     private currentServiceTemplateInstanceId: string;
-
-    private pollInterval: number;
-    private pollTimeout: number;
-
     private currentTopologyTemplate: TTopologyTemplate;
     private lastSavedTopologyTemplate: TTopologyTemplate;
     private deployedTopologyTemplate: TTopologyTemplate;
 
-    private readonly csarEnding = '.csar';
+    private settings: LiveModelingSettings;
     private state: LiveModelingStates;
 
     constructor(
@@ -68,68 +65,72 @@ export class LiveModelingService {
         private loggingService: LoggingService,
         private toastrService: ToastrService) {
 
-        this.ngRedux.select(state => state.liveModelingState.settings).subscribe(settings => {
-            this.pollInterval = settings.interval;
-            this.pollTimeout = settings.timeout;
-        });
-
+        this.ngRedux.select(state => state.liveModelingState.currentCsarId)
+            .subscribe(csarId => this.currentCsarId = csarId);
+        this.ngRedux.select(state => state.liveModelingState.currentServiceTemplateInstanceId)
+            .subscribe(serviceTemplateInstanceId => this.currentServiceTemplateInstanceId = serviceTemplateInstanceId);
+        this.ngRedux.select(state => state.wineryState.currentJsonTopology)
+            .subscribe(topologyTemplate => this.currentTopologyTemplate = topologyTemplate);
+        this.ngRedux.select(state => state.wineryState.lastSavedJsonTopology)
+            .subscribe(topologyTemplate => this.lastSavedTopologyTemplate = topologyTemplate);
+        this.ngRedux.select(state => state.liveModelingState.deployedJsonTopology)
+            .subscribe(topologyTemplate => this.deployedTopologyTemplate = topologyTemplate);
         this.ngRedux.select(state => state.liveModelingState.state)
             .subscribe(state => this.state = state);
-
-        this.ngRedux.select(state => state.wineryState.currentJsonTopology)
-            .subscribe(topologyTemplate => {
-                this.currentTopologyTemplate = topologyTemplate;
-            });
-
-        this.ngRedux.select(state => state.wineryState.lastSavedJsonTopology)
-            .subscribe(topologyTemplate => {
-                this.lastSavedTopologyTemplate = topologyTemplate;
-            });
-
-        this.ngRedux.select(state => state.liveModelingState.deployedJsonTopology)
-            .subscribe(topologyTemplate => {
-                this.deployedTopologyTemplate = topologyTemplate;
-            });
-
-        this.ngRedux.select(state => state.liveModelingState.currentServiceTemplateInstanceId)
-            .subscribe(serviceTemplateInstanceId => {
-                this.currentServiceTemplateInstanceId = serviceTemplateInstanceId;
-            });
-
-        this.ngRedux.select(state => state.liveModelingState.currentCsarId)
-            .subscribe(csarId => {
-                this.currentCsarId = csarId;
-            });
+        this.ngRedux.select(state => state.liveModelingState.settings)
+            .subscribe(settings => this.settings = settings);
     }
 
-    public async enable(containerUrl: string, deployInstance: boolean): Promise<void> {
+    public async init(startInstance: boolean, containerUrl?: string): Promise<void> {
         try {
-            if (this.state !== LiveModelingStates.DISABLED) {
+            if (this.state !== LiveModelingStates.DISABLED &&
+                this.state !== LiveModelingStates.TERMINATED &&
+                this.state !== LiveModelingStates.ERROR &&
+                this.state !== LiveModelingStates.RECONFIGURATE
+            ) {
+                this.toastrService.error('Unauthorized action');
                 return;
             }
             this.ngRedux.dispatch(this.liveModelingActions.setState(LiveModelingStates.INIT));
-            const topologyTemplate = _.cloneDeep(this.currentTopologyTemplate);
             this.clearData();
+            if (containerUrl) {
+                this.ngRedux.dispatch(this.liveModelingActions.setContainerUrl(containerUrl));
+            }
             this.setAllNodeTemplateWorkingState(true);
-            this.ngRedux.dispatch(this.liveModelingActions.setContainerUrl(containerUrl));
             const csarId = await this.createLiveModelingServiceTemplate();
             await this.installCsarIfNeeded(csarId);
             this.ngRedux.dispatch(this.liveModelingActions.setCurrentCsarId(csarId));
-            let newInstanceId;
-            this.setAllNodeTemplateInstanceState(NodeTemplateInstanceStates.NOT_AVAILABLE);
+            this.setAllNodeTemplateWorkingState(false);
+            await this.deploy(startInstance);
+        } catch (error) {
+            this.handleError(error);
+        }
+    }
+
+    public async deploy(startInstance: boolean): Promise<void> {
+        try {
+            if (this.state !== LiveModelingStates.INIT &&
+                this.state !== LiveModelingStates.TERMINATED &&
+                this.state !== LiveModelingStates.ERROR
+            ) {
+                this.toastrService.error('Unauthorized action');
+                return;
+            }
             this.ngRedux.dispatch(this.liveModelingActions.setState(LiveModelingStates.DEPLOY));
-            if (deployInstance) {
+            const csarId = this.currentCsarId;
+            this.setAllNodeTemplateWorkingState(true);
+            this.setAllNodeTemplateInstanceState(NodeTemplateInstanceStates.NOT_AVAILABLE);
+            let newInstanceId;
+            if (startInstance) {
                 const buildPlanInputParameters = await this.retrieveBuildPlanParametersAndShowModalIfNeeded(csarId);
                 newInstanceId = await this.deployServiceTemplateInstance(csarId, buildPlanInputParameters);
             } else {
                 newInstanceId = await this.initializeServiceTemplateInstance(csarId);
             }
             this.ngRedux.dispatch(this.liveModelingActions.setCurrentServiceTemplateInstanceId(newInstanceId));
-            this.ngRedux.dispatch(this.liveModelingActions.setDeployedJsonTopology(topologyTemplate));
-            this.ngRedux.dispatch(this.liveModelingActions.setState(LiveModelingStates.UPDATE));
-            await this.updateLiveModelingData(csarId, newInstanceId);
+            await this.setDeployedTopologyTemplate(csarId);
             this.setAllNodeTemplateWorkingState(false);
-            this.ngRedux.dispatch(this.liveModelingActions.setState(LiveModelingStates.ENABLED));
+            await this.update();
         } catch (error) {
             this.handleError(error);
         }
@@ -137,7 +138,11 @@ export class LiveModelingService {
 
     public async update(): Promise<void> {
         try {
-            if (this.state !== LiveModelingStates.ENABLED) {
+            if (this.state !== LiveModelingStates.DEPLOY &&
+                this.state !== LiveModelingStates.ENABLED &&
+                this.state !== LiveModelingStates.RECONFIGURATE
+            ) {
+                this.toastrService.error('Unauthorized action');
                 return;
             }
             this.ngRedux.dispatch(this.liveModelingActions.setState(LiveModelingStates.UPDATE));
@@ -150,64 +155,26 @@ export class LiveModelingService {
         }
     }
 
-    public async deploy(deployInstance: boolean): Promise<void> {
+    public async redeploy(startInstance: boolean): Promise<void> {
         try {
-            if (this.state !== LiveModelingStates.TERMINATED && this.state !== LiveModelingStates.ERROR) {
-                return;
-            }
-            this.ngRedux.dispatch(this.liveModelingActions.setState(LiveModelingStates.DEPLOY));
-            const currentCsarId = this.currentCsarId;
-            this.setAllNodeTemplateWorkingState(true);
-            let newInstanceId;
-            this.setAllNodeTemplateInstanceState(NodeTemplateInstanceStates.NOT_AVAILABLE);
-            if (deployInstance) {
-                const buildPlanInputParameters = await this.retrieveBuildPlanParametersAndShowModalIfNeeded(currentCsarId);
-                newInstanceId = await this.deployServiceTemplateInstance(currentCsarId, buildPlanInputParameters);
-            } else {
-                newInstanceId = await this.initializeServiceTemplateInstance(currentCsarId);
-            }
-            this.ngRedux.dispatch(this.liveModelingActions.setCurrentServiceTemplateInstanceId(newInstanceId));
-            this.ngRedux.dispatch(this.liveModelingActions.setState(LiveModelingStates.UPDATE));
-            await this.updateLiveModelingData(currentCsarId, newInstanceId);
-            this.setAllNodeTemplateWorkingState(false);
-            this.ngRedux.dispatch(this.liveModelingActions.setState(LiveModelingStates.ENABLED));
-        } catch (error) {
-            this.handleError(error);
-        }
-    }
-
-    public async redeploy(deployInstance: boolean): Promise<void> {
-        try {
-            if (this.state !== LiveModelingStates.ENABLED && this.state !== LiveModelingStates.ERROR && this.state !== LiveModelingStates.TERMINATED) {
+            if (this.state !== LiveModelingStates.ENABLED &&
+                this.state !== LiveModelingStates.ERROR &&
+                this.state !== LiveModelingStates.TERMINATED
+            ) {
+                this.toastrService.error('Unauthorized action');
                 return;
             }
             this.ngRedux.dispatch(this.liveModelingActions.setState(LiveModelingStates.RECONFIGURATE));
             const oldCsarId = this.currentCsarId;
             const oldInstanceId = this.currentServiceTemplateInstanceId;
-            const topologyTemplate = _.cloneDeep(this.currentTopologyTemplate);
             this.setAllNodeTemplateWorkingState(true);
             if (oldInstanceId) {
                 this.terminateServiceTemplateInstanceInBackground(oldCsarId, oldInstanceId).add(() => {
                     this.deleteApplicationInBackground(oldCsarId);
                 });
             }
-            const newCsarId = await this.createLiveModelingServiceTemplate();
-            await this.installCsarIfNeeded(newCsarId);
-            this.ngRedux.dispatch(this.liveModelingActions.setCurrentCsarId(newCsarId));
-            let newInstanceId;
-            this.setAllNodeTemplateInstanceState(NodeTemplateInstanceStates.NOT_AVAILABLE);
-            if (deployInstance) {
-                const buildPlanInputParameters = await this.retrieveBuildPlanParametersAndShowModalIfNeeded(newCsarId);
-                newInstanceId = await this.deployServiceTemplateInstance(newCsarId, buildPlanInputParameters);
-            } else {
-                newInstanceId = await this.initializeServiceTemplateInstance(newCsarId);
-            }
-            this.ngRedux.dispatch(this.liveModelingActions.setCurrentServiceTemplateInstanceId(newInstanceId));
-            this.ngRedux.dispatch(this.liveModelingActions.setDeployedJsonTopology(topologyTemplate));
-            this.ngRedux.dispatch(this.liveModelingActions.setState(LiveModelingStates.UPDATE));
-            await this.updateLiveModelingData(newCsarId, newInstanceId);
             this.setAllNodeTemplateWorkingState(false);
-            this.ngRedux.dispatch(this.liveModelingActions.setState(LiveModelingStates.ENABLED));
+            await this.init(startInstance);
         } catch (error) {
             this.handleError(error);
         }
@@ -216,13 +183,13 @@ export class LiveModelingService {
     public async transform(): Promise<void> {
         try {
             if (this.state !== LiveModelingStates.ENABLED) {
+                this.toastrService.error('Unauthorized action');
                 return;
             }
             this.ngRedux.dispatch(this.liveModelingActions.setState(LiveModelingStates.RECONFIGURATE));
             this.setAllNodeTemplateWorkingState(true);
             const sourceCsarId = this.currentCsarId;
             const oldInstanceId = this.currentServiceTemplateInstanceId;
-            const topologyTemplate = _.cloneDeep(this.currentTopologyTemplate);
             const targetCsarId = await this.createLiveModelingServiceTemplate();
             await this.installCsarIfNeeded(targetCsarId);
             const transformationPlanId = await this.containerService.generateTransformationPlan(sourceCsarId, targetCsarId).toPromise();
@@ -232,11 +199,47 @@ export class LiveModelingService {
             const newInstanceId = await this.transformServiceTemplateInstance(
                 sourceCsarId, targetCsarId, oldInstanceId, parameterPayload);
             this.ngRedux.dispatch(this.liveModelingActions.setCurrentCsarId(targetCsarId));
-            this.ngRedux.dispatch(this.liveModelingActions.setDeployedJsonTopology(topologyTemplate));
-            this.ngRedux.dispatch(this.liveModelingActions.setState(LiveModelingStates.UPDATE));
-            await this.updateLiveModelingData(targetCsarId, newInstanceId);
+            this.ngRedux.dispatch(this.liveModelingActions.setCurrentServiceTemplateInstanceId(newInstanceId));
+            await this.setDeployedTopologyTemplate(targetCsarId);
             this.setAllNodeTemplateWorkingState(false);
-            this.ngRedux.dispatch(this.liveModelingActions.setState(LiveModelingStates.ENABLED));
+            await this.update();
+        } catch (error) {
+            this.handleError(error);
+        }
+    }
+
+    public async adapt(nodeTemplateId: string, adaptationAction: AdaptationAction) {
+        try {
+            if (this.state !== LiveModelingStates.ENABLED) {
+                this.toastrService.error('Unauthorized action');
+                return;
+            }
+            this.ngRedux.dispatch(this.liveModelingActions.setState(LiveModelingStates.RECONFIGURATE));
+            const csarId = this.currentCsarId;
+            const serviceTemplateInstanceId = this.currentServiceTemplateInstanceId;
+            const topologyTemplate = _.cloneDeep(this.currentTopologyTemplate);
+            const adaptationPayload = this.generateAdaptationPayload(topologyTemplate, nodeTemplateId, adaptationAction);
+            const workingNodeIds = _.union(adaptationPayload.source_node_templates, adaptationPayload.target_node_templates);
+
+            for (const nodeId of workingNodeIds) {
+                this.ngRedux.dispatch(this.wineryActions.setNodeWorking(nodeId, true));
+            }
+
+            // MOCK:
+            // await this.adaptServiceTemplateInstanceMock(csarId, serviceTemplateInstanceId, topologyTemplate, adaptationPayload);
+            await this.adaptServiceTemplateInstance(csarId, serviceTemplateInstanceId, adaptationPayload);
+
+            await this.waitUntilNodeTemplateInstanceIsInState(
+                csarId,
+                serviceTemplateInstanceId,
+                nodeTemplateId,
+                adaptationAction === AdaptationAction.START_NODE ? NodeTemplateInstanceStates.STARTED : NodeTemplateInstanceStates.DELETED
+            );
+
+            for (const nodeId of workingNodeIds) {
+                this.ngRedux.dispatch(this.wineryActions.setNodeWorking(nodeId, false));
+            }
+            await this.update();
         } catch (error) {
             this.handleError(error);
         }
@@ -245,6 +248,7 @@ export class LiveModelingService {
     public async terminate(): Promise<void> {
         try {
             if (this.state !== LiveModelingStates.ENABLED) {
+                this.toastrService.error('Unauthorized action');
                 return;
             }
             this.ngRedux.dispatch(this.liveModelingActions.setState(LiveModelingStates.TERMINATE));
@@ -259,7 +263,10 @@ export class LiveModelingService {
 
     public disable(): Promise<void> {
         try {
-            if (this.state !== LiveModelingStates.ENABLED && this.state !== LiveModelingStates.TERMINATED && this.state !== LiveModelingStates.ERROR) {
+            if (this.state !== LiveModelingStates.ENABLED &&
+                this.state !== LiveModelingStates.TERMINATED &&
+                this.state !== LiveModelingStates.ERROR) {
+                this.toastrService.error('Unauthorized action');
                 return;
             }
             const csarId = this.currentCsarId;
@@ -278,93 +285,7 @@ export class LiveModelingService {
         }
     }
 
-    public fetchNodeTemplateInstanceData(nodeTemplateId: string): Observable<NodeTemplateInstance> {
-        try {
-            if (this.state === LiveModelingStates.DISABLED) {
-                return of(null);
-            }
-            return this.containerService.getNodeTemplateInstance(this.currentCsarId, this.currentServiceTemplateInstanceId, nodeTemplateId).pipe(
-                tap(resp => this.ngRedux.dispatch(this.wineryActions.setNodeInstanceState(nodeTemplateId, NodeTemplateInstanceStates[resp.state]))),
-                catchError(error => {
-                    this.loggingService.logWarning('Unable to fetch node template instance');
-                    this.ngRedux.dispatch(this.wineryActions.setNodeInstanceState(nodeTemplateId, NodeTemplateInstanceStates.NOT_AVAILABLE));
-                    return of(null);
-                })
-            );
-        } catch (error) {
-            return of(null);
-        }
-    }
-
-    public async adapt(nodeTemplateId: string, adaptationAction: AdaptationAction) {
-        try {
-            if (this.state !== LiveModelingStates.ENABLED) {
-                return;
-            }
-            this.ngRedux.dispatch(this.liveModelingActions.setState(LiveModelingStates.RECONFIGURATE));
-            const csarId = this.currentCsarId;
-            const serviceTemplateInstanceId = this.currentServiceTemplateInstanceId;
-            const topologyTemplate = _.cloneDeep(this.currentTopologyTemplate);
-            const adaptationPayload = this.generateAdaptationPayload(topologyTemplate, nodeTemplateId, adaptationAction);
-            const workingNodeIds = _.union(adaptationPayload.source_node_templates, adaptationPayload.target_node_templates);
-
-            for (const nodeId of workingNodeIds) {
-                this.ngRedux.dispatch(this.wineryActions.setNodeWorking(nodeId, true));
-            }
-
-            // MOCK:
-            // await this.mockAdaptation(csarId, serviceTemplateInstanceId, topologyTemplate, adaptationPayload);
-            // True adaptation:
-            await this.trueAdaptation(csarId, serviceTemplateInstanceId, adaptationPayload);
-
-            await this.waitUntilNodeTemplateInstanceIsInState(
-                csarId,
-                serviceTemplateInstanceId,
-                nodeTemplateId,
-                adaptationAction === AdaptationAction.START_NODE ? NodeTemplateInstanceStates.STARTED : NodeTemplateInstanceStates.DELETED
-            );
-
-            for (const nodeId of workingNodeIds) {
-                this.ngRedux.dispatch(this.wineryActions.setNodeWorking(nodeId, false));
-            }
-            this.setAllNodeTemplateWorkingState(true);
-            this.ngRedux.dispatch(this.liveModelingActions.setState(LiveModelingStates.UPDATE));
-            await this.updateLiveModelingData(csarId, serviceTemplateInstanceId);
-            this.setAllNodeTemplateWorkingState(false);
-            this.ngRedux.dispatch(this.liveModelingActions.setState(LiveModelingStates.ENABLED));
-        } catch (error) {
-            this.handleError(error);
-        }
-    }
-
-    private mockAdaptation(csarId: string, serviceTemplateInstanceId: string, topologyTemplate: TTopologyTemplate, adaptationPayload: AdaptationPayload) {
-        const startingNodes = adaptationPayload.target_node_templates;
-        const stoppingNodes = topologyTemplate.nodeTemplates.filter(n => !startingNodes.includes(n.id)).map(n => n.id);
-
-        const observables = [];
-        startingNodes.forEach(nodeId => {
-            observables.push(
-                this.containerService.updateNodeTemplateInstanceState(csarId, serviceTemplateInstanceId, nodeId, NodeTemplateInstanceStates.STARTED));
-        });
-        stoppingNodes.forEach(nodeId => {
-            observables.push(
-                this.containerService.updateNodeTemplateInstanceState(csarId, serviceTemplateInstanceId, nodeId, NodeTemplateInstanceStates.DELETED));
-        });
-        return Observable.forkJoin(observables).toPromise();
-    }
-
-    private async trueAdaptation(
-        csarId: string,
-        serviceTemplateInstanceId: string,
-        adaptationPayload: AdaptationPayload) {
-        const adaptationPlan = await this.containerService.generateAdaptationPlan(csarId, adaptationPayload).toPromise();
-        let parameterPayload = [];
-        if (adaptationPlan.input_parameters.length > 0) {
-            parameterPayload = await this.requestInputParameters(adaptationPlan.input_parameters);
-        }
-        const correlationId = await this.containerService.executeManagementPlan(
-            csarId, serviceTemplateInstanceId, adaptationPlan.id, parameterPayload).toPromise();
-    }
+    // Action methods
 
     private clearData(): void {
         this.loggingService.clearLogs();
@@ -374,8 +295,11 @@ export class LiveModelingService {
         try {
             this.overlayService.showOverlay('Creating temporary live modeling template');
             const resp = await this.backendService.createLiveModelingServiceTemplate().toPromise();
+            const csarId = resp.localname;
+            const csarEnding = '.csar';
+            const normalizedCsarId = csarId.endsWith(csarEnding) ? csarId : csarId + csarEnding;
             this.overlayService.hideOverlay();
-            return this.normalizeCsarId(resp.localname);
+            return normalizedCsarId;
         } catch (error) {
             throw new CreateLiveModelingTemplateError();
         }
@@ -396,6 +320,16 @@ export class LiveModelingService {
         }
     }
 
+    private getCsarResourceUrl(csarId: string): string {
+        const csarQueryString = '?csar';
+        const csarEnding = '.csar';
+        const csarIdWithoutCsarSuffix = csarId.endsWith(csarEnding) ? csarId.slice(0, -csarEnding.length) : csarId;
+        return this.backendService.configuration.repositoryURL + '/' +
+            this.backendService.configuration.parentPath + '/' +
+            encodeURIComponent(encodeURIComponent(this.backendService.configuration.ns)) + '/' +
+            csarIdWithoutCsarSuffix + csarQueryString;
+    }
+
     private async retrieveBuildPlanParametersAndShowModalIfNeeded(csarId: string): Promise<InputParameter[]> {
         try {
             const requiredBuildPlanInputParameters = await this.containerService.getRequiredBuildPlanInputParameters(csarId).toPromise();
@@ -404,26 +338,6 @@ export class LiveModelingService {
                 buildPlanInputParameters = await this.requestInputParameters(requiredBuildPlanInputParameters);
             }
             return buildPlanInputParameters;
-        } catch (error) {
-            throw new RetrieveInputParametersError();
-        }
-    }
-
-    private async retrieveTransformPlanParametersAndShowModalIfNeeded(
-        csarId: string, serviceTemplateInstanceId: string, transformationPlanId: string): Promise<InputParameter[]> {
-        try {
-            const inputParameters = await this.containerService.getManagementPlanInputParameters(
-                csarId,
-                serviceTemplateInstanceId,
-                transformationPlanId
-            ).toPromise();
-
-            let parameterPayload = [];
-            if (inputParameters.length > 0) {
-                parameterPayload = await this.requestInputParameters(inputParameters);
-            }
-
-            return parameterPayload;
         } catch (error) {
             throw new RetrieveInputParametersError();
         }
@@ -440,12 +354,7 @@ export class LiveModelingService {
 
             this.loggingService.logInfo('Executing build plan with correlation id ' + correlationId);
 
-            const newInstanceId = await this.containerService.waitForServiceTemplateInstanceIdAfterDeployment(
-                csarId,
-                correlationId,
-                this.pollInterval,
-                this.pollTimeout
-            ).toPromise();
+            const newInstanceId = await this.waitForServiceTemplateInstanceIdAfterDeployment(csarId, correlationId).toPromise();
 
             this.loggingService.logInfo('Waiting for deployment of service template instance with id ' + newInstanceId);
 
@@ -466,97 +375,43 @@ export class LiveModelingService {
         }
     }
 
+    private waitForServiceTemplateInstanceIdAfterDeployment(csarId: string, correlationId: string): Observable<string> {
+        return Observable.timer(0, this.settings.interval).pipe(
+            concatMap(() => this.containerService.getServiceTemplateInstanceIdAfterDeployment(csarId, correlationId)),
+            distinctUntilChanged(),
+            first(resp => resp !== ''),
+            timeout(this.settings.timeout)
+        );
+    }
+
     private async initializeServiceTemplateInstance(csarId: string) {
         const correlationId = Date.now().toString();
         const newInstanceId = await this.containerService.initializeServiceTemplateInstance(csarId, correlationId).toPromise();
         return newInstanceId;
     }
 
-    private async transformServiceTemplateInstance(
-        sourceCsarId: string, targetCsarId: string, serviceTemplateInstanceId: string, transformationPayload: InputParameter[]): Promise<string> {
-        let correlationId;
-        try {
-            this.setAllNodeTemplateInstanceState(NodeTemplateInstanceStates.INITIAL);
-            const prevServiceTemplateInstanceId = serviceTemplateInstanceId;
-
-            this.loggingService.logInfo('Transforming service template instance...');
-            correlationId = await this.containerService.executeTransformationPlan(
-                serviceTemplateInstanceId, sourceCsarId, targetCsarId, transformationPayload).toPromise();
-
-            this.loggingService.logInfo('Executing transformation plan with correlation id ' + correlationId);
-
-            await this.waitUntilServiceTemplateInstanceIsInState(sourceCsarId, serviceTemplateInstanceId, ServiceTemplateInstanceStates.MIGRATED);
-
-            const newInstanceId = await this.containerService.waitForServiceTemplateInstanceIdAfterMigration(
-                sourceCsarId, serviceTemplateInstanceId, correlationId, sourceCsarId, targetCsarId, this.pollInterval, this.pollTimeout).toPromise();
-
-            this.ngRedux.dispatch(this.liveModelingActions.setCurrentServiceTemplateInstanceId(newInstanceId));
-            this.loggingService.logInfo('Waiting for transformation of service template instance with id ' + newInstanceId);
-
-            await this.waitUntilServiceTemplateInstanceIsInState(targetCsarId, newInstanceId, ServiceTemplateInstanceStates.CREATED);
-
-            this.loggingService.logSuccess(`Successfully transformed service template instance from ${prevServiceTemplateInstanceId} to ${newInstanceId}`);
-            return newInstanceId;
-        } catch (error) {
-            throw new TransformInstanceError();
-        } finally {
-            try {
-                const transformationPlanLogs = await this.containerService.getTransformationPlanLogs(
-                    sourceCsarId, serviceTemplateInstanceId, correlationId, sourceCsarId, targetCsarId).toPromise();
-                for (const log of transformationPlanLogs) {
-                    this.loggingService.logContainer(log.message);
+    private waitUntilServiceTemplateInstanceIsInState(
+        csarId: string,
+        serviceTemplateInstanceId: string,
+        desiredInstanceState: ServiceTemplateInstanceStates
+    ): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+            Observable.timer(0, this.settings.interval).pipe(
+                concatMap(() => this.containerService.getServiceTemplateInstanceState(csarId, serviceTemplateInstanceId)),
+                distinctUntilChanged(),
+                timeout(this.settings.timeout),
+                takeWhile(state => state !== desiredInstanceState && state !== ServiceTemplateInstanceStates.ERROR, true),
+            ).subscribe(state => {
+                this.ngRedux.dispatch(this.liveModelingActions.setCurrentServiceTemplateInstanceState(state));
+                if (state === ServiceTemplateInstanceStates.ERROR) {
+                    reject(new ServiceTemplateInstanceError());
                 }
-            } catch (e) {
-            }
-        }
-    }
-
-    private handleError(error: Error): void {
-        this.updateLiveModelingData(this.currentCsarId, this.currentServiceTemplateInstanceId);
-
-        if (error instanceof LiveModelingError) {
-            this.toastrService.error(error.message);
-            this.loggingService.logError(error.message);
-        } else {
-            const errorMessage = 'There was an unexpected error during operation';
-            this.toastrService.error(errorMessage);
-            this.loggingService.logError(errorMessage);
-        }
-
-        this.ngRedux.dispatch(this.liveModelingActions.setState(LiveModelingStates.ERROR));
-        this.ngRedux.dispatch(this.liveModelingActions.setCurrentServiceTemplateInstanceState(ServiceTemplateInstanceStates.ERROR));
-        this.overlayService.hideOverlay();
-        this.setAllNodeTemplateWorkingState(false);
-    }
-
-    // ------------------- HELPER METHODS -------------------------
-
-    private getCsarResourceUrl(csarId: string): string {
-        const csarQueryString = '?csar';
-        return this.backendService.configuration.repositoryURL + '/' +
-            this.backendService.configuration.parentPath + '/' +
-            encodeURIComponent(encodeURIComponent(this.backendService.configuration.ns)) + '/' +
-            this.stripCsarSuffix(csarId) + csarQueryString;
-    }
-
-    private normalizeCsarId(csarId: string): string {
-        return csarId.endsWith(this.csarEnding) ? csarId : csarId + this.csarEnding;
-    }
-
-    private stripCsarSuffix(csarId: string): string {
-        return csarId.endsWith(this.csarEnding) ? csarId.slice(0, -this.csarEnding.length) : csarId;
-    }
-
-    private setAllNodeTemplateInstanceState(state: NodeTemplateInstanceStates): void {
-        for (const nodeTemplate of this.lastSavedTopologyTemplate.nodeTemplates) {
-            this.ngRedux.dispatch(this.wineryActions.setNodeInstanceState(nodeTemplate.id, state));
-        }
-    }
-
-    private setAllNodeTemplateWorkingState(working: boolean): void {
-        for (const nodeTemplate of this.lastSavedTopologyTemplate.nodeTemplates) {
-            this.ngRedux.dispatch(this.wineryActions.setNodeWorking(nodeTemplate.id, working));
-        }
+            }, () => {
+                reject(new TimeoutError());
+            }, () => {
+                resolve();
+            });
+        });
     }
 
     private updateLiveModelingData(csarId: string, serviceTemplateInstanceId: string): Promise<any> {
@@ -593,7 +448,7 @@ export class LiveModelingService {
 
     private updateNodeTemplateData(csarId: string, serviceTemplateInstanceId: string): Observable<NodeTemplateInstance[]> {
         this.loggingService.logInfo(`Fetching node template data`);
-        return this.containerService.getNodeTemplates(csarId, serviceTemplateInstanceId).pipe(
+        return this.containerService.getNodeTemplates(csarId).pipe(
             switchMap(nodeTemplates => {
                 const observables: Observable<NodeTemplateInstance>[] = [];
                 for (const nodeTemplate of nodeTemplates) {
@@ -625,6 +480,157 @@ export class LiveModelingService {
                 return of(ServiceTemplateInstanceStates.NOT_AVAILABLE);
             })
         );
+    }
+
+    private async retrieveTransformPlanParametersAndShowModalIfNeeded(
+        csarId: string, serviceTemplateInstanceId: string, transformationPlanId: string): Promise<InputParameter[]> {
+        try {
+            const inputParameters = await this.containerService.getManagementPlanInputParameters(
+                csarId,
+                serviceTemplateInstanceId,
+                transformationPlanId
+            ).toPromise();
+
+            let parameterPayload = [];
+            if (inputParameters.length > 0) {
+                parameterPayload = await this.requestInputParameters(inputParameters);
+            }
+
+            return parameterPayload;
+        } catch (error) {
+            throw new RetrieveInputParametersError();
+        }
+    }
+
+    private async transformServiceTemplateInstance(
+        sourceCsarId: string, targetCsarId: string, serviceTemplateInstanceId: string, transformationPayload: InputParameter[]): Promise<string> {
+        let correlationId;
+        try {
+            this.setAllNodeTemplateInstanceState(NodeTemplateInstanceStates.INITIAL);
+            const prevServiceTemplateInstanceId = serviceTemplateInstanceId;
+
+            this.loggingService.logInfo('Transforming service template instance...');
+            correlationId = await this.containerService.executeTransformationPlan(
+                serviceTemplateInstanceId, sourceCsarId, targetCsarId, transformationPayload).toPromise();
+
+            this.loggingService.logInfo('Executing transformation plan with correlation id ' + correlationId);
+
+            await this.waitUntilServiceTemplateInstanceIsInState(sourceCsarId, serviceTemplateInstanceId, ServiceTemplateInstanceStates.MIGRATED);
+
+            const newInstanceId = await this.waitForServiceTemplateInstanceIdAfterMigration(
+                sourceCsarId, serviceTemplateInstanceId, correlationId, sourceCsarId, targetCsarId).toPromise();
+            this.loggingService.logInfo('Waiting for transformation of service template instance with id ' + newInstanceId);
+
+            await this.waitUntilServiceTemplateInstanceIsInState(targetCsarId, newInstanceId, ServiceTemplateInstanceStates.CREATED);
+
+            this.loggingService.logSuccess(`Successfully transformed service template instance from ${prevServiceTemplateInstanceId} to ${newInstanceId}`);
+            return newInstanceId;
+        } catch (error) {
+            throw new TransformInstanceError();
+        } finally {
+            try {
+                const transformationPlanLogs = await this.containerService.getTransformationPlanLogs(
+                    sourceCsarId, serviceTemplateInstanceId, correlationId, sourceCsarId, targetCsarId).toPromise();
+                for (const log of transformationPlanLogs) {
+                    this.loggingService.logContainer(log.message);
+                }
+            } catch (e) {
+            }
+        }
+    }
+
+    private waitForServiceTemplateInstanceIdAfterMigration(
+        csarId: string,
+        serviceTemplateInstanceId: string,
+        correlationId: string,
+        sourceCsarId: string,
+        targetCsarId: string
+    ): Observable<string> {
+        const planId = this.containerService.getTransformationPlanId(sourceCsarId, targetCsarId);
+        return Observable.timer(0, this.settings.interval).pipe(
+            concatMap(() => this.containerService.getServiceTemplateInstanceIdAfterTransformation(csarId, serviceTemplateInstanceId, correlationId, planId)),
+            distinctUntilChanged(),
+            first(resp => resp !== ''),
+            timeout(this.settings.timeout)
+        );
+    }
+
+    private async adaptServiceTemplateInstance(
+        csarId: string,
+        serviceTemplateInstanceId: string,
+        adaptationPayload: AdaptationPayload): Promise<string> {
+        try {
+            const adaptationPlan = await this.containerService.generateAdaptationPlan(csarId, adaptationPayload).toPromise();
+            let parameterPayload = [];
+            if (adaptationPlan.input_parameters.length > 0) {
+                parameterPayload = await this.requestInputParameters(adaptationPlan.input_parameters);
+            }
+            return await this.containerService.executeManagementPlan(csarId, serviceTemplateInstanceId, adaptationPlan.id, parameterPayload).toPromise();
+        } catch (error) {
+            throw new AdaptInstanceError();
+        }
+    }
+
+    private adaptServiceTemplateInstanceMock(
+        csarId: string,
+        serviceTemplateInstanceId: string,
+        topologyTemplate: TTopologyTemplate,
+        adaptationPayload: AdaptationPayload) {
+        const startingNodes = adaptationPayload.target_node_templates;
+        const stoppingNodes = topologyTemplate.nodeTemplates.filter(n => !startingNodes.includes(n.id)).map(n => n.id);
+
+        const observables = [];
+        startingNodes.forEach(nodeId => {
+            observables.push(
+                this.containerService.updateNodeTemplateInstanceState(csarId, serviceTemplateInstanceId, nodeId, NodeTemplateInstanceStates.STARTED));
+        });
+        stoppingNodes.forEach(nodeId => {
+            observables.push(
+                this.containerService.updateNodeTemplateInstanceState(csarId, serviceTemplateInstanceId, nodeId, NodeTemplateInstanceStates.DELETED));
+        });
+        return Observable.forkJoin(observables).toPromise();
+    }
+
+    private waitUntilNodeTemplateInstanceIsInState(
+        csarId: string,
+        serviceTemplateInstanceId: string,
+        nodeTemplateId: string,
+        desiredInstanceState: NodeTemplateInstanceStates
+    ): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+            Observable.timer(0, this.settings.interval).pipe(
+                concatMap(() => this.containerService.getNodeTemplateInstanceState(csarId, serviceTemplateInstanceId, nodeTemplateId)),
+                distinctUntilChanged(),
+                timeout(this.settings.timeout),
+                takeWhile(state => state !== desiredInstanceState && state !== NodeTemplateInstanceStates.ERROR, true),
+            ).subscribe(state => {
+                if (state === NodeTemplateInstanceStates.ERROR) {
+                    reject(new NodeTemplateInstanceError());
+                }
+            }, () => {
+                reject(new TimeoutError());
+            }, () => {
+                resolve();
+            });
+        });
+    }
+
+    public fetchNodeTemplateInstanceData(nodeTemplateId: string): Observable<NodeTemplateInstance> {
+        try {
+            if (this.state === LiveModelingStates.DISABLED) {
+                return of(null);
+            }
+            return this.containerService.getNodeTemplateInstance(this.currentCsarId, this.currentServiceTemplateInstanceId, nodeTemplateId).pipe(
+                tap(resp => this.ngRedux.dispatch(this.wineryActions.setNodeInstanceState(nodeTemplateId, NodeTemplateInstanceStates[resp.state]))),
+                catchError(error => {
+                    this.loggingService.logWarning('Unable to fetch node template instance');
+                    this.ngRedux.dispatch(this.wineryActions.setNodeInstanceState(nodeTemplateId, NodeTemplateInstanceStates.NOT_AVAILABLE));
+                    return of(null);
+                })
+            );
+        } catch (error) {
+            return of(null);
+        }
     }
 
     private async terminateServiceTemplateInstance(csarId: string, serviceTemplateInstanceId: string): Promise<void> {
@@ -664,6 +670,48 @@ export class LiveModelingService {
         });
     }
 
+    private deinitializeLiveModelingData(): void {
+        this.ngRedux.dispatch(this.liveModelingActions.setCurrentCsar(null));
+        this.ngRedux.dispatch(this.liveModelingActions.setCurrentCsarId(null));
+        this.ngRedux.dispatch(this.liveModelingActions.setCurrentServiceTemplateInstanceId(null));
+        this.ngRedux.dispatch(this.liveModelingActions.setCurrentServiceTemplateInstanceState(null));
+        this.ngRedux.dispatch(this.liveModelingActions.setCurrentBuildPlanInstance(null));
+        this.setAllNodeTemplateWorkingState(false);
+        this.setAllNodeTemplateInstanceState(null);
+    }
+
+    // Helper methods
+
+    private handleError(error: Error): void {
+        this.updateLiveModelingData(this.currentCsarId, this.currentServiceTemplateInstanceId);
+
+        if (error instanceof LiveModelingError) {
+            this.toastrService.error(error.message);
+            this.loggingService.logError(error.message);
+        } else {
+            const errorMessage = 'There was an unexpected error during operation';
+            this.toastrService.error(errorMessage);
+            this.loggingService.logError(errorMessage);
+        }
+
+        this.ngRedux.dispatch(this.liveModelingActions.setState(LiveModelingStates.ERROR));
+        this.ngRedux.dispatch(this.liveModelingActions.setCurrentServiceTemplateInstanceState(ServiceTemplateInstanceStates.ERROR));
+        this.overlayService.hideOverlay();
+        this.setAllNodeTemplateWorkingState(false);
+    }
+
+    private setAllNodeTemplateWorkingState(working: boolean): void {
+        for (const nodeTemplate of this.lastSavedTopologyTemplate.nodeTemplates) {
+            this.ngRedux.dispatch(this.wineryActions.setNodeWorking(nodeTemplate.id, working));
+        }
+    }
+
+    private setAllNodeTemplateInstanceState(state: NodeTemplateInstanceStates): void {
+        for (const nodeTemplate of this.lastSavedTopologyTemplate.nodeTemplates) {
+            this.ngRedux.dispatch(this.wineryActions.setNodeInstanceState(nodeTemplate.id, state));
+        }
+    }
+
     private async requestInputParameters(inputParameters: InputParameter[]): Promise<InputParameter[]> {
         const initialState = {
             inputParameters: inputParameters
@@ -680,64 +728,6 @@ export class LiveModelingService {
         }
 
         return modalRef.content.inputParameters;
-    }
-
-    private waitUntilServiceTemplateInstanceIsInState(
-        csarId: string,
-        serviceTemplateInstanceId: string,
-        desiredInstanceState: ServiceTemplateInstanceStates
-    ): Promise<any> {
-        return new Promise<any>((resolve, reject) => {
-            Observable.timer(0, this.pollInterval).pipe(
-                concatMap(() => this.containerService.getServiceTemplateInstanceState(csarId, serviceTemplateInstanceId)),
-                distinctUntilChanged(),
-                timeout(this.pollTimeout),
-                takeWhile(state => state !== desiredInstanceState && state !== ServiceTemplateInstanceStates.ERROR, true),
-            ).subscribe(state => {
-                this.ngRedux.dispatch(this.liveModelingActions.setCurrentServiceTemplateInstanceState(state));
-                if (state === ServiceTemplateInstanceStates.ERROR) {
-                    reject(new ServiceTemplateInstanceError());
-                }
-            }, () => {
-                reject(new TimeoutError());
-            }, () => {
-                resolve();
-            });
-        });
-    }
-
-    private waitUntilNodeTemplateInstanceIsInState(
-        csarId: string,
-        serviceTemplateInstanceId: string,
-        nodeTemplateId: string,
-        desiredInstanceState: NodeTemplateInstanceStates
-    ): Promise<any> {
-        return new Promise<any>((resolve, reject) => {
-            Observable.timer(0, this.pollInterval).pipe(
-                concatMap(() => this.containerService.getNodeTemplateInstanceState(csarId, serviceTemplateInstanceId, nodeTemplateId)),
-                distinctUntilChanged(),
-                timeout(this.pollTimeout),
-                takeWhile(state => state !== desiredInstanceState && state !== NodeTemplateInstanceStates.ERROR, true),
-            ).subscribe(state => {
-                if (state === NodeTemplateInstanceStates.ERROR) {
-                    reject(new NodeTemplateInstanceError());
-                }
-            }, () => {
-                reject(new TimeoutError());
-            }, () => {
-                resolve();
-            });
-        });
-    }
-
-    private deinitializeLiveModelingData(): void {
-        this.ngRedux.dispatch(this.liveModelingActions.setCurrentCsar(null));
-        this.ngRedux.dispatch(this.liveModelingActions.setCurrentCsarId(null));
-        this.ngRedux.dispatch(this.liveModelingActions.setCurrentServiceTemplateInstanceId(null));
-        this.ngRedux.dispatch(this.liveModelingActions.setCurrentServiceTemplateInstanceState(null));
-        this.ngRedux.dispatch(this.liveModelingActions.setCurrentBuildPlanInstance(null));
-        this.setAllNodeTemplateWorkingState(false);
-        this.setAllNodeTemplateInstanceState(null);
     }
 
     private generateAdaptationPayload(topologyTemplate: TTopologyTemplate, nodeTemplateId: string, adaptationAction: AdaptationAction): AdaptationPayload {
@@ -806,5 +796,16 @@ export class LiveModelingService {
             target_node_templates: target_node_templates,
             target_relationship_templates: target_relationship_templates
         };
+    }
+
+    private async setDeployedTopologyTemplate(csarId: string) {
+        const topologyTemplate = await this.getTopologyTemplate(csarId).toPromise();
+        this.ngRedux.dispatch(this.liveModelingActions.setDeployedJsonTopology(topologyTemplate));
+    }
+
+    private getTopologyTemplate(csarId: string): Observable<TTopologyTemplate> {
+        const csarEnding = '.csar';
+        const csarIdWithoutCsarSuffix = csarId.endsWith(csarEnding) ? csarId.slice(0, -csarEnding.length) : csarId;
+        return this.backendService.requestTopologyTemplate(csarIdWithoutCsarSuffix);
     }
 }
