@@ -86,7 +86,7 @@ import { InterfaceDefinitionsComponent } from '../node/interface-definitions/int
     ],
     exports: [
         TopologyRendererComponent,
-
+        PoliciesComponent,
     ],
 })
 export class TopologyRendererModule {
