@@ -43,7 +43,7 @@
             </p>
         </div>
         <div *ngIf="liveModelingState !== LiveModelingStates.DISABLED" class="live-modeling-sidebar-page live-page">
-            <div *ngIf="(deploymentChanges || unsavedChanges) && liveModelingState === LiveModelingStates.ENABLED"
+            <div *ngIf="(deploymentChanges || unsavedChanges)"
                  class="d-flex flex-column warning-changes">
                 <span>
                     <i class="fa fa-warning mr-2"></i>

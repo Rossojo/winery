@@ -137,7 +137,7 @@ export class LiveModelingSidebarComponent implements OnInit, OnDestroy {
     }
 
     isDeployEnabled() {
-        return this.liveModelingState === LiveModelingStates.TERMINATED || this.liveModelingState === LiveModelingStates.ERROR;
+        return (this.liveModelingState === LiveModelingStates.TERMINATED || this.liveModelingState === LiveModelingStates.ERROR) && !this.unsavedChanges;
     }
 
     async handleRedeploy() {
@@ -153,7 +153,7 @@ export class LiveModelingSidebarComponent implements OnInit, OnDestroy {
     }
 
     isRedeployEnabled() {
-        return this.liveModelingState === LiveModelingStates.TERMINATED || this.liveModelingState === LiveModelingStates.ERROR;
+        return (this.liveModelingState === LiveModelingStates.TERMINATED || this.liveModelingState === LiveModelingStates.ERROR) && !this.unsavedChanges;
     }
 
     async handleTerminate() {

@@ -38,7 +38,6 @@ export class TopologyService {
             .subscribe(topologyTemplate => {
                 this.currentJsonTopologyTemplate = topologyTemplate;
                 this.checkForSaveChanges();
-                this.checkForDeployChanges();
             });
         this.ngRedux.select(state => state.wineryState.lastSavedJsonTopology)
             .subscribe(topologyTemplate => {
@@ -47,6 +46,7 @@ export class TopologyService {
         this.ngRedux.select(state => state.liveModelingState.deployedJsonTopology)
             .subscribe(topologyTemplate => {
                 this.deployedJsonTopologyTemplate = topologyTemplate;
+                this.checkForDeployChanges();
             });
         this.ngRedux.select(state => state.liveModelingState.state)
             .subscribe(state => {
