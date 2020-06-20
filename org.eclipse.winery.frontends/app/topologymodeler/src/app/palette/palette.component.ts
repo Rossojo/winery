@@ -26,7 +26,7 @@ import { NodeTypeModel } from '../models/groupedNodeTypeModel';
 import { Visuals } from '../models/visuals';
 import { BackendService } from '../services/backend.service';
 import { InheritanceUtils } from '../models/InheritanceUtils';
-import { Interface } from '../models/interfaceModel';
+import { Interface } from '../../../../tosca-management/src/app/model/interfaces';
 
 /**
  * This is the left sidebar, where nodes can be created from.
@@ -160,6 +160,7 @@ export class PaletteComponent implements OnDestroy {
             { artifact: [] },
             { interface: this.getInterfaceDefinitionsOfNodeType(this.removeVersionIdentifier(child.text)) }
         );
+        console.log(newNode.interfaceDefinitions);
         this.ngRedux.dispatch(this.actions.saveNodeTemplate(newNode));
     }
 

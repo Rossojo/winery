@@ -61,6 +61,7 @@ import { WineryRowData } from '../../../../tosca-management/src/app/wineryTableM
 import { InheritanceUtils } from '../models/InheritanceUtils';
 import { PolicyService } from '../services/policy.service';
 import { SelectData } from '../../../../tosca-management/src/app/model/selectData';
+import { ConfigureInterface, Interface, StandardInterface } from '../../../../tosca-management/src/app/model/interfaces';
 
 @Component({
     selector: 'winery-canvas',
@@ -154,11 +155,11 @@ export class CanvasComponent implements OnInit, OnDestroy, OnChanges, AfterViewI
 
     private longPressing: boolean;
 
-    // Manage InterfaceDefinitions Modal TODO: is this the correct place?
     readonly interfaceTypes: SelectData[] = [
         { text: '{tosca.interfaces.node.lifecycle}Standard', id: 'Standard' },
         { text: '{tosca.interfaces.relationship}Configure', id: 'Configure' },
     ];
+    selectedInterfaceType: SelectData;
 
     // Manage YAML Policies Modal
     selectedNewPolicyType: string;
@@ -345,7 +346,6 @@ export class CanvasComponent implements OnInit, OnDestroy, OnChanges, AfterViewI
                 this.modalData.modalTitle = 'Policy';
                 break;
             case toggleModalType.InterfaceDefinitions:
-                this.modalData.modalVariant = ModalVariant.Other;
                 this.modalData.modalVisible = false;
                 this.addInterfaceDefinitionModalRef = this.modalService.show(this.addInterfaceDefinitionModal);
                 break;
@@ -2540,7 +2540,14 @@ export class CanvasComponent implements OnInit, OnDestroy, OnChanges, AfterViewI
         return '<a href="' + absoluteURL + '">' + typeQName.localName + '</a>';
     }
 
-    addInterfaceDefinition(item: SelectData) {
-        console.log(item);
+    addInterfaceDefinition(name: string, interfaceItem: SelectData) {
+        let newInterfaceDefinition: Interface = Object.assign(new Interface(), StandardInterface);
+        if (interfaceItem.id === 'Configure') {
+            newInterfaceDefinition = Object.assign(new Interface(), ConfigureInterface);
+        }
+        newInterfaceDefinition.name = name;
+        // Add interface definition to the node template.
+        this.currentModalData.interfaceDefinitions.interface.push(newInterfaceDefinition);
+        console.log(this.currentModalData);
     }
 }

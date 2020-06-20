@@ -517,24 +517,30 @@
 
 <!--Add interface definitions modal -->
 <ng-template #addInterfaceDefinitionModal>
-    <winery-modal-header [modalRef]="addInterfaceDefinitionModalRef" [title]="'Add interface definitions to node template'" ></winery-modal-header>
+    <winery-modal-header [modalRef]="addInterfaceDefinitionModalRef"
+                         [title]="'Add interface definitions to node template'"></winery-modal-header>
     <winery-modal-body>
         <form #form="ngForm">
             <div class="form-group">
-                <label for="type" class="control-label">Type</label>
-                <ng-select id="type" name="type" #type="ngModel" ngModel required
-                           [items]="interfaceTypes">
-                </ng-select>
+                <label for="interfaceName" class="control-label">Name</label>
+                <div>
+                    <input #interfaceName id="interfaceName">
+                </div>
+                <label for="interfaceTypes" class="control-label">Type</label>
+                <div>
+                    <select name="interfaceType" id="interfaceTypes" [(ngModel)]="selectedInterfaceType">
+                        <option *ngFor="let i of interfaceTypes" [ngValue]="i">{{i.text}}</option>
+                    </select>
+                </div>
             </div>
         </form>
     </winery-modal-body>
     <winery-modal-footer [modalRef]="addInterfaceDefinitionModalRef"
                          [closeButtonLabel]="'Cancel'" [okButtonLabel]="'Add'"
-                         (onOk)="addInterfaceDefinition(type.value[0])"
-                         [disableOkButton]="type.invalid">
+                         (onOk)="addInterfaceDefinition(interfaceName.value, selectedInterfaceType)"
+                         [disableOkButton]="selectedInterfaceType == null">
     </winery-modal-footer>
 </ng-template>
-
 
 <!-- XML Policies and Deployment Artifacts Modal -->
 <winery-entities-modal *ngIf="!readonly"

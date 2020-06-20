@@ -126,7 +126,7 @@ export class TopologyTemplateUtil {
             node.deploymentArtifacts ? node.deploymentArtifacts : {},
             node.policies ? node.policies : { policy: [] },
             node.artifacts ? node.artifacts : { artifact: [] },
-            node.interfaceDefinitions ? node.interfaceDefinitions : undefined,
+            node.interfaceDefinitions ? node.interfaceDefinitions : { interface: [] },
             state
         );
     }

@@ -33,7 +33,6 @@ import { VersionElement } from '../models/versionElement';
 import { WineryRepositoryConfigurationService } from '../../../../tosca-management/src/app/wineryFeatureToggleModule/WineryRepositoryConfiguration.service';
 import { takeLast } from 'rxjs/operators';
 import { TPolicy } from '../models/policiesModalData';
-import { backendBaseURL } from '../../../../tosca-management/src/app/configuration';
 
 /**
  * Responsible for interchanging data between the app and the server.
@@ -184,15 +183,6 @@ export class BackendService {
     }
 
     /**
-     * Requests all capability types from the backend
-     */
-    private requestInterfaceTypes(): Observable<any> {
-        if (this.configuration) {
-            return this.http.get(this.configuration.repositoryURL + '/capabilitytypes?full', { headers: this.headers });
-        }
-    }
-
-    /**
      * Requests all grouped node types from the backend
      */
     private requestGroupedNodeTypes(): Observable<any> {
@@ -308,6 +298,7 @@ export class BackendService {
             console.log(topologySkeleton);
 
             const headers = new HttpHeaders().set('Content-Type', 'application/json');
+            console.log(this.configuration.elementUrl);
             return this.http.put(this.configuration.elementUrl,
                 topologySkeleton,
                 { headers: headers, responseType: 'text', observe: 'response' }
