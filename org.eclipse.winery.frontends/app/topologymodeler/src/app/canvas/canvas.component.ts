@@ -2008,7 +2008,7 @@ export class CanvasComponent implements OnInit, OnDestroy, OnChanges, AfterViewI
     onClickJsPlumbConnection(conn: any, rel: any) {
         this.clearSelectedNodes();
         this.newJsPlumbInstance.select().removeType('marked');
-        const currentRel = this.allRelationshipTemplates.find(con => con.id === rel.id);
+        const currentRel = this.allRelationshipTemplates.find(con => con.id === conn.id);
         let name = currentRel.name;
         if (currentRel.name.startsWith(this.backendService.configuration.relationshipPrefix)) {
             // Workaround to support old topology templates with the real name
@@ -2028,9 +2028,7 @@ export class CanvasComponent implements OnInit, OnDestroy, OnChanges, AfterViewI
                     target: currentRel.targetElement.ref
                 }
             }));
-            if (conn.types) {
-                conn.addType('marked');
-            }
+            conn.addType('marked');
         }
     }
 

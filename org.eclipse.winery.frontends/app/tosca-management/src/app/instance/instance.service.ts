@@ -75,8 +75,8 @@ export class InstanceService {
             case ToscaTypes.RelationshipType:
                 if (this.configurationService.isYaml()) {
                     subMenu = [SubMenuItems.readme, SubMenuItems.documentation, SubMenuItems.license, SubMenuItems.appearance, SubMenuItems.instanceStates,
-                        SubMenuItems.interfacedefinitions, SubMenuItems.validSourcesAndTargets, SubMenuItems.implementations, SubMenuItems.propertiesDefinition,
-                        SubMenuItems.inheritance];
+                        SubMenuItems.files, SubMenuItems.interfacedefinitions, SubMenuItems.validSourcesAndTargets, SubMenuItems.implementations,
+                        SubMenuItems.propertiesDefinition, SubMenuItems.inheritance];
                 } else {
                     subMenu = [SubMenuItems.readme, SubMenuItems.documentation, SubMenuItems.license, SubMenuItems.appearance, SubMenuItems.instanceStates,
                         SubMenuItems.sourceInterfaces, SubMenuItems.interfaces, SubMenuItems.targetInterfaces, SubMenuItems.validSourcesAndTargets,
@@ -139,8 +139,9 @@ export class InstanceService {
                     SubMenuItems.documentation, SubMenuItems.xml];
                 break;
             case ToscaTypes.PatternRefinementModel:
+            case ToscaTypes.TopologyFragmentRefinementModel:
                 subMenu = [SubMenuItems.readme, SubMenuItems.license, SubMenuItems.detector, SubMenuItems.refinementStructure, SubMenuItems.relationMappings,
-                    SubMenuItems.attributeMappings, SubMenuItems.stayMappings, SubMenuItems.xml];
+                    SubMenuItems.attributeMappings, SubMenuItems.stayMappings, SubMenuItems.deploymentArtifactMappings, SubMenuItems.xml];
                 break;
             case ToscaTypes.TestRefinementModel:
                 subMenu = [SubMenuItems.readme, SubMenuItems.license, SubMenuItems.detector, SubMenuItems.testFragment, SubMenuItems.relationMappings,

@@ -71,7 +71,7 @@ export class NavbarComponent implements OnDestroy {
                 private backendService: BackendService,
                 private statefulService: StatefulAnnotationsService,
                 private hotkeysService: HotkeysService,
-                private configurationService: WineryRepositoryConfigurationService) {
+                public configurationService: WineryRepositoryConfigurationService) {
         this.subscriptions.push(ngRedux.select(state => state.topologyRendererState)
             .subscribe(newButtonsState => this.setButtonsState(newButtonsState)));
         this.subscriptions.push(ngRedux.select(currentState => currentState.wineryState.currentJsonTopology)
@@ -217,6 +217,11 @@ export class NavbarComponent implements OnDestroy {
             }
             case 'substituteTopology':
                 this.ngRedux.dispatch(this.actions.substituteTopology());
+                break;
+            case 'refinePatterns':
+                this.readonly = true;
+                this.ngRedux.dispatch(this.wineryActions.sendPaletteOpened(false));
+                this.ngRedux.dispatch(this.actions.refinePatterns());
                 break;
             case 'refineTopology':
                 this.readonly = true;

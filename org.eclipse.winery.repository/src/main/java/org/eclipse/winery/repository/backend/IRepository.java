@@ -60,18 +60,19 @@ import org.eclipse.winery.common.ids.definitions.RelationshipTypeImplementationI
 import org.eclipse.winery.common.ids.definitions.RequirementTypeId;
 import org.eclipse.winery.common.ids.definitions.ServiceTemplateId;
 import org.eclipse.winery.common.ids.definitions.TestRefinementModelId;
+import org.eclipse.winery.common.ids.definitions.TopologyFragmentRefinementModelId;
 import org.eclipse.winery.common.ids.definitions.imports.GenericImportId;
 import org.eclipse.winery.common.ids.elements.ToscaElementId;
 import org.eclipse.winery.model.tosca.Definitions;
 import org.eclipse.winery.model.tosca.HasInheritance;
 import org.eclipse.winery.model.tosca.HasType;
+import org.eclipse.winery.model.tosca.OTComplianceRule;
 import org.eclipse.winery.model.tosca.TAppliesTo;
 import org.eclipse.winery.model.tosca.TArtifactTemplate;
 import org.eclipse.winery.model.tosca.TArtifacts;
 import org.eclipse.winery.model.tosca.TBoundaryDefinitions;
 import org.eclipse.winery.model.tosca.TCapability;
 import org.eclipse.winery.model.tosca.TCapabilityDefinition;
-import org.eclipse.winery.model.tosca.TComplianceRule;
 import org.eclipse.winery.model.tosca.TDeploymentArtifact;
 import org.eclipse.winery.model.tosca.TDeploymentArtifacts;
 import org.eclipse.winery.model.tosca.TEntityTemplate;
@@ -99,8 +100,10 @@ import org.eclipse.winery.repository.backend.xsd.RepositoryBasedXsdImportManager
 import org.eclipse.winery.repository.backend.xsd.XsdImportManager;
 import org.eclipse.winery.repository.exceptions.RepositoryCorruptException;
 import org.eclipse.winery.repository.exceptions.WineryRepositoryException;
+import org.eclipse.winery.repository.export.entries.RemoteRefBasedCsarEntry;
 
 import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.tika.mime.MediaType;
 import org.slf4j.Logger;
@@ -306,6 +309,16 @@ public interface IRepository extends IWineryRepositoryCommon {
             }
         }
         return mimeType;
+    }
+
+    default String getMimeType(RemoteRefBasedCsarEntry ref) throws IOException {
+        MediaType mediaType = BackendUtils.getMimeType(new BufferedInputStream(ref.getInputStream()), FilenameUtils.getName(ref.getUrl().getPath()));
+        if (Objects.nonNull(mediaType)) {
+            return mediaType.toString();
+        } else {
+            LOGGER.debug("Could not determine mimetype of the remote file");
+            return "application/octet-stream";
+        }
     }
 
     /**
@@ -605,8 +618,8 @@ public interface IRepository extends IWineryRepositoryCommon {
 
         final TNodeType nodeType = this.getElement(id);
 
-        // add all referenced requirement types, but only in XML mode. YAML does not have requirement types
-
+        // Add all referenced requirement types, but only in XML mode. 
+        // For YAML mode add referenced RelationshipType and CapabilityType, if present
         TNodeType.RequirementDefinitions reqDefsContainer = nodeType.getRequirementDefinitions();
         if (reqDefsContainer != null) {
             List<TRequirementDefinition> reqDefs = reqDefsContainer.getRequirementDefinition();
@@ -617,6 +630,9 @@ public interface IRepository extends IWineryRepositoryCommon {
                 } else {
                     if (Objects.nonNull(reqDef.getRelationship())) {
                         ids.add(new RelationshipTypeId(reqDef.getRelationship()));
+                    }
+                    if (Objects.nonNull(reqDef.getCapability())) {
+                        ids.add(new CapabilityTypeId(reqDef.getCapability()));
                     }
                 }
             }
@@ -629,6 +645,12 @@ public interface IRepository extends IWineryRepositoryCommon {
             for (TCapabilityDefinition capDef : capDefs) {
                 CapabilityTypeId capTypeId = new CapabilityTypeId(capDef.getCapabilityType());
                 ids.add(capTypeId);
+
+                // Add all types referenced in valid source types
+                if (Objects.nonNull(capDef.getValidSourceTypes())) {
+                    capDef.getValidSourceTypes()
+                        .forEach(sourceType -> ids.add(new NodeTypeId(sourceType)));
+                }
             }
         }
 
@@ -917,6 +939,11 @@ public interface IRepository extends IWineryRepositoryCommon {
         return new HashSet<>();
     }
 
+    default Collection<DefinitionsChildId> getReferencedDefinitionsChildIds(TopologyFragmentRefinementModelId id) {
+        // TODO
+        return new HashSet<>();
+    }
+
     default Collection<DefinitionsChildId> getReferencedDefinitionsChildIds(TestRefinementModelId id) {
         // TODO
         return new HashSet<>();
@@ -927,7 +954,7 @@ public interface IRepository extends IWineryRepositoryCommon {
         // E.g., there may be multiple relationship templates having the same type
         Collection<DefinitionsChildId> ids = new HashSet<>();
 
-        TComplianceRule complianceRule = this.getElement(id);
+        OTComplianceRule complianceRule = this.getElement(id);
 
         //TODO to extra method
         //TODO extend to required Structure
@@ -1015,6 +1042,8 @@ public interface IRepository extends IWineryRepositoryCommon {
             referencedDefinitionsChildIds = this.getReferencedDefinitionsChildIds((ComplianceRuleId) id);
         } else if (id instanceof PatternRefinementModelId) {
             referencedDefinitionsChildIds = this.getReferencedDefinitionsChildIds((PatternRefinementModelId) id);
+        } else if (id instanceof TopologyFragmentRefinementModelId) {
+            referencedDefinitionsChildIds = this.getReferencedDefinitionsChildIds((TopologyFragmentRefinementModelId) id);
         } else if (id instanceof TestRefinementModelId) {
             referencedDefinitionsChildIds = this.getReferencedDefinitionsChildIds((TestRefinementModelId) id);
         } else {
