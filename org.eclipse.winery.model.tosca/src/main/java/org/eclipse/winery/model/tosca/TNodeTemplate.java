@@ -41,7 +41,8 @@ import org.eclipse.jdt.annotation.Nullable;
     "capabilities",
     "policies",
     "deploymentArtifacts",
-    "artifacts"
+    "artifacts",
+    "interfaces"
 })
 @JsonTypeInfo(
     defaultImpl = TNodeTemplate.class,
@@ -67,6 +68,7 @@ public class TNodeTemplate extends RelationshipSourceOrTarget implements HasPoli
     // this element is added to support YAML mode
     @XmlElement(name = "Artifacts", required = false)
     protected TArtifacts artifacts;
+    protected TInterfaces interfaces;
 
     public TNodeTemplate() {
         super();
@@ -86,6 +88,7 @@ public class TNodeTemplate extends RelationshipSourceOrTarget implements HasPoli
         this.minInstances = builder.minInstances;
         this.maxInstances = builder.maxInstances;
         this.artifacts = builder.artifacts;
+        this.interfaces = builder.interfaces;
 
         if (Objects.nonNull(builder.x) && Objects.nonNull(builder.y)) {
             this.setX(builder.x);
@@ -242,6 +245,14 @@ public class TNodeTemplate extends RelationshipSourceOrTarget implements HasPoli
         this.artifacts = artifacts;
     }
 
+    public TInterfaces getInterfaces() {
+        return interfaces;
+    }
+
+    public void setInterfaces(TInterfaces interfaces) {
+        this.interfaces = interfaces;
+    }
+
     @XmlAccessorType(XmlAccessType.FIELD)
     @XmlType(name = "", propOrder = {
         "capability"
@@ -341,6 +352,7 @@ public class TNodeTemplate extends RelationshipSourceOrTarget implements HasPoli
         private String x;
         private String y;
         private TArtifacts artifacts;
+        private TInterfaces interfaces;
 
         public Builder(String id, QName type) {
             super(id, type);
@@ -496,6 +508,11 @@ public class TNodeTemplate extends RelationshipSourceOrTarget implements HasPoli
 
         public Builder setArtifacts(List<TArtifact> artifacts) {
             this.artifacts = new TArtifacts(artifacts);
+            return self();
+        }
+
+        public Builder setInterfaces(List<TInterface> interfaces) {
+            this.interfaces = new TInterfaces(interfaces);
             return self();
         }
 

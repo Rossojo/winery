@@ -298,7 +298,6 @@ export class BackendService {
             console.log(topologySkeleton);
 
             const headers = new HttpHeaders().set('Content-Type', 'application/json');
-            console.log(this.configuration.elementUrl);
             return this.http.put(this.configuration.elementUrl,
                 topologySkeleton,
                 { headers: headers, responseType: 'text', observe: 'response' }

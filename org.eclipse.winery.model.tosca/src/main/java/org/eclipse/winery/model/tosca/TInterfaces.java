@@ -34,12 +34,24 @@ public class TInterfaces {
     @XmlElement(name = "Interface", required = true)
     protected List<TInterface> _interface;
 
+    public TInterfaces() {
+
+    }
+
+    public TInterfaces(List<TInterface> interfaces) {
+        this._interface = interfaces;
+    }
+
     @NonNull
     public List<TInterface> getInterface() {
         if (_interface == null) {
             _interface = new ArrayList<>();
         }
         return this._interface;
+    }
+
+    public void setInterface(List<TInterface> interfaces) {
+        this._interface = interfaces;
     }
 
     @Override

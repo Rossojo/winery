@@ -55,7 +55,7 @@ export class TNodeTemplate extends AbstractTEntity {
                 public deploymentArtifacts?: any,
                 public policies?: { policy: any[] },
                 public artifacts?: { artifact: Array<TArtifact> },
-                public interfaceDefinitions?: { interface: Array<Interface> },
+                public interfaces?: { interface: Array<Interface> },
                 public _state?: DifferenceStates) {
         super(documentation, any, otherAttributes);
     }
@@ -71,7 +71,7 @@ export class TNodeTemplate extends AbstractTEntity {
     generateNewNodeTemplateWithUpdatedAttribute(updatedAttribute: string, updatedValue: any): TNodeTemplate {
         const nodeTemplate = new TNodeTemplate(this.properties, this.id, this.type, this.name, this.minInstances, this.maxInstances,
             this.visuals, this.documentation, this.any, this.otherAttributes, this.x, this.y, this.capabilities,
-            this.requirements, this.deploymentArtifacts, this.policies, this.artifacts, this.interfaceDefinitions);
+            this.requirements, this.deploymentArtifacts, this.policies, this.artifacts, this.interfaces);
         if (updatedAttribute === 'coordinates') {
             nodeTemplate.x = updatedValue.x;
             nodeTemplate.y = updatedValue.y;

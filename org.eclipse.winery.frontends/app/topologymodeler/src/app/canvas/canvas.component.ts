@@ -2547,7 +2547,7 @@ export class CanvasComponent implements OnInit, OnDestroy, OnChanges, AfterViewI
         }
         newInterfaceDefinition.name = name;
         // Add interface definition to the node template.
-        this.currentModalData.interfaceDefinitions.interface.push(newInterfaceDefinition);
+        this.currentModalData.interfaces.interface.push(newInterfaceDefinition);
         console.log(this.currentModalData);
     }
 }

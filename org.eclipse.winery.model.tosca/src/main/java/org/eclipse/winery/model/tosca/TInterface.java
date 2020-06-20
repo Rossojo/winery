@@ -14,14 +14,19 @@
 
 package org.eclipse.winery.model.tosca;
 
-import org.eclipse.jdt.annotation.NonNull;
-
-import javax.xml.bind.annotation.*;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlSchemaType;
+import javax.xml.bind.annotation.XmlType;
+
+import org.eclipse.jdt.annotation.NonNull;
 
 
 /**
@@ -123,6 +128,10 @@ public class TInterface implements HasName, Serializable {
     @Override
     public void setName(String value) {
         this.name = value;
+    }
+
+    public void setOperation(List<TOperation> operations) {
+        this.operation = operations;
     }
 
     public static class Builder {
