@@ -68,7 +68,7 @@ public class TNodeTemplate extends RelationshipSourceOrTarget implements HasPoli
     // this element is added to support YAML mode
     @XmlElement(name = "Artifacts", required = false)
     protected TArtifacts artifacts;
-    protected TInterfaces interfaces;
+    protected List<TInterfaceDefinition> interfaces;
 
     public TNodeTemplate() {
         super();
@@ -245,11 +245,11 @@ public class TNodeTemplate extends RelationshipSourceOrTarget implements HasPoli
         this.artifacts = artifacts;
     }
 
-    public TInterfaces getInterfaces() {
+    public List<TInterfaceDefinition> getInterfaces() {
         return interfaces;
     }
 
-    public void setInterfaces(TInterfaces interfaces) {
+    public void setInterfaces(List<TInterfaceDefinition> interfaces) {
         this.interfaces = interfaces;
     }
 
@@ -352,7 +352,7 @@ public class TNodeTemplate extends RelationshipSourceOrTarget implements HasPoli
         private String x;
         private String y;
         private TArtifacts artifacts;
-        private TInterfaces interfaces;
+        private List<TInterfaceDefinition> interfaces;
 
         public Builder(String id, QName type) {
             super(id, type);
@@ -511,8 +511,8 @@ public class TNodeTemplate extends RelationshipSourceOrTarget implements HasPoli
             return self();
         }
 
-        public Builder setInterfaces(List<TInterface> interfaces) {
-            this.interfaces = new TInterfaces(interfaces);
+        public Builder setInterfaces(List<TInterfaceDefinition> interfaces) {
+            this.interfaces = interfaces;
             return self();
         }
 

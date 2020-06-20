@@ -158,9 +158,8 @@ export class PaletteComponent implements OnDestroy {
             null,
             null,
             { artifact: [] },
-            { interface: this.getInterfaceDefinitionsOfNodeType(this.removeVersionIdentifier(child.text)) }
+            this.getInterfaceDefinitionsOfNodeType(this.removeVersionIdentifier(child.text))
         );
-        console.log(newNode.interfaces);
         this.ngRedux.dispatch(this.actions.saveNodeTemplate(newNode));
     }
 

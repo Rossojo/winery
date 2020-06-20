@@ -55,7 +55,7 @@ export class TNodeTemplate extends AbstractTEntity {
                 public deploymentArtifacts?: any,
                 public policies?: { policy: any[] },
                 public artifacts?: { artifact: Array<TArtifact> },
-                public interfaces?: { interface: Array<Interface> },
+                public interfaces?: Array<Interface>,
                 public _state?: DifferenceStates) {
         super(documentation, any, otherAttributes);
     }
