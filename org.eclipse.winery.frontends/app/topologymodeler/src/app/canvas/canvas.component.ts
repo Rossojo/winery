@@ -12,8 +12,8 @@
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
  ********************************************************************************/
 import {
-    AfterViewInit, Component, ElementRef, HostListener, Input, KeyValueDiffers, NgZone, OnChanges, OnDestroy, OnInit,
-    QueryList, Renderer2, SimpleChanges, ViewChild, ViewChildren
+    AfterViewInit, Component, ElementRef, HostListener, Input, KeyValueDiffers, NgZone, OnChanges, OnDestroy, OnInit, QueryList, Renderer2, SimpleChanges,
+    ViewChild, ViewChildren
 } from '@angular/core';
 import { JsPlumbService } from '../services/jsPlumb.service';
 import { EntityType, TNodeTemplate, TRelationshipTemplate, VisualEntityType } from '../models/ttopology-template';
@@ -24,7 +24,7 @@ import { IWineryState } from '../redux/store/winery.store';
 import { TopologyRendererActions } from '../redux/actions/topologyRenderer.actions';
 import { NodeComponent } from '../node/node.component';
 import { Hotkey, HotkeysService } from 'angular2-hotkeys';
-import { ModalDirective } from 'ngx-bootstrap';
+import { BsModalRef, BsModalService, ModalDirective } from 'ngx-bootstrap';
 import { GridTemplate } from '../models/gridTemplate';
 import { Subscription } from 'rxjs';
 import { CapabilitiesModalData } from '../models/capabilitiesModalData';
@@ -60,6 +60,7 @@ import { CapabilityDefinitionModel } from '../models/capabilityDefinitionModel';
 import { WineryRowData } from '../../../../tosca-management/src/app/wineryTableModule/wineryTable.component';
 import { InheritanceUtils } from '../models/InheritanceUtils';
 import { PolicyService } from '../services/policy.service';
+import { SelectData } from '../../../../tosca-management/src/app/model/selectData';
 
 @Component({
     selector: 'winery-canvas',
@@ -81,6 +82,8 @@ export class CanvasComponent implements OnInit, OnDestroy, OnChanges, AfterViewI
     @ViewChild('threatModelingModal') threatModelingModal: ModalDirective;
     @ViewChild('manageYamlPoliciesModal') manageYamlPoliciesModal: ModalDirective;
     @ViewChild('addYamlPolicyModal') addYamlPolicyModal: ModalDirective;
+    @ViewChild('addInterfaceDefinitionModal') addInterfaceDefinitionModal: ModalDirective;
+    addInterfaceDefinitionModalRef: BsModalRef;
     @Input() readonly: boolean;
     @Input() entityTypes: EntityTypesModel;
     @Input() diffMode = false;
@@ -123,7 +126,6 @@ export class CanvasComponent implements OnInit, OnDestroy, OnChanges, AfterViewI
 
     // threatmodeling accordion state
     threatModalTab = 'create';
-
     indexOfNewNode: number;
     targetNodes: Array<string> = [];
 
@@ -151,6 +153,12 @@ export class CanvasComponent implements OnInit, OnDestroy, OnChanges, AfterViewI
     duplicateId = false;
 
     private longPressing: boolean;
+
+    // Manage InterfaceDefinitions Modal TODO: is this the correct place?
+    readonly interfaceTypes: SelectData[] = [
+        { text: '{tosca.interfaces.node.lifecycle}Standard', id: 'Standard' },
+        { text: '{tosca.interfaces.relationship}Configure', id: 'Configure' },
+    ];
 
     // Manage YAML Policies Modal
     selectedNewPolicyType: string;
@@ -190,7 +198,8 @@ export class CanvasComponent implements OnInit, OnDestroy, OnChanges, AfterViewI
                 private policyService: PolicyService,
                 private reqCapRelationshipService: ReqCapRelationshipService,
                 private notify: ToastrService,
-                private configuration: WineryRepositoryConfigurationService) {
+                private configuration: WineryRepositoryConfigurationService,
+                private modalService: BsModalService) {
         this.newJsPlumbInstance = this.jsPlumbService.getJsPlumbInstance();
         this.newJsPlumbInstance.setContainer('container');
 
@@ -337,7 +346,8 @@ export class CanvasComponent implements OnInit, OnDestroy, OnChanges, AfterViewI
                 break;
             case toggleModalType.InterfaceDefinitions:
                 this.modalData.modalVariant = ModalVariant.Other;
-                this.modalData.modalVisible = true;
+                this.modalData.modalVisible = false;
+                this.addInterfaceDefinitionModalRef = this.modalService.show(this.addInterfaceDefinitionModal);
                 break;
             case toggleModalType.Requirements:
                 this.modalData.modalVariant = ModalVariant.Other;
@@ -2530,5 +2540,9 @@ export class CanvasComponent implements OnInit, OnDestroy, OnChanges, AfterViewI
         // no need to encode the namespace since we assume dotted namespaces in YAML mode
         const absoluteURL = `${this.backendService.configuration.uiURL}${refType}/${typeQName.nameSpace}/${typeQName.localName}`;
         return '<a href="' + absoluteURL + '">' + typeQName.localName + '</a>';
+    }
+
+    addInterfaceDefinition(item: SelectData) {
+        console.log(item);
     }
 }

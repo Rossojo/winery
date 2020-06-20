@@ -16,6 +16,7 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { TableType } from '../../models/enums';
 import { FeatureEnum } from '../../../../../tosca-management/src/app/wineryFeatureToggleModule/wineryRepository.feature.direct';
 import { EntityTypesModel } from '../../models/entityTypesModel';
+import { Interface } from '../../models/interfaceModel';
 
 @Component({
     selector: 'winery-interface-definitions',

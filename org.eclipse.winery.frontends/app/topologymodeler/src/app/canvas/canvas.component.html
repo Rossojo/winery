@@ -365,7 +365,6 @@
 
     </winery-modal-body>
     <winery-modal-footer closeButtonLabel="Cancel" okButtonLabel="Add" (onOk)="addNewYamlPolicy(newPolicyName.value)">
-
     </winery-modal-footer>
 </winery-modal>
 
@@ -515,6 +514,26 @@
         </button>
     </winery-modal-footer>
 </winery-modal>
+
+<!--Add interface definitions modal -->
+<ng-template #addInterfaceDefinitionModal>
+    <winery-modal-header [modalRef]="addInterfaceDefinitionModalRef" [title]="'Add interface definitions to node template'" ></winery-modal-header>
+    <winery-modal-body>
+        <form #form="ngForm">
+            <div class="form-group">
+                <label for="type" class="control-label">Type</label>
+                <ng-select id="type" name="type" #type="ngModel" ngModel required
+                           [items]="interfaceTypes">
+                </ng-select>
+            </div>
+        </form>
+    </winery-modal-body>
+    <winery-modal-footer [modalRef]="addInterfaceDefinitionModalRef"
+                         [closeButtonLabel]="'Cancel'" [okButtonLabel]="'Add'"
+                         (onOk)="addInterfaceDefinition(type.value[0])"
+                         [disableOkButton]="type.invalid">
+    </winery-modal-footer>
+</ng-template>
 
 
 <!-- XML Policies and Deployment Artifacts Modal -->

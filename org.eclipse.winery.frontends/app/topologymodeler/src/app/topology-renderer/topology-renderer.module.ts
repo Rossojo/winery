@@ -46,6 +46,7 @@ import { WineryFeatureToggleModule } from '../../../../tosca-management/src/app/
 import { WineryTableModule } from '../../../../tosca-management/src/app/wineryTableModule/wineryTable.module';
 import { Ng2TableModule } from 'ng2-table';
 import { InterfaceDefinitionsComponent } from '../node/interface-definitions/interface-definitions.component';
+import { SelectModule } from 'ng2-select';
 
 @NgModule({
     imports: [
@@ -66,6 +67,7 @@ import { InterfaceDefinitionsComponent } from '../node/interface-definitions/int
         WineryFeatureToggleModule,
         WineryTableModule,
         Ng2TableModule,
+        SelectModule,
     ],
     declarations: [
         NavbarComponent,

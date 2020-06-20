@@ -183,6 +183,15 @@ export class BackendService {
     }
 
     /**
+     * Requests all capability types from the backend
+     */
+    private requestInterfaceTypes(): Observable<any> {
+        if (this.configuration) {
+            return this.http.get(this.configuration.repositoryURL + '/capabilitytypes?full', { headers: this.headers });
+        }
+    }
+
+    /**
      * Requests all grouped node types from the backend
      */
     private requestGroupedNodeTypes(): Observable<any> {

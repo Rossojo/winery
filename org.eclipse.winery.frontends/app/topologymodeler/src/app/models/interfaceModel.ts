@@ -14,6 +14,7 @@
 
 import { YesNoEnum } from '../../../../tosca-management/src/app/model/enums';
 import { TArtifact } from './ttopology-template';
+import { SelectData } from '../../../../tosca-management/src/app/model/selectData';
 
 export class Interface {
     name: string;
@@ -39,6 +40,29 @@ export class Operation {
     outputs: Parameter[] = [];
     implementation: TArtifact;
 }
+
+export const StandardInterface: Interface = {
+    name: 'Standard', type: '{tosca.interfaces.node.lifecycle}Standard', inputs: [], operations: [
+        Object.assign(new Operation(), { name: 'create' }),
+        Object.assign(new Operation(), { name: 'configure' }),
+        Object.assign(new Operation(), { name: 'start' }),
+        Object.assign(new Operation(), { name: 'stop' }),
+        Object.assign(new Operation(), { name: 'delete' }),
+    ]
+};
+
+export const ConfigureInterface: Interface = {
+    name: 'Configure', type: '{tosca.interfaces.relationship}Configure', inputs: [], operations: [
+        Object.assign(new Operation(), { name: 'pre_configure_source' }),
+        Object.assign(new Operation(), { name: 'pre_configure_target' }),
+        Object.assign(new Operation(), { name: 'post_configure_source' }),
+        Object.assign(new Operation(), { name: 'post_configure_target' }),
+        Object.assign(new Operation(), { name: 'add_target' }),
+        Object.assign(new Operation(), { name: 'add_source' }),
+        Object.assign(new Operation(), { name: 'target_changed' }),
+        Object.assign(new Operation(), { name: 'remove_target' }),
+    ]
+};
 
 export class InputParameters {
     inputParameter: InterfaceParameter[] = [];
