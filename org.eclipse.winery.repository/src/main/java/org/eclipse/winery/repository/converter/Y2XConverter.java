@@ -648,6 +648,7 @@ public class Y2XConverter {
             .setProperties(convertPropertyAssignments(node.getProperties()))
             .addRequirements(convert(node.getRequirements()))
             .addCapabilities(convert(node.getCapabilities()))
+            .setInterfaces(convert(node.getInterfaces()))
             // .setDeploymentArtifacts(convertDeploymentArtifacts(node.getArtifacts()));
             .setArtifacts(convert(node.getArtifacts()));
         TNodeTemplate nodeTemplate = builder.build();

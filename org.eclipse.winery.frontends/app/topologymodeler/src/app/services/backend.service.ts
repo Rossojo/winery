@@ -126,6 +126,7 @@ export class BackendService {
             // This is required because the information has to be returned together
 
             if (isNullOrUndefined(this.configuration.compareTo)) {
+                console.log(this.configuration.elementUrl);
                 return forkJoin(
                     this.http.get<TTopologyTemplate>(this.configuration.elementUrl),
                     this.http.get<Visuals>(nodeVisualsUrl),

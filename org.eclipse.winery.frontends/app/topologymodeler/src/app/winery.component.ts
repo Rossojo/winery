@@ -292,6 +292,7 @@ export class WineryComponent implements OnInit, AfterViewInit {
 
     initiateData(): void {
         this.backendService.allEntities$.subscribe(JSON => {
+            console.log(JSON);
             // Grouped NodeTypes
             this.initEntityType(JSON[0], 'groupedNodeTypes');
 
