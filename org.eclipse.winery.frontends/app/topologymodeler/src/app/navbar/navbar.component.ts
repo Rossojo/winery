@@ -149,10 +149,6 @@ export class NavbarComponent implements OnDestroy {
                 this.ngRedux.dispatch(this.actions.togglePolicies());
                 break;
             }
-            case 'groupView': {
-                this.ngRedux.dispatch(this.actions.toggleGroupView());
-                break;
-            }
             case 'requirementsCapabilities': {
                 this.ngRedux.dispatch(this.actions.toggleRequirementsCapabilities());
                 break;

@@ -28,13 +28,11 @@ export class TagService {
         this.path = backendBaseURL + this.route.url + '/';
     }
 
-    getTagsData(path?: string): Observable<TagsAPIData[]> {
-        this.setPathIfExists(path);
+    getTagsData(): Observable<TagsAPIData[]> {
         return this.http.get<TagsAPIData[]>(this.path);
     }
 
-    removeTagData(data: TagsAPIData, path?: string): Observable<HttpResponse<string>> {
-        this.setPathIfExists(path);
+    removeTagData(data: TagsAPIData): Observable<HttpResponse<string>> {
         return this.http
             .delete(
                 this.path + data.id + '/',
@@ -42,8 +40,7 @@ export class TagService {
             );
     }
 
-    postTag(tagsApiData: TagsAPIData, path?: string): Observable<string> {
-        this.setPathIfExists(path);
+    postTag(tagsApiData: TagsAPIData): Observable<string> {
         const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
         return this.http
             .post(
@@ -51,11 +48,5 @@ export class TagService {
                 tagsApiData,
                 { responseType: 'text' }
             );
-    }
-
-    private setPathIfExists(path?: string) {
-        if (path) {
-            this.path = path;
-        }
     }
 }

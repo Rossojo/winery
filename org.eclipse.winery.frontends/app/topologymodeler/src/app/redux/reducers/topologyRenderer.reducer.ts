@@ -28,7 +28,6 @@ export interface TopologyRendererState {
         layoutButton?: boolean;
         alignHButton?: boolean;
         alignVButton?: boolean;
-        groupViewButton?: boolean;
         importTopologyButton?: boolean;
         threatModelingButton?: boolean;
         splitTopologyButton?: boolean;
@@ -49,7 +48,6 @@ export interface TopologyRendererState {
         manageYamlPoliciesButton?: boolean;
     };
     nodesToSelect?: string[];
-    updateGroupView?: boolean;
 }
 
 export const INITIAL_TOPOLOGY_RENDERER_STATE: TopologyRendererState = {
@@ -71,7 +69,6 @@ export const INITIAL_TOPOLOGY_RENDERER_STATE: TopologyRendererState = {
         matchTopologyButton: false,
         problemDetectionButton: false,
         enrichmentButton: false,
-        groupViewButton: false,
         substituteTopologyButton: false,
         refinePatternsButton: false,
         refineTopologyButton: false,
@@ -85,7 +82,6 @@ export const INITIAL_TOPOLOGY_RENDERER_STATE: TopologyRendererState = {
         placeComponentsButton: false,
         manageYamlPoliciesButton: false
     },
-    updateGroupView: false
 };
 /**
  * Reducer for the TopologyRenderer
@@ -93,14 +89,6 @@ export const INITIAL_TOPOLOGY_RENDERER_STATE: TopologyRendererState = {
 export const TopologyRendererReducer =
     function (lastState: TopologyRendererState = INITIAL_TOPOLOGY_RENDERER_STATE, action: Action): TopologyRendererState {
         switch (action.type) {
-            case TopologyRendererActions.TOGGLE_GROUP_VIEW:
-                return {
-                    ...lastState,
-                    buttonsState: {
-                        ...lastState.buttonsState,
-                        groupViewButton: !lastState.buttonsState.groupViewButton
-                    }
-                };
             case TopologyRendererActions.TOGGLE_POLICIES:
                 return {
                     ...lastState,
@@ -292,14 +280,6 @@ export const TopologyRendererReducer =
                         ...lastState.buttonsState,
                         generatePlaceholderSubs: !lastState.buttonsState.generatePlaceholderSubs
                     }
-                };
-            case TopologyRendererActions.UPDATE_GROUP_VIEW:
-                return {
-                    ...lastState,
-                    buttonsState: {
-                        ...lastState.buttonsState
-                    },
-                    updateGroupView: !lastState.updateGroupView
                 };
             case TopologyRendererActions.HIGHLIGHT_NODES:
                 const data = <HighlightNodesAction>action;

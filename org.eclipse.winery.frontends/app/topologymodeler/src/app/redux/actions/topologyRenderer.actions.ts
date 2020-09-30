@@ -25,7 +25,6 @@ export interface HighlightNodesAction extends Action {
 @Injectable()
 export class TopologyRendererActions {
 
-    static TOGGLE_GROUP_VIEW = 'TOGGLE_GROUP_VIEW';
     static TOGGLE_POLICIES = 'TOGGLE_POLICIES';
     static TOGGLE_TARGET_LOCATIONS = 'TOGGLE_TARGET_LOCATIONS';
     static TOGGLE_PROPERTIES = 'TOGGLE_PROPERTIES';
@@ -52,7 +51,6 @@ export class TopologyRendererActions {
     static DETECT_PROBLEMS = 'DETECT_PROBLEMS';
     static ENRICH_NODE_TEMPLATES = 'ENRICH_NODE_TEMPLATES';
     static DETERMINE_STATEFUL_COMPONENTS = 'DETERMINE_STATEFUL_COMPONENTS';
-    static UPDATE_GROUP_VIEW = 'UPDATE_GROUP_VIEW';
     static DETERMINE_FREEZABLE_COMPONENTS = 'DETERMINE_FREEZABLE_COMPONENTS';
     static CLEAN_FREEZABLE_COMPONENTS = 'CLEAN_FREEZABLE_COMPONENTS';
     static PLACE_COMPONENTS = 'PLACE_COMPONENTS';
@@ -60,10 +58,6 @@ export class TopologyRendererActions {
 
     togglePolicies(): Action {
         return { type: TopologyRendererActions.TOGGLE_POLICIES };
-    }
-
-    toggleGroupView(): Action {
-        return { type: TopologyRendererActions.TOGGLE_GROUP_VIEW };
     }
 
     toggleTargetLocations(): Action {
@@ -165,10 +159,6 @@ export class TopologyRendererActions {
             type: TopologyRendererActions.HIGHLIGHT_NODES,
             nodesToHighlight: listOfNodeIds
         };
-    }
-
-    updateGroupView(): Action {
-        return { type: TopologyRendererActions.UPDATE_GROUP_VIEW };
     }
 
     determineStatefulComponents(): Action {

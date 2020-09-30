@@ -55,8 +55,6 @@ import { ReqCapRelationshipService } from './services/req-cap-relationship.servi
 import { WineryTableModule } from '../../../tosca-management/src/app/wineryTableModule/wineryTable.module';
 import { EdmmTransformationCheckComponent } from './edmmTransformationCheck/edmmTransformationCheck.component';
 import { PolicyService } from './services/policy.service';
-import { GroupViewComponent } from './group-view/group-view.component';
-import { TagService } from '../../../tosca-management/src/app/instance/sharedComponents/tag/tag.service';
 
 @NgModule({
     declarations: [
@@ -69,7 +67,6 @@ import { TagService } from '../../../tosca-management/src/app/instance/sharedCom
         EnricherComponent,
         MultiParticipantsComponent,
         EdmmTransformationCheckComponent,
-        GroupViewComponent,
     ],
     exports: [WineryComponent],
     imports: [
@@ -107,7 +104,6 @@ import { TagService } from '../../../tosca-management/src/app/instance/sharedCom
         LoadedService,
         AppReadyEventService,
         BackendService,
-        TagService,
         ExistsService,
         EntitiesModalService,
         ImportTopologyService,

@@ -34,7 +34,6 @@ import { WineryRepositoryConfigurationService } from '../../../../tosca-manageme
 import { takeLast } from 'rxjs/operators';
 import { TPolicy } from '../models/policiesModalData';
 import { backendBaseURL } from '../../../../tosca-management/src/app/configuration';
-import { TagsAPIData } from '../../../../tosca-management/src/app/instance/sharedComponents/tag/tagsAPIData';
 
 /**
  * Responsible for interchanging data between the app and the server.
@@ -119,7 +118,7 @@ export class BackendService {
      * We use Observable.forkJoin to await all responses from the backend.
      * This is required
      */
-    public requestTopologyTemplateAndVisuals(): Observable<any> {
+    private requestTopologyTemplateAndVisuals(): Observable<any> {
         if (this.configuration) {
             const nodeVisualsUrl = this.configuration.repositoryURL + '/nodetypes/allvisualappearancedata';
             const relationshipVisualsUrl = this.configuration.repositoryURL + '/relationshiptypes/allvisualappearancedata';

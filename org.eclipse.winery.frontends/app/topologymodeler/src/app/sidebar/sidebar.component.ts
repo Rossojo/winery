@@ -61,18 +61,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
     sidebarAnimationStatus: string;
     maxInputEnabled = true;
     propertyDefinitionType: string;
-    subscriptions: Array<Subscription> = [];
-
-    attributeViewVisible = false;
-    participantValue = '';
-    participants: string[] = [];
-    groupTypes: string[] = ['location', 'participant'];
-    endpoint: string;
-    attributeName: string;
-    attributeValue: string;
-    currentTopologyTemplate: TTopologyTemplate;
-    groupOptionSelection = 'reuse';
-    participantOptionSelection = 'createNewParticipant';
 
     @Output() sidebarDeleteButtonClicked: EventEmitter<any> = new EventEmitter<any>();
     public nodeNameKeyUp: Subject<string> = new Subject<string>();
@@ -82,13 +70,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
     constructor(private ngRedux: NgRedux<IWineryState>,
                 private actions: WineryActions,
-                private topologyRendererActions: TopologyRendererActions,
-                private alert: ToastrService,
-                private tagService: TagService,
                 private backendService: BackendService,
                 private policyService: PolicyService) {
-        this.subscriptions.push(this.ngRedux.select(currentState => currentState.wineryState.currentJsonTopology)
-            .subscribe(topologyTemplate => this.currentTopologyTemplate = topologyTemplate));
     }
 
     deleteButtonSidebarClicked($event) {
@@ -98,23 +81,10 @@ export class SidebarComponent implements OnInit, OnDestroy {
         });
     }
 
-    onCreateNewGroup(): void {
-        this.attributeName = '';
-    }
-
-    onUseExistingGroup(): void {
-        this.attributeName = '';
-    }
-
-    selectGroupType(groupType): void {
-        this.attributeName = groupType;
-    }
-
     /**
      * Closes the sidebar.
      */
     closeSidebar() {
-        this.attributeViewVisible = false;
         this.ngRedux.dispatch(this.actions.openSidebar({
             sidebarContents: {
                 sidebarVisible: false,
@@ -124,50 +94,9 @@ export class SidebarComponent implements OnInit, OnDestroy {
                 type: '',
                 minInstances: -1,
                 maxInstances: -1,
-                properties: '',
-                groupViewVisible: false,
-                group: null
+                properties: ''
             }
         }));
-    }
-
-    private getParticipants(): void {
-        this.backendService.requestTopologyTemplateAndVisuals().subscribe(
-            data => {
-                this.retrieveParticipantsFromNodeTemplates(data[0].nodeTemplates);
-            }
-        );
-    }
-
-    private retrieveParticipantsFromNodeTemplates(nodeTemplates: TNodeTemplate[]): void {
-        const wineryExtensionNamespace = '{http://www.opentosca.org/winery/extensions/tosca/2013/02/12}';
-
-        for (const nodeTemplate of nodeTemplates) {
-            const participantValue = nodeTemplate.otherAttributes[wineryExtensionNamespace + 'participant'];
-            if (participantValue) {
-                if (!this.isParticipantExisting(participantValue)) {
-                    const csvValue = participantValue.split(',');
-                    for (const val of csvValue) {
-                        if (this.participants.findIndex(part => part === val) < 0) {
-                            this.participants.push(val);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private isParticipantExisting(participantValue): boolean {
-        return !(this.participants.findIndex(participant => participant === participantValue) < 0);
-    }
-
-    selectParticipant(participantValue): void {
-        this.participantValue = participantValue;
-        this.attributeValue = participantValue;
-    }
-
-    clearParticipant(): void {
-        this.participantValue = '';
     }
 
     /**
@@ -212,7 +141,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
         // apply changes to the node name <input> field with a debounceTime of 300ms
         this.subscription = this.nodeNameKeyUp.pipe(
             debounceTime(300),
-            distinctUntilChanged(), )
+            distinctUntilChanged(),)
             .subscribe(data => {
                 if (this.sidebarState.nodeClicked) {
                     this.ngRedux.dispatch(this.actions.changeNodeName({
@@ -253,7 +182,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
         // minInstances
         const nodeMinInstancesKeyUpObservable = this.nodeMinInstancesKeyUp.pipe(
             debounceTime(300),
-            distinctUntilChanged(), )
+            distinctUntilChanged(),)
             .subscribe(data => {
                 if (this.sidebarState.nodeClicked) {
                     this.ngRedux.dispatch(this.actions.changeMinInstances({
@@ -283,7 +212,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
         // maxInstances
         const nodeMaxInstancesKeyUpObservable = this.nodeMaxInstancesKeyUp.pipe(
             debounceTime(300),
-            distinctUntilChanged(), )
+            distinctUntilChanged(),)
             .subscribe(data => {
                 if (this.sidebarState.nodeClicked) {
                     this.ngRedux.dispatch(this.actions.changeMaxInstances({
@@ -311,76 +240,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
                 }));
             });
     }
-
-    addToGroup(): void {
-        this.backendService.requestTopologyTemplateAndVisuals().subscribe(
-            data => {
-                data[0].nodeTemplates.forEach(nodeTemplate => {
-                    this.currentTopologyTemplate.nodeTemplates.forEach(currentNodeTemplate => {
-                        if (currentNodeTemplate.id === nodeTemplate.id) {
-                            currentNodeTemplate.otherAttributes = nodeTemplate.otherAttributes;
-                        }
-                    });
-                });
-            }
-        );
-        this.attributeViewVisible = true;
-        this.sidebarState.groupViewVisible = false;
-        this.getParticipants();
-    }
-
-    submitNewAttribute(): void {
-        if (this.attributeName === 'participant') {
-            this.submitTag().subscribe(tagResponse => {
-                this.alert.success('Successfully added selected Node Templates to participant ' + this.attributeValue);
-                this.submitWineryAttribute().subscribe(attributeResponse => {
-                    this.ngRedux.dispatch(this.topologyRendererActions.updateGroupView());
-                    this.resetGroupConfig();
-                    this.alert.success('Saved Topology Template');
-                });
-            });
-        } else {
-            this.submitWineryAttribute().subscribe(attributeResponse => {
-                this.ngRedux.dispatch(this.topologyRendererActions.updateGroupView());
-                this.resetGroupConfig();
-                this.alert.success('Saved Topology Template');
-            });
-        }
-        this.getParticipants();
-    }
-
-    private resetGroupConfig(): void {
-        this.endpoint = '';
-        this.attributeName = '';
-        this.attributeValue = '';
-        this.sidebarState.groupViewVisible = false;
-        this.sidebarState.group = [];
-        this.attributeViewVisible = false;
-        this.participantValue = '';
-    }
-
-    private submitTag(): Observable<any> {
-        const participantTag: TagsAPIData = new TagsAPIData();
-        participantTag.name = this.attributeValue;
-        participantTag.value = this.endpoint;
-        return this.tagService.postTag(participantTag, this.backendService.serviceTemplateURL + '/tags');
-    }
-
-    private submitWineryAttribute(): Observable<any> {
-        for (const selectedNode of this.sidebarState.group) {
-            for (const nodeTemplate of this.currentTopologyTemplate.nodeTemplates) {
-                if (selectedNode.id === nodeTemplate.id) {
-                    // check if there were previously stored values and overwrite or add to comma-separated list of groups!
-                    const attributeNodeTemplate = nodeTemplate.generateNewNodeTemplateWithUpdatedAttribute(this.attributeName, this.attributeValue);
-                    this.currentTopologyTemplate.nodeTemplates[this.currentTopologyTemplate.nodeTemplates.findIndex(element => element.id === nodeTemplate.id)]
-                        = attributeNodeTemplate;
-                }
-            }
-        }
-        return this.backendService.saveTopologyTemplate(this.currentTopologyTemplate);
-
-    }
-
+    
     /**
      * Implements some checks, if the values from the user are correct, and updates the nodes
      * @param $event

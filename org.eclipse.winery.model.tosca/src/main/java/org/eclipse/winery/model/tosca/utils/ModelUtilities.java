@@ -75,7 +75,6 @@ import org.xml.sax.SAXException;
 public abstract class ModelUtilities {
 
     public static final QName QNAME_LOCATION = new QName(Namespaces.TOSCA_WINERY_EXTENSIONS_NAMESPACE, "location");
-    public static final QName QNAME_PARTICIPANT = new QName(Namespaces.TOSCA_WINERY_EXTENSIONS_NAMESPACE, "participant");
     public static final QName NODE_TEMPLATE_REGION = new QName(Namespaces.TOSCA_WINERY_EXTENSIONS_NAMESPACE, "region");
     public static final QName NODE_TEMPLATE_PROVIDER = new QName(Namespaces.TOSCA_WINERY_EXTENSIONS_NAMESPACE,
         "provider");
@@ -591,18 +590,6 @@ public abstract class ModelUtilities {
             return Optional.empty();
         }
         return Optional.ofNullable(targetLabel).map(String::toLowerCase);
-    }
-
-    public static Optional<String> getParticipant(TNodeTemplate nodeTemplate) {
-        if (nodeTemplate == null) {
-            return Optional.empty();
-        }
-        Map<QName, String> otherAttributes = nodeTemplate.getOtherAttributes();
-        String participant = otherAttributes.get(QNAME_PARTICIPANT);
-        if (participant != null && (participant.equals("undefined") || participant.equals(""))) {
-            return Optional.empty();
-        }
-        return Optional.ofNullable(participant).map(String::toLowerCase);
     }
 
     /**
