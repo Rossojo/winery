@@ -66,7 +66,7 @@ export class WineryComponentExistsComponent implements OnInit {
             this.generateData.url += '/';
         }
 
-        if (!this.generateData.namespace.endsWith('/')) {
+        if (this.generateData.namespace && !this.generateData.namespace.endsWith('/')) {
             this.existService.check(this.generateData.url)
                 .subscribe(
                     () => this.generateData.createComponent = false,

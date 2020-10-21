@@ -31,13 +31,10 @@ import { Threat, ThreatAssessmentApiData } from '../models/threatModelingModalDa
 import { Visuals } from '../models/visuals';
 import { VersionElement } from '../models/versionElement';
 import { WineryRepositoryConfigurationService } from '../../../../tosca-management/src/app/wineryFeatureToggleModule/WineryRepositoryConfiguration.service';
-import { tap } from 'rxjs/operators';
+import { takeLast, tap } from 'rxjs/operators';
 import { NgRedux } from '@angular-redux/store';
 import { IWineryState } from '../redux/store/winery.store';
 import { WineryActions } from '../redux/actions/winery.actions';
-import { takeLast } from 'rxjs/operators';
-import { TPolicy } from '../models/policiesModalData';
-import { backendBaseURL } from '../../../../tosca-management/src/app/configuration';
 
 /**
  * Responsible for interchanging data between the app and the server.
@@ -331,7 +328,7 @@ export class BackendService {
      * @param topologyTemplate
      */
     private prepareTopologyTemplateForExport(topologyTemplate: any) {
-        const topologySkeleton = {
+        return {
             documentation: [],
             any: [],
             otherAttributes: {},
@@ -350,10 +347,8 @@ export class BackendService {
                 delete clone.visuals;
                 return clone;
             }),
-            policies: topologyTemplate.policies.map(policy => Object.assign({}, policy)),
+            policies: topologyTemplate.policies,
         };
-
-        return topologySkeleton;
     }
 
     saveYamlArtifact(topology: TTopologyTemplate,
@@ -406,8 +401,7 @@ export class BackendService {
      *
      */
     threatCreation(data: ThreatCreation): Observable<string> {
-        const url = this.configuration.repositoryURL;
-        return this.http.post(url + '/threats', data, { responseType: 'text' });
+        return this.http.post(this.configuration.repositoryURL + '/threats', data, { responseType: 'text' });
     }
 
     /**
