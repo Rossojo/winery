@@ -23,7 +23,7 @@ import { ServiceTemplateId } from '../models/serviceTemplateId';
 import { ToscaDiff } from '../models/ToscaDiff';
 import { ToastrService } from 'ngx-toastr';
 import { Observable } from 'rxjs/Observable';
-import { forkJoin } from 'rxjs';
+import { concat, forkJoin } from 'rxjs';
 import { TopologyModelerConfiguration } from '../models/topologyModelerConfiguration';
 import { ErrorHandlerService } from './error-handler.service';
 import { ThreatCreation } from '../models/threatCreation';
@@ -35,6 +35,9 @@ import { tap } from 'rxjs/operators';
 import { NgRedux } from '@angular-redux/store';
 import { IWineryState } from '../redux/store/winery.store';
 import { WineryActions } from '../redux/actions/winery.actions';
+import { takeLast } from 'rxjs/operators';
+import { TPolicy } from '../models/policiesModalData';
+import { backendBaseURL } from '../../../../tosca-management/src/app/configuration';
 
 /**
  * Responsible for interchanging data between the app and the server.
@@ -209,7 +212,7 @@ export class BackendService {
      */
     private requestArtifactTypes(): Observable<any> {
         if (this.configuration) {
-            return this.http.get(this.configuration.repositoryURL + '/artifacttypes', { headers: this.headers });
+            return this.http.get(this.configuration.repositoryURL + '/artifacttypes?full', { headers: this.headers });
         }
     }
 
@@ -346,11 +349,39 @@ export class BackendService {
                 delete clone.working;
                 delete clone.visuals;
                 return clone;
-            })
-
+            }),
+            policies: topologyTemplate.policies.map(policy => Object.assign({}, policy)),
         };
 
         return topologySkeleton;
+    }
+
+    saveYamlArtifact(topology: TTopologyTemplate,
+                     nodeTemplateId: string,
+                     artifactName: string,
+                     file: File): Observable<HttpResponse<string>> {
+        const url =
+            `${this.serviceTemplateURL}${urlElement.TopologyTemplate}${urlElement.NodeTemplates}${nodeTemplateId}${urlElement.YamlArtifacts}/${artifactName}`;
+        // handle entries managed by the backend
+        const formData: FormData = new FormData();
+        formData.append('file', file, file.name);
+
+        // we save the new topology template first, and then post the artifact file.
+        return concat(
+            this.saveTopologyTemplate(topology),
+            this.http.post(url, formData, { observe: 'response', responseType: 'text' }))
+            .pipe(
+                takeLast(1)
+            );
+    }
+
+    downloadYamlArtifactFile(nodeTemplateId: string,
+                             artifactName: string,
+                             fileName: string) {
+        const url =
+            `${this.serviceTemplateURL}${urlElement.TopologyTemplate}${urlElement.NodeTemplates}${nodeTemplateId}${urlElement.YamlArtifacts}/${artifactName}/` +
+            fileName;
+        return this.http.get(url, { observe: 'response', responseType: 'blob' });
     }
 
     /**
@@ -358,7 +389,7 @@ export class BackendService {
      */
     importTopology(importedTemplateQName: string): Observable<HttpResponse<string>> {
         const headers = new HttpHeaders().set('Content-Type', 'text/plain');
-        return this.http.post(this.configuration.elementPath + '/merge/',
+        return this.http.post(`${this.serviceTemplateURL}${urlElement.TopologyTemplate}merge/`,
             importedTemplateQName,
             { headers: headers, observe: 'response', responseType: 'text' }
         );

@@ -39,7 +39,6 @@ import { TypeaheadModule } from 'ngx-bootstrap/typeahead';
 import { ExistsService } from './services/exists.service';
 import { EntitiesModalService } from './canvas/entities-modal/entities-modal.service';
 import { ImportTopologyService } from './services/import-topology.service';
-import { ReqCapService } from './services/req-cap.service';
 import { SplitMatchTopologyService } from './services/split-match-topology.service';
 import { ErrorHandlerService } from './services/error-handler.service';
 import { PopoverModule } from 'ngx-bootstrap/popover';
@@ -53,13 +52,15 @@ import { WineryFeatureToggleModule } from '../../../tosca-management/src/app/win
 import { PlaceComponentsService } from './services/placement.service';
 import { LiveModelingService } from './services/live-modeling.service';
 import { ContainerService } from './services/container.service';
-import { ModalModule, ProgressbarModule, TooltipModule } from 'ngx-bootstrap';
+import { ModalModule, TooltipModule } from 'ngx-bootstrap';
 import { ReqCapRelationshipService } from './services/req-cap-relationship.service';
+import { WineryTableModule } from '../../../tosca-management/src/app/wineryTableModule/wineryTable.module';
 import { LiveModelingActions } from './redux/actions/live-modeling.actions';
 import { AngularResizedEventModule } from 'angular-resize-event';
 import { NavbarComponent } from './navbar/navbar.component';
 import { OverlayComponent } from './overlay/overlay.component';
 import { EdmmTransformationCheckComponent } from './edmmTransformationCheck/edmmTransformationCheck.component';
+import { PolicyService } from './services/policy.service';
 import { PropertyValidatorService } from './services/property-validator.service';
 import { OverlayService } from './services/overlay.service';
 import { TopologyService } from './services/topology.service';
@@ -105,6 +106,7 @@ import { LiveModelingSidebarModule } from './live-modeling/live-modeling-sidebar
         PopoverModule.forRoot(),
         PropertiesModule,
         WineryFeatureToggleModule,
+        WineryTableModule,
         TooltipModule.forRoot(),
         AngularResizedEventModule,
         ModalModule.forRoot(),
@@ -122,11 +124,12 @@ import { LiveModelingSidebarModule } from './live-modeling/live-modeling-sidebar
         ExistsService,
         EntitiesModalService,
         ImportTopologyService,
-        ReqCapService,
         SplitMatchTopologyService,
         ErrorHandlerService,
         StatefulAnnotationsService,
         PlaceComponentsService,
+        ReqCapRelationshipService,
+        PolicyService,
         ContainerService,
         PropertyValidatorService,
         LiveModelingService,

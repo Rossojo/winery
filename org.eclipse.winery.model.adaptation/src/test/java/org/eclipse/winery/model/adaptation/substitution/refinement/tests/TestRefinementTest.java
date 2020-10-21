@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 Contributors to the Eclipse Foundation
+ * Copyright (c) 2019-2020 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -21,11 +21,11 @@ import java.util.List;
 import javax.xml.namespace.QName;
 
 import org.eclipse.winery.model.adaptation.substitution.refinement.RefinementCandidate;
+import org.eclipse.winery.model.tosca.OTRelationDirection;
+import org.eclipse.winery.model.tosca.OTRelationMapping;
+import org.eclipse.winery.model.tosca.OTTestRefinementModel;
 import org.eclipse.winery.model.tosca.TNodeTemplate;
-import org.eclipse.winery.model.tosca.TRelationDirection;
-import org.eclipse.winery.model.tosca.TRelationMapping;
 import org.eclipse.winery.model.tosca.TRelationshipTemplate;
-import org.eclipse.winery.model.tosca.TTestRefinementModel;
 import org.eclipse.winery.model.tosca.TTopologyTemplate;
 import org.eclipse.winery.topologygraph.matching.ToscaIsomorphismMatcher;
 import org.eclipse.winery.topologygraph.matching.ToscaTypeMatcher;
@@ -37,8 +37,8 @@ import org.eclipse.winery.topologygraph.transformation.ToscaTransformer;
 import org.jgrapht.GraphMapping;
 import org.junit.jupiter.api.Test;
 
-import static org.eclipse.jdt.annotation.Checks.assertNonNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class TestRefinementTest {
 
@@ -80,27 +80,27 @@ public class TestRefinementTest {
         TTopologyTemplate refinementTopology = new TTopologyTemplate();
         refinementTopology.addNodeTemplate(mySqlConnectorTest);
 
-        TRelationMapping testHostedOn = new TRelationMapping();
-        testHostedOn.setDirection(TRelationDirection.OUTGOING);
+        OTRelationMapping testHostedOn = new OTRelationMapping();
+        testHostedOn.setDirection(OTRelationDirection.OUTGOING);
         testHostedOn.setRelationType(QName.valueOf("{ns}hostedOn"));
-        testHostedOn.setRefinementNode(mySqlConnectorTest);
-        testHostedOn.setDetectorNode(tomcat);
-        TRelationMapping testConnectsTo = new TRelationMapping();
-        testConnectsTo.setDirection(TRelationDirection.OUTGOING);
+        testHostedOn.setRefinementElement(mySqlConnectorTest);
+        testHostedOn.setDetectorElement(tomcat);
+        OTRelationMapping testConnectsTo = new OTRelationMapping();
+        testConnectsTo.setDirection(OTRelationDirection.OUTGOING);
         testConnectsTo.setRelationType(QName.valueOf("{ns}connectsTo"));
-        testConnectsTo.setRefinementNode(mySqlConnectorTest);
-        testConnectsTo.setDetectorNode(database);
-        TRelationMapping testIngoingRelationTest = new TRelationMapping();
-        testIngoingRelationTest.setDirection(TRelationDirection.INGOING);
+        testConnectsTo.setRefinementElement(mySqlConnectorTest);
+        testConnectsTo.setDetectorElement(database);
+        OTRelationMapping testIngoingRelationTest = new OTRelationMapping();
+        testIngoingRelationTest.setDirection(OTRelationDirection.INGOING);
         testIngoingRelationTest.setRelationType(QName.valueOf("{ns}ingoingTest"));
-        testIngoingRelationTest.setRefinementNode(mySqlConnectorTest);
-        testIngoingRelationTest.setDetectorNode(webShop);
-        List<TRelationMapping> relationMappings = new ArrayList<>();
+        testIngoingRelationTest.setRefinementElement(mySqlConnectorTest);
+        testIngoingRelationTest.setDetectorElement(webShop);
+        List<OTRelationMapping> relationMappings = new ArrayList<>();
         relationMappings.add(testHostedOn);
         relationMappings.add(testConnectsTo);
         relationMappings.add(testIngoingRelationTest);
 
-        TTestRefinementModel testRefinementModel = new TTestRefinementModel();
+        OTTestRefinementModel testRefinementModel = new OTTestRefinementModel();
         testRefinementModel.setRefinementTopology(refinementTopology);
         testRefinementModel.setDetector(topologyTemplate);
         testRefinementModel.setRelationMappings(relationMappings);
@@ -122,17 +122,17 @@ public class TestRefinementTest {
         assertEquals(5, topologyTemplate.getRelationshipTemplates().size());
 
         TRelationshipTemplate mimicTestHostedOnTomcat = topologyTemplate.getRelationshipTemplate("mimicTest-hostedOn");
-        assertNonNull(mimicTestHostedOnTomcat);
+        assertNotNull(mimicTestHostedOnTomcat);
         assertEquals("tomcat", mimicTestHostedOnTomcat.getTargetElement().getRef().getId());
         assertEquals("sqlConnectorTest", mimicTestHostedOnTomcat.getSourceElement().getRef().getId());
 
         TRelationshipTemplate mimicTestConnectsToDatabase = topologyTemplate.getRelationshipTemplate("mimicTest-connectsTo");
-        assertNonNull(mimicTestConnectsToDatabase);
+        assertNotNull(mimicTestConnectsToDatabase);
         assertEquals("database", mimicTestConnectsToDatabase.getTargetElement().getRef().getId());
         assertEquals("sqlConnectorTest", mimicTestConnectsToDatabase.getSourceElement().getRef().getId());
 
         TRelationshipTemplate mimicTestTestIngoingConnection = topologyTemplate.getRelationshipTemplate("mimicTest-ingoingTest");
-        assertNonNull(mimicTestTestIngoingConnection);
+        assertNotNull(mimicTestTestIngoingConnection);
         assertEquals("webShop", mimicTestTestIngoingConnection.getSourceElement().getRef().getId());
         assertEquals("sqlConnectorTest", mimicTestTestIngoingConnection.getTargetElement().getRef().getId());
         // endregion

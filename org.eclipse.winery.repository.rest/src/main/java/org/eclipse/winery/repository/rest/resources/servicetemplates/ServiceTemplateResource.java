@@ -1,5 +1,5 @@
 /********************************************************************************
- * Copyright (c) 2012-2019 Contributors to the Eclipse Foundation
+ * Copyright (c) 2012-2020 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -20,6 +20,8 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -34,8 +36,9 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.JAXBException;
 import javax.xml.namespace.QName;
-import javax.xml.parsers.ParserConfigurationException;
 
+import org.eclipse.winery.common.configuration.Environments;
+import org.eclipse.winery.common.configuration.RepositoryConfigurationObject;
 import org.eclipse.winery.common.ids.definitions.ServiceTemplateId;
 import org.eclipse.winery.common.version.VersionUtils;
 import org.eclipse.winery.common.version.WineryVersion;
@@ -44,6 +47,7 @@ import org.eclipse.winery.compliance.checking.ServiceTemplateComplianceRuleRuleC
 import org.eclipse.winery.model.adaptation.substitution.Substitution;
 import org.eclipse.winery.model.threatmodeling.ThreatAssessment;
 import org.eclipse.winery.model.threatmodeling.ThreatModeling;
+import org.eclipse.winery.model.tosca.HasId;
 import org.eclipse.winery.model.tosca.TBoundaryDefinitions;
 import org.eclipse.winery.model.tosca.TExtensibleElements;
 import org.eclipse.winery.model.tosca.TPlans;
@@ -52,6 +56,7 @@ import org.eclipse.winery.model.tosca.TServiceTemplate;
 import org.eclipse.winery.model.tosca.TTopologyTemplate;
 import org.eclipse.winery.model.tosca.utils.ModelUtilities;
 import org.eclipse.winery.repository.backend.BackendUtils;
+import org.eclipse.winery.repository.backend.YamlArtifactsSynchronizer;
 import org.eclipse.winery.repository.driverspecificationandinjection.DASpecification;
 import org.eclipse.winery.repository.driverspecificationandinjection.DriverInjection;
 import org.eclipse.winery.repository.export.EdmmUtils;
@@ -75,7 +80,6 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xml.sax.SAXException;
 
 public class ServiceTemplateResource extends AbstractComponentInstanceResourceContainingATopology implements IHasName {
 
@@ -91,13 +95,41 @@ public class ServiceTemplateResource extends AbstractComponentInstanceResourceCo
 
     @Override
     public void setTopology(TTopologyTemplate topologyTemplate, String type) {
+        // if we are in yaml mode, replacing the topology can result in yaml artifacts having to be deleted.
+        if (Environments.getInstance().getRepositoryConfig().getProvider() == RepositoryConfigurationObject.RepositoryProvider.YAML) {
+            try {
+                YamlArtifactsSynchronizer synchronizer = new YamlArtifactsSynchronizer
+                    .Builder()
+                    .setOriginalTemplate(this.getServiceTemplate().getTopologyTemplate())
+                    .setNewTemplate(topologyTemplate)
+                    .setServiceTemplateId((ServiceTemplateId) this.getId())
+                    .build();
+                synchronizer.synchronizeNodeTemplates();
+                synchronizer.synchronizeRelationshipTemplates();
+            } catch (IOException e) {
+                LOGGER.error("Failed to delete yaml artifact files from disk. Reason {}", e.getMessage());
+            }
+            // filter unused requirements
+            // (1) get a list of requirement template ids
+            // (2) filter requirement entry on node template if there is relations assigned
+            Set<String> usedRelationshipTemplateIds = topologyTemplate.getRelationshipTemplates()
+                .stream().map(HasId::getId).collect(Collectors.toSet());
+            topologyTemplate.getNodeTemplates().forEach(node -> {
+                if (node.getRequirements() != null) {
+                    List<TRequirement> requirements = node.getRequirements().getRequirement().stream()
+                        .filter(r -> usedRelationshipTemplateIds.contains(r.getRelationship()))
+                        .collect(Collectors.toList());
+                    node.getRequirements().getRequirement().clear();
+                    node.getRequirements().getRequirement().addAll(requirements);
+                }
+            });
+        }
         this.getServiceTemplate().setTopologyTemplate(topologyTemplate);
     }
 
     /**
      * sub-resources
      **/
-
     @Path("topologytemplate/")
     public TopologyTemplateResource getTopologyTemplateResource() {
         if (this.getServiceTemplate().getTopologyTemplate() == null) {
@@ -231,7 +263,7 @@ public class ServiceTemplateResource extends AbstractComponentInstanceResourceCo
     @Path("injector/replace")
     @Consumes( {MediaType.APPLICATION_XML, MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
     @Produces( {MediaType.APPLICATION_XML, MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
-    public Response injectNodeTemplates(InjectorReplaceData injectorReplaceData, @Context UriInfo uriInfo) throws Exception, IOException, ParserConfigurationException, SAXException, SplittingException {
+    public Response injectNodeTemplates(InjectorReplaceData injectorReplaceData, @Context UriInfo uriInfo) throws Exception {
 
         if (injectorReplaceData.hostInjections != null) {
             Collection<TTopologyTemplate> hostInjectorTopologyTemplates = injectorReplaceData.hostInjections.values();
@@ -397,6 +429,14 @@ public class ServiceTemplateResource extends AbstractComponentInstanceResourceCo
     @Override
     public void synchronizeReferences() throws IOException {
         BackendUtils.synchronizeReferences((ServiceTemplateId) this.id);
+    }
+
+    @Path("parameters")
+    public ParameterResource getParameterResource() {
+        if (this.getServiceTemplate().getTopologyTemplate() == null) {
+            this.getServiceTemplate().setTopologyTemplate(new TTopologyTemplate());
+        }
+        return new ParameterResource(this, this.getServiceTemplate().getTopologyTemplate());
     }
 
     @Path("toscalight")

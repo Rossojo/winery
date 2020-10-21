@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012-2018 Contributors to the Eclipse Foundation
+ * Copyright (c) 2012-2020 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -24,20 +24,25 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.xml.namespace.QName;
 
-import org.eclipse.winery.common.ids.definitions.NodeTypeImplementationId;
+import org.eclipse.winery.common.ids.IdNames;
 import org.eclipse.winery.common.ids.definitions.RelationshipTypeId;
+import org.eclipse.winery.common.ids.definitions.RelationshipTypeImplementationId;
 import org.eclipse.winery.model.tosca.TExtensibleElements;
 import org.eclipse.winery.model.tosca.TInterfaces;
 import org.eclipse.winery.model.tosca.TRelationshipType;
 import org.eclipse.winery.model.tosca.TRelationshipType.ValidSource;
 import org.eclipse.winery.model.tosca.TRelationshipType.ValidTarget;
 import org.eclipse.winery.model.tosca.TTopologyElementInstanceStates;
+import org.eclipse.winery.repository.datatypes.ids.elements.DirectoryId;
+import org.eclipse.winery.repository.datatypes.ids.elements.GenericDirectoryId;
 import org.eclipse.winery.repository.rest.RestUtils;
 import org.eclipse.winery.repository.rest.datatypes.select2.Select2DataItem;
+import org.eclipse.winery.repository.rest.resources._support.GenericFileResource;
 import org.eclipse.winery.repository.rest.resources.apiData.QNameApiData;
 import org.eclipse.winery.repository.rest.resources.apiData.ValidEndingsApiData;
 import org.eclipse.winery.repository.rest.resources.apiData.ValidEndingsApiDataSet;
 import org.eclipse.winery.repository.rest.resources.entitytypes.InstanceStatesResource;
+import org.eclipse.winery.repository.rest.resources.entitytypes.InterfaceDefinitionsResource;
 import org.eclipse.winery.repository.rest.resources.entitytypes.TopologyGraphElementEntityTypeResource;
 import org.eclipse.winery.repository.rest.resources.interfaces.InterfacesResource;
 
@@ -56,7 +61,7 @@ public class RelationshipTypeResource extends TopologyGraphElementEntityTypeReso
     @Path("implementations/")
     @Produces(MediaType.APPLICATION_JSON)
     public List<QNameApiData> getImplementations() {
-        return RestUtils.getAllElementsReferencingGivenType(NodeTypeImplementationId.class, this.id.getQName());
+        return RestUtils.getAllElementsReferencingGivenType(RelationshipTypeImplementationId.class, this.id.getQName());
     }
 
     @Path("appearance")
@@ -103,6 +108,11 @@ public class RelationshipTypeResource extends TopologyGraphElementEntityTypeReso
             this.getRelationshipType().setTargetInterfaces(interfaces);
         }
         return new InterfacesResource(this, interfaces.getInterface(), "target");
+    }
+
+    @Path("interfacedefinitions")
+    public InterfaceDefinitionsResource InterfaceDefinitionsResource() {
+        return new InterfaceDefinitionsResource(this);
     }
 
     /*
@@ -160,6 +170,12 @@ public class RelationshipTypeResource extends TopologyGraphElementEntityTypeReso
         }
 
         return RestUtils.persist(this);
+    }
+
+    @Path("files")
+    public GenericFileResource files() {
+        DirectoryId dir = new GenericDirectoryId(this.getId(), IdNames.FILES_DIRECTORY);
+        return new GenericFileResource(dir);
     }
 
     /**

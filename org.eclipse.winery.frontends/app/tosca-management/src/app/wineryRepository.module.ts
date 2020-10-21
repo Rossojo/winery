@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017-2019 Contributors to the Eclipse Foundation
+ * Copyright (c) 2017-2020 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -46,7 +46,8 @@ import { ComplianceRuleModule } from './wineryMainModules/complianceRules/compli
 import { HttpClientModule } from '@angular/common/http';
 import { PatternRefinementModelModule } from './wineryMainModules/patternRefinementModels/patternRefinementModel.module';
 import { TestRefinementModelModule } from './wineryMainModules/testRefinementModels/testRefinementModel.module';
-import {WineryRepositoryConfigurationService} from './wineryFeatureToggleModule/WineryRepositoryConfiguration.service';
+import { WineryRepositoryConfigurationService } from './wineryFeatureToggleModule/WineryRepositoryConfiguration.service';
+import { TopologyFragmentRefinementModelModule } from './wineryMainModules/topologyFragmentRefinementModel/topologyFragmentRefinementModel.module';
 import { WineryFeatureToggleModule } from './wineryFeatureToggleModule/winery-feature-toggle.module';
 
 @NgModule({
@@ -76,6 +77,7 @@ import { WineryFeatureToggleModule } from './wineryFeatureToggleModule/winery-fe
         ImportModule,
         ComplianceRuleModule,
         PatternRefinementModelModule,
+        TopologyFragmentRefinementModelModule,
         TestRefinementModelModule,
         WineryRepositoryRoutingModule,
         WineryFeatureToggleModule

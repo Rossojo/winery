@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 Contributors to the Eclipse Foundation
+ * Copyright (c) 2019-2020 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -14,7 +14,6 @@
 
 package org.eclipse.winery.repository.rest.resources._support;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -23,8 +22,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 
 import org.eclipse.winery.common.ids.definitions.DefinitionsChildId;
-import org.eclipse.winery.model.tosca.TRefinementModel;
-import org.eclipse.winery.model.tosca.TRelationMapping;
+import org.eclipse.winery.model.tosca.OTRefinementModel;
+import org.eclipse.winery.model.tosca.OTRelationMapping;
 import org.eclipse.winery.model.tosca.TTopologyTemplate;
 import org.eclipse.winery.repository.rest.RestUtils;
 import org.eclipse.winery.repository.rest.resources.refinementmodels.RelationMappingsResource;
@@ -39,18 +38,18 @@ public abstract class AbstractRefinementModelResource extends AbstractComponentI
         super(id);
     }
 
-    public abstract TRefinementModel getTRefinementModel();
+    public abstract OTRefinementModel getTRefinementModel();
 
     @Path("detector")
-    public TopologyTemplateResource getDetector() {
+    public TopologyTemplateResource getDetectorResource() {
         return new TopologyTemplateResource(this, this.getTRefinementModel().getDetector(), DETECTOR);
     }
 
-    public abstract TopologyTemplateResource getRefinementTopology();
+    public abstract TopologyTemplateResource getRefinementTopologyResource();
 
     @Path("relationmappings")
     public RelationMappingsResource getRelationMappings() {
-        List<TRelationMapping> relationMappings = this.getTRefinementModel().getRelationMappings();
+        List<OTRelationMapping> relationMappings = this.getTRefinementModel().getRelationMappings();
 
         if (Objects.isNull(relationMappings)) {
             relationMappings = new ArrayList<>();
@@ -77,7 +76,7 @@ public abstract class AbstractRefinementModelResource extends AbstractComponentI
     }
 
     @Override
-    protected void synchronizeReferences() throws IOException {
+    protected void synchronizeReferences() {
         // no synchronization needed
     }
 

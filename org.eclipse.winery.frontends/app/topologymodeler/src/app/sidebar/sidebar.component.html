@@ -1,5 +1,5 @@
 <!--
-   * Copyright (c) 2017-2019 Contributors to the Eclipse Foundation
+   * Copyright (c) 2017-2020 Contributors to the Eclipse Foundation
    *
    * See the NOTICE file(s) distributed with this work for additional
    * information regarding copyright ownership.
@@ -60,15 +60,25 @@
                 <div class="form-group">
                     <label>Properties</label>
                     <winery-properties
-                        (toggleModalHandler)="sendToggleAction($event)"
                         [currentNodeData]="{
                                     nodeTemplate: sidebarState,
                                     propertyDefinitionType:findOutPropertyDefinitionTypeForProperties()}">
                     </winery-properties>
                 </div>
+                <div class="form-group" *wineryRepositoryHideOnFeature="'yaml'">
+                    <label>Policies</label>
+                    <winery-policies
+                        [readonly]=false
+                        (toggleModalHandler)="addNewPolicy($event)"
+                        [currentNodeData]="{currentNodeId: sidebarState.relationshipTemplate.id,
+                                    currentNodePart: 'POLICIES',
+                                    currentProperties: sidebarState.relationshipTemplate}"
+                        [policies]="sidebarState.relationshipTemplate.policies?.policy">
+                    </winery-policies>
+                </div>
             </div>
             <div *ngIf="sidebarState.nodeClicked">
-                <div class="form-group">
+                <div class="form-group" *wineryRepositoryHideOnFeature="'yaml'">
                     <label for="maxInstances">max</label>
                     <div class="row">
                         <div class="col-lg-12">

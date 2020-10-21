@@ -1,5 +1,5 @@
 /********************************************************************************
- * Copyright (c) 2017-2019 Contributors to the Eclipse Foundation
+ * Copyright (c) 2017-2020 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -14,7 +14,7 @@
 
 import { Action } from 'redux';
 import { Injectable } from '@angular/core';
-import { TNodeTemplate, TRelationshipTemplate, TTopologyTemplate } from '../../models/ttopology-template';
+import { TArtifact, TNodeTemplate, TRelationshipTemplate, TTopologyTemplate } from '../../models/ttopology-template';
 import { TDeploymentArtifact } from '../../models/artifactsModalData';
 import { TPolicy } from '../../models/policiesModalData';
 import { Visuals } from '../../models/visuals';
@@ -152,6 +152,20 @@ export interface SetDeploymentArtifactAction extends Action {
     };
 }
 
+export interface SetYamlArtifactAction extends Action {
+    nodeYamlArtifact: {
+        nodeId: string,
+        newYamlArtifact: TArtifact
+    };
+}
+
+export interface DeleteYamlArtifactAction extends Action {
+    nodeYamlArtifact: {
+        nodeId: string,
+        deletedYamlArtifactId: TArtifact
+    };
+}
+
 export interface DeleteDeploymentArtifactAction extends Action {
     nodeDeploymentArtifact: {
         nodeId: string,
@@ -163,6 +177,12 @@ export interface SetPolicyAction extends Action {
     nodePolicy: {
         nodeId: string,
         newPolicy: TPolicy
+    };
+}
+
+export interface ChangeYamlPoliciesAction extends Action {
+    yamlPolicies: {
+        policies: { policy: TPolicy[] }
     };
 }
 
@@ -250,7 +270,11 @@ export class WineryActions {
     static SET_REQUIREMENT = 'SET_REQUIREMENT';
     static SET_DEPLOYMENT_ARTIFACT = 'SET_DEPLOYMENT_ARTIFACT';
     static DELETE_DEPLOYMENT_ARTIFACT = 'DELETE_DEPLOYMENT_ARTIFACT';
+    static SET_YAML_ARTIFACT = 'SET_YAML_ARTIFACT';
+    static DELETE_YAML_ARTIFACT = 'DELETE_YAML_ARTIFACT';
     static SET_POLICY = 'SET_POLICY';
+    static UPDATE_YAML_POLICIES = 'UPDATE_YAML_POLICIES';
+    static SET_POLICY_FOR_RELATIONSHIP = 'SET_POLICY_FOR_RELATIONSHIP';
     static SET_TARGET_LOCATION = 'SET_TARGET_LOCATION';
     static DELETE_POLICY = 'DELETE_POLICY';
     static SEND_CURRENT_NODE_ID = 'SEND_CURRENT_NODE_ID';
@@ -410,10 +434,42 @@ export class WineryActions {
         };
     }
 
+    setYamlArtifact(newYamlArt): SetYamlArtifactAction {
+        return {
+            type: WineryActions.SET_YAML_ARTIFACT,
+            nodeYamlArtifact: newYamlArt
+        };
+    }
+
+    deleteYamlArtifact(deletedYamlArt): DeleteYamlArtifactAction {
+        return {
+            type: WineryActions.DELETE_YAML_ARTIFACT,
+            nodeYamlArtifact: deletedYamlArt
+        };
+    }
+
     setPolicy(newPolicy): SetPolicyAction {
         return {
             type: WineryActions.SET_POLICY,
             nodePolicy: newPolicy
+        };
+    }
+
+    setPolicyForRelationship(newPolicy): SetPolicyAction {
+        return {
+            type: WineryActions.SET_POLICY_FOR_RELATIONSHIP,
+            nodePolicy: newPolicy
+        };
+    }
+
+    changeYamlPolicies(policies): ChangeYamlPoliciesAction {
+        return {
+            type: WineryActions.UPDATE_YAML_POLICIES,
+            yamlPolicies: {
+                policies: {
+                    policy: policies
+                }
+            }
         };
     }
 

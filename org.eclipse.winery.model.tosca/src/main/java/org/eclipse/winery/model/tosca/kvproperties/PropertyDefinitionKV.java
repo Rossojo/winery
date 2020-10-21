@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013-2018 Contributors to the Eclipse Foundation
+ * Copyright (c) 2013-2020 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -16,14 +16,23 @@ package org.eclipse.winery.model.tosca.kvproperties;
 import java.io.Serializable;
 import java.util.Objects;
 
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 @XmlRootElement(name = "PropertyDefinition")
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class PropertyDefinitionKV implements Serializable {
 
     private String key;
     private String type;
+    private Boolean required;
+    private String defaultValue;
     private String description;
+
+    private ConstraintClauseKVList constraintList;
     private String pattern;
 
     public PropertyDefinitionKV() {
@@ -36,12 +45,20 @@ public class PropertyDefinitionKV implements Serializable {
         this.setType(type);
     }
 
-    public PropertyDefinitionKV(String key, String type, String description, String pattern) {
-        super();
-        this.setKey(key);
-        this.setType(type);
+    public PropertyDefinitionKV(String key, String type, Boolean required, String defaultValue) {
+        this(key, type);
+        this.setRequired(required);
+        this.setDefaultValue(defaultValue);
+    }
+
+    public PropertyDefinitionKV(String key, String type, Boolean required, String defaultValue, String description) {
+        this(key, type, required, defaultValue);
         this.setDescription(description);
-        this.setPattern(pattern);
+    }
+
+    public PropertyDefinitionKV(String key, String type, Boolean required, String defaultValue, String description, ConstraintClauseKVList constraints) {
+        this(key, type, required, defaultValue, description);
+        this.setConstraints(constraints);
     }
 
     public String getKey() {
@@ -65,14 +82,6 @@ public class PropertyDefinitionKV implements Serializable {
         }
         this.type = type;
     }
-    
-    public String getDescription() {
-        return this.description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
 
     public String getPattern() {
         return this.pattern;
@@ -82,15 +91,46 @@ public class PropertyDefinitionKV implements Serializable {
         this.pattern = pattern;
     }
     
+    public Boolean isRequired() {
+        return required;
+    }
+
+    public void setRequired(Boolean required) {
+        this.required = required;
+    }
+
+    public String getDefaultValue() {
+        return defaultValue;
+    }
+
+    public void setDefaultValue(String defaultValue) {
+        this.defaultValue = defaultValue;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    @XmlElementWrapper(name = "constraints")
+    @XmlElement(name = "constraint")
+    public ConstraintClauseKVList getConstraints() {
+        return this.constraintList;
+    }
+
+    public void setConstraints(ConstraintClauseKVList constraintList) {
+        this.constraintList = constraintList;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         PropertyDefinitionKV that = (PropertyDefinitionKV) o;
-        return Objects.equals(key, that.key) &&
-            Objects.equals(type, that.type) &&
-            Objects.equals(description, that.description) &&
-            Objects.equals(pattern, that.pattern);
+        return Objects.equals(key, that.key);
     }
 
     @Override

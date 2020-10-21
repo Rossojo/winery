@@ -14,7 +14,6 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { WineryTableColumn } from '../../../wineryTableModule/wineryTable.component';
 import { SelectableInterface, WineryArtifactService } from './artifact.service';
-import { isNullOrUndefined } from 'util';
 import { WineryNotificationService } from '../../../wineryNotificationModule/wineryNotification.service';
 import { NameAndQNameApiData, NameAndQNameApiDataList } from '../../../wineryQNameSelector/wineryNameAndQNameApiData';
 import { InstanceService } from '../../instance.service';
@@ -22,9 +21,8 @@ import { GenerateArtifactApiData } from '../interfaces/generateArtifactApiData';
 import { ModalDirective } from 'ngx-bootstrap';
 import { ArtifactApiData, WineryInstance } from '../../../model/wineryComponent';
 import { backendBaseURL, hostURL } from '../../../configuration';
-import { WineryArtifactFilesService } from './artifact.files.service.';
 import { Router } from '@angular/router';
-import { FilesApiData } from '../../artifactTemplates/filesTag/files.service.';
+import { FilesApiData, FilesService } from '../filesTag/files.service';
 import { GenerateData } from '../../../wineryComponentExists/wineryComponentExists.component';
 import { ToscaTypes } from '../../../model/enums';
 import { WineryVersion } from '../../../model/wineryVersion';
@@ -40,7 +38,7 @@ import { WineryAddComponentDataComponent } from '../../../wineryAddComponentData
     selector: 'winery-artifact',
     templateUrl: 'artifact.component.html',
     styleUrls: ['artifact.component.css'],
-    providers: [WineryArtifactService, WineryArtifactFilesService, SectionService]
+    providers: [WineryArtifactService, FilesService, SectionService]
 })
 export class WineryArtifactComponent implements OnInit {
 
@@ -88,15 +86,16 @@ export class WineryArtifactComponent implements OnInit {
     valid: boolean;
     validation: any;
     hideHelp = true;
-    private typeRequired = false;
-    private types: SelectData[];
+    typeRequired = false;
+    types: SelectData[];
     private createComponent: boolean;
-    private nodetype: string;
+    private nodeType: string;
+    private nodeTypeName: string;
 
     constructor(private service: WineryArtifactService,
                 public sharedData: InstanceService,
                 private notify: WineryNotificationService,
-                private fileService: WineryArtifactFilesService,
+                private fileService: FilesService,
                 private sectionService: SectionService,
                 private existService: ExistService,
                 private nodeTypeService: InstanceService,
@@ -135,11 +134,11 @@ export class WineryArtifactComponent implements OnInit {
             this.artifact.namespace = this.sharedData.toscaComponent.namespace;
         }
         this.artifact.namespace = this.artifact.namespace.slice(0, this.sharedData.toscaComponent.namespace.lastIndexOf('/') + 1) + ToscaTypes.ArtifactTemplate;
-        this.artifact.name = this.nodetype;
+        this.artifact.name = this.nodeTypeName;
         this.artifact.toscaType = ToscaTypes.ArtifactTemplate;
         this.existCheck();
-        this.addComponentData.createArtifactName(this.sharedData.toscaComponent, this.sharedData.currentVersion,
-            this.selectedOperation, this.isImplementationArtifact, this.nodetype);
+        this.addComponentData.createArtifactName(this.sharedData.toscaComponent, this.nodeType,
+            this.selectedOperation, this.isImplementationArtifact, this.nodeTypeName);
         this.addArtifactModal.show();
     }
 
@@ -148,7 +147,7 @@ export class WineryArtifactComponent implements OnInit {
      * @param data
      */
     onRemoveClick(data: any) {
-        if (isNullOrUndefined(data)) {
+        if (!data) {
             return;
         } else {
             this.elementToRemove = data;
@@ -185,10 +184,10 @@ export class WineryArtifactComponent implements OnInit {
     }
 
     addConfirmed() {
-        if (this.selectedOperation === '(none)' || isNullOrUndefined(this.selectedOperation)) {
+        if (this.selectedOperation === '(none)' || !this.selectedOperation) {
             this.selectedOperation = '';
         }
-        if (isNullOrUndefined(this.selectedInterface)) {
+        if (!this.selectedInterface) {
             this.selectedInterface = new SelectableInterface();
             this.selectedInterface.text = '';
         }
@@ -253,25 +252,25 @@ export class WineryArtifactComponent implements OnInit {
         this.artifactsData = data;
         this.artifactsData = this.artifactsData.map(
             obj => {
-                if (!isNullOrUndefined(obj.artifactType)) {
+                if (obj.artifactType) {
                     obj.artifactTypeLocalName = '<a href="#' + this.createArtifactTypeUrl(obj.artifactType) +
                         '">' + this.getLocalName(obj.artifactType) + '</a>';
                 } else {
                     obj.artifactTypeLocalName = '';
                 }
-                if (!isNullOrUndefined(obj.artifactRef)) {
+                if (obj.artifactRef) {
                     obj.artifactRefLocalName = '<a href="#' + this.createArtifactTemplateUrl(obj.artifactRef) +
                         '">' + this.getLocalName(obj.artifactRef) + '</a>';
                 } else {
                     obj.artifactRefLocalName = '';
                 }
-                if (!isNullOrUndefined(obj.any)) {
+                if (obj.any) {
                     obj.anyText = '';
                 }
-                if (isNullOrUndefined(obj.interfaceName)) {
+                if (!obj.interfaceName) {
                     obj.interfaceName = '';
                 }
-                if (isNullOrUndefined(obj.operationName)) {
+                if (!obj.operationName) {
                     obj.operationName = '';
                 }
                 return obj;
@@ -312,7 +311,7 @@ export class WineryArtifactComponent implements OnInit {
     }
 
     private getLocalName(qName: string): string {
-        if (!isNullOrUndefined(qName)) {
+        if (qName) {
             return qName.slice(qName.indexOf('}') + 1);
         } else {
             return '';
@@ -397,7 +396,7 @@ export class WineryArtifactComponent implements OnInit {
 
     private getTypes(componentType?: SelectData) {
         const typesUrl = Utils.getTypeOfTemplateOrImplementation(this.toscaType);
-        if (!isNullOrUndefined(typesUrl) && !componentType) {
+        if (typesUrl && !componentType) {
             this.loading = true;
             this.typeRequired = true;
             this.sectionService.getSectionData('/' + typesUrl + '?grouped=angularSelect')
@@ -447,13 +446,18 @@ export class WineryArtifactComponent implements OnInit {
     }
 
     interfaceAndOperation() {
-        this.addComponentData.createArtifactName(this.sharedData.toscaComponent, this.sharedData.currentVersion,
-            this.selectedOperation, this.isImplementationArtifact, this.nodetype);
+        if (this.isImplementationArtifact) {
+            this.addComponentData.createArtifactName(this.sharedData.toscaComponent, this.nodeType,
+                this.selectedOperation, this.isImplementationArtifact, this.nodeTypeName);
+        } else {
+            this.addComponentData.createArtifactName(this.sharedData.toscaComponent, this.nodeType,
+                this.newArtifact.artifactName, this.isImplementationArtifact, this.nodeTypeName);
+        }
     }
 
     private handleComponentData(compData: WineryInstance) {
-        const node = compData.serviceTemplateOrNodeTypeOrNodeTypeImplementation[0].nodeType;
-        this.nodetype = node.substring(node.indexOf('}') + 1, node.indexOf('_'));
+        this.nodeType = compData.serviceTemplateOrNodeTypeOrNodeTypeImplementation[0].nodeType;
+        this.nodeTypeName = this.nodeType.substring(this.nodeType.indexOf('}') + 1, this.nodeType.indexOf('_'));
     }
 
     clearOperation() {

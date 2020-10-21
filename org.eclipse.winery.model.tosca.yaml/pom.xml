@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  ~ Copyright (c) 2017-2019 Contributors to the Eclipse Foundation
+  ~ Copyright (c) 2017-2020 Contributors to the Eclipse Foundation
   ~
   ~ See the NOTICE file(s) distributed with this work for additional
   ~ information regarding copyright ownership.
@@ -25,6 +25,7 @@
     <artifactId>org.eclipse.winery.model.tosca.yaml</artifactId>
 
     <properties>
+        <checkstyle.config.location>../checkstyle.xml</checkstyle.config.location>
         <main.basedir>${project.parent.basedir}</main.basedir>
     </properties>
 
@@ -45,6 +46,11 @@
             <version>${io.github.adr.e-adr.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${org.apache.commons-lang3.version}</version>
+        </dependency>
+        <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>${ch.qos.logback.logback-classic.version}</version>
@@ -60,6 +66,27 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>${maven.checkstyle.version}</version>
+                <executions>
+                    <execution>
+                        <id>checkstyle</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.thomasjensen.checkstyle.addons</groupId>
+                        <artifactId>checkstyle-addons</artifactId>
+                        <version>${checkstyle.addons.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
             <plugin>
                 <artifactId>maven-source-plugin</artifactId>
             </plugin>

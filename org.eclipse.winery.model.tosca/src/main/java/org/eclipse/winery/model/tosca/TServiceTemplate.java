@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013-2018 Contributors to the Eclipse Foundation
+ * Copyright (c) 2013-2020 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -37,7 +37,7 @@ import org.eclipse.jdt.annotation.Nullable;
     "topologyTemplate",
     "plans"
 })
-public class TServiceTemplate extends HasId implements HasName, HasTargetNamespace {
+public class TServiceTemplate extends HasId implements HasName, HasTargetNamespace, HasTags {
 
     @XmlElement(name = "Tags")
     protected TTags tags;
@@ -126,6 +126,7 @@ public class TServiceTemplate extends HasId implements HasName, HasTargetNamespa
             RemoveEmptyLists removeEmptyLists = new RemoveEmptyLists();
             removeEmptyLists.removeEmptyLists(value);
         }
+
         this.topologyTemplate = value;
     }
 
@@ -178,6 +179,11 @@ public class TServiceTemplate extends HasId implements HasName, HasTargetNamespa
         private String name;
         private String targetNamespace;
         private QName substitutableNodeType;
+
+        public Builder(String id) {
+            super(id);
+            topologyTemplate = null;
+        }
 
         public Builder(String id, TTopologyTemplate topologyTemplate) {
             super(id);

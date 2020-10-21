@@ -1,5 +1,5 @@
 /********************************************************************************
- * Copyright (c) 2012-2019 Contributors to the Eclipse Foundation
+ * Copyright (c) 2012-2020 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -22,6 +22,18 @@
     cursor: pointer;
 }
 
+#reqdef-table tr td:nth-of-type(2) { /* Select the 2nd td */
+    cursor: pointer;
+}
+
+#reqdef-table tr td:nth-of-type(3) { /* Select the 3rd td */
+    cursor: pointer;
+}
+
+#reqdef-table tr td:nth-of-type(4) { /* Select the 4th td */
+    cursor: pointer;
+}
+
 .hidden {
     display: none;
 }
@@ -40,7 +52,7 @@ body {
     height: 87px;
     background-repeat: no-repeat;
     background-image: url('../assets/img/header_background.png');
-    postion: relative;
+    position: relative;
 }
 
 #showabout {
@@ -209,7 +221,7 @@ div#mainMenuContainer {
 /* tabs */
 
 a.styledTabMenuButton {
-    margin-bottom: 5px;
+    margin-bottom: 3px;
     float: left;
 }
 
@@ -353,6 +365,18 @@ div.mainContentContainer.patternRefinementModel div.middle {
 }
 
 div.mainContentContainer.patternRefinementModel div.bottom {
+    background: url('../assets/img/containers/admin/FrameBottom.jpg');
+}
+
+div.mainContentContainer.topologyFragmentRefinementModel div.top {
+    background: url('../assets/img/containers/admin/FrameTopLarge.jpg');
+}
+
+div.mainContentContainer.topologyFragmentRefinementModel div.middle {
+    background: url('../assets/img/containers/admin/FrameMiddle.jpg');
+}
+
+div.mainContentContainer.topologyFragmentRefinementModel div.bottom {
     background: url('../assets/img/containers/admin/FrameBottom.jpg');
 }
 
@@ -801,6 +825,18 @@ div.entityContainer.patternRefinementModelContainer > div.right {
     background: url('../assets/img/entityBox/adminContainer/a-container-right.png');
 }
 
+div.entityContainer.topologyFragmentRefinementModelContainer > div.left {
+    background: url('../assets/img/entityBox/adminContainer/a-container-left.png');
+}
+
+div.entityContainer.topologyFragmentRefinementModelContainer > div.center {
+    background: url('../assets/img/entityBox/adminContainer/a-container-center.jpg');
+}
+
+div.entityContainer.topologyFragmentRefinementModelContainer > div.right {
+    background: url('../assets/img/entityBox/adminContainer/a-container-right.png');
+}
+
 div.entityContainer.testRefinementModelContainer > div.left {
     background: url('../assets/img/entityBox/adminContainer/a-container-left.png');
 }
@@ -1005,6 +1041,18 @@ div.entityContainer.patternRefinementModel > div.right {
     background: url('../assets/img/entityBox/admin/a-right.png');
 }
 
+div.entityContainer.topologyFragmentRefinementModel > div.left {
+    background: url('../assets/img/entityBox/admin/a-left.png');
+}
+
+div.entityContainer.topologyFragmentRefinementModel > div.center {
+    background: url('../assets/img/entityBox/admin/a-center.jpg');
+}
+
+div.entityContainer.topologyFragmentRefinementModel > div.right {
+    background: url('../assets/img/entityBox/admin/a-right.png');
+}
+
 div.entityContainer.testRefinementModel > div.left {
     background: url('../assets/img/entityBox/admin/a-left.png');
 }
@@ -1177,11 +1225,19 @@ div.col-xs-4.bordered div.listheading > button {
 
 table.dataTable {
     font-size: 12px;
+    max-width: 100%;
+    table-layout: fixed;
 }
 
 table.dataTable thead th {
     font-size: 11px;
     color: #3F3F3F;
+}
+
+table.dataTable tbody tr td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 div.titledTableBox {
@@ -1191,7 +1247,6 @@ div.titledTableBox {
     border: 1px solid #aeaeae;
     padding: 0;
     margin-left: 0;
-    padding-left: 0 !important;
 }
 
 .listheading {
@@ -1266,17 +1321,16 @@ div.policiesContainer > div.content > div.policy > textarea.policy_xml {
     text-shadow: 0 1px 0 #fff;
     background: #ffffff;
     background: -moz-linear-gradient(top, #ffffff 0%, #e0e0e0 100%);
-    background: -webkit-gradient(left top, left bottom, color-stop(0%, #ffffff), color-stop(100%, #e0e0e0));
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #ffffff), color-stop(100%, #e0e0e0));
     background: -webkit-linear-gradient(top, #ffffff 0%, #e0e0e0 100%);
     background: -o-linear-gradient(top, #ffffff 0%, #e0e0e0 100%);
     background: -ms-linear-gradient(top, #ffffff 0%, #e0e0e0 100%);
     background: linear-gradient(to bottom, #ffffff 0%, #e0e0e0 100%);
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff', endColorstr='#e0e0e0', GradientType=0);
     background-repeat: repeat-x;
-    border-color: #dbdbdb;
     border-color: #ccc;
 
-    webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, .15), 0 1px 1px rgba(0, 0, 0, .075);
+    -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, .15), 0 1px 1px rgba(0, 0, 0, .075);
     -moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, .15), 0 1px 1px rgba(0, 0, 0, .075);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, .15), 0 1px 1px rgba(0, 0, 0, .075);
 }
@@ -1299,7 +1353,7 @@ div.policiesContainer > div.content > div.policy > textarea.policy_xml {
 
 .collapsespan:after {
     /* symbol for "opening" panel */
-    font-family: 'Glyphicons Halflings'; /* enable glyphicon */
+    font-family: 'Glyphicons Halflings', sans-serif; /* enable glyphicon */
     content: "\e260"; /* menu-up glyphicon */
 
 }
@@ -1311,4 +1365,12 @@ div.policiesContainer > div.content > div.policy > textarea.policy_xml {
 
 .active-row {
     background-color: #ccc !important;
+}
+
+.left-margin-10 {
+    margin-left: 10px;
+}
+
+.right-margin-10 {
+    margin-right: 10px;
 }

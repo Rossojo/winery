@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018-2019 Contributors to the Eclipse Foundation
+ * Copyright (c) 2018-2020 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -24,6 +24,9 @@ import { PropertiesDefinitionsResourceApiData } from '../sharedComponents/proper
 import { ToscaTypes } from '../../model/enums';
 import { StayMapping } from './stayMappings/stayMapping';
 import { AttributeMapping } from './attributeMappings/attributeMapping';
+import { DeploymentArtifactMapping } from './deploymentArtifactsMappings/deploymentArtifactMapping';
+import { RefinementMappings } from './RefinementMappings';
+import { PermutationMapping } from './permutationMappings/permutationMapping';
 
 @Injectable()
 export class RefinementMappingsService {
@@ -58,6 +61,10 @@ export class RefinementMappingsService {
         return this.http.get<SelectData[]>(backendBaseURL + '/nodetypes/?grouped=angularSelect');
     }
 
+    public getArtifactTypes(): Observable<SelectData[]> {
+        return this.http.get<SelectData[]>(backendBaseURL + '/artifacttypes/?grouped=angularSelect');
+    }
+
     public getRelationshipMappings(): Observable<RelationMapping[]> {
         return this.http.get<RelationMapping[]>(this.path + '/relationmappings');
     }
@@ -84,7 +91,7 @@ export class RefinementMappingsService {
 
     public getTypeProperties(type: string, nodeTemplate: boolean): Observable<PropertiesDefinitionsResourceApiData> {
         const qName = Utils.getNamespaceAndLocalNameFromQName(type);
-        const toscaType = nodeTemplate ? '/nodetypes/' : '/relationshiptypes/';
+        const toscaType = nodeTemplate ? 'nodetypes' : 'relationshiptypes';
         const url = backendBaseURL + `/${toscaType}/${encodeURIComponent(encodeURIComponent(qName.namespace))}/${qName.localName}/propertiesdefinition/`;
         return this.http.get<PropertiesDefinitionsResourceApiData>(url);
     }
@@ -101,9 +108,49 @@ export class RefinementMappingsService {
         return this.http.delete<StayMapping[]>(this.path + '/staymappings/' + mapping.id);
     }
 
+    public addDeploymentArtifactMappings(element: DeploymentArtifactMapping): Observable<DeploymentArtifactMapping[]> {
+        return this.http.put<DeploymentArtifactMapping[]>(this.path + '/deploymentartifactmappings', element);
+    }
+
+    public deleteDeploymentArtifactMappings(mapping: DeploymentArtifactMapping): Observable<DeploymentArtifactMapping[]> {
+        return this.http.delete<DeploymentArtifactMapping[]>(this.path + '/deploymentartifactmappings/' + mapping.id);
+    }
+
+    public getDeploymentArtifactMappings(): Observable<DeploymentArtifactMapping[]> {
+        return this.http.get<DeploymentArtifactMapping[]>(this.path + '/deploymentartifactmappings');
+    }
+
+    public addPermutationMappings(mapping: PermutationMapping): Observable<PermutationMapping[]> {
+        return this.http.put<PermutationMapping[]>(this.path + '/permutationmappings', mapping);
+    }
+
+    public deletePermutationMappings(mapping: PermutationMapping): Observable<PermutationMapping[]> {
+        return this.http.delete<PermutationMapping[]>(this.path + '/permutationmappings/' + mapping.id);
+    }
+
+    public getPermutationMappings(): Observable<PermutationMapping[]> {
+        return this.http.get<PermutationMapping[]>(this.path + '/permutationmappings');
+    }
+
+    public getNewMappingsId(mappings: RefinementMappings[], prefix: string): number {
+        let id = 0;
+        mappings.forEach(value => {
+            const number = Number(value.id.split(prefix)[1]);
+            if (!isNaN(number) && number >= id) {
+                id = number;
+                if (number === id) {
+                    id++;
+                }
+            }
+        });
+
+        return id;
+    }
+
     private getRefinementStructureUrl(): string {
         let url = this.path;
-        if (this.sharedData.toscaComponent.toscaType === ToscaTypes.PatternRefinementModel) {
+        if (this.sharedData.toscaComponent.toscaType === ToscaTypes.PatternRefinementModel
+            || this.sharedData.toscaComponent.toscaType === ToscaTypes.TopologyFragmentRefinementModel) {
             url += '/refinementstructure';
         } else if (this.sharedData.toscaComponent.toscaType === ToscaTypes.TestRefinementModel) {
             url += '/testfragment';

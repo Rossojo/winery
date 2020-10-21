@@ -1,5 +1,5 @@
 /********************************************************************************
- * Copyright (c) 2018-2019 Contributors to the Eclipse Foundation
+ * Copyright (c) 2018-2020 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -25,6 +25,9 @@ import { RelationMappingsComponent } from '../../instance/refinementModels/relat
 import { TopologyTemplateComponent } from '../../instance/sharedComponents/topologyTemplate/topologyTemplate.component';
 import { StayMappingsComponent } from '../../instance/refinementModels/stayMappings/stayMappings.component';
 import { AttributeMappingsComponent } from '../../instance/refinementModels/attributeMappings/attributeMappings.component';
+import { DeploymentArtifactsMappingsComponent } from '../../instance/refinementModels/deploymentArtifactsMappings/deploymentArtifactsMappings.component';
+import { PermutationMappingsComponent } from '../../instance/refinementModels/permutationMappings/permutationMappings.component';
+import { PermutationsComponent } from '../../instance/refinementModels/permutations/permutations.component';
 
 const toscaType = ToscaTypes.PatternRefinementModel;
 
@@ -43,6 +46,9 @@ const patternRefinementRoutes: Routes = [
             { path: 'relationmappings', component: RelationMappingsComponent },
             { path: 'attributemappings', component: AttributeMappingsComponent },
             { path: 'staymappings', component: StayMappingsComponent },
+            { path: 'deploymentartifactmappings', component: DeploymentArtifactsMappingsComponent },
+            { path: 'permutationmappings', component: PermutationMappingsComponent },
+            { path: 'permutations', component: PermutationsComponent },
             { path: 'xml', component: EditXMLComponent },
             { path: '', redirectTo: 'readme', pathMatch: 'full' }
         ]

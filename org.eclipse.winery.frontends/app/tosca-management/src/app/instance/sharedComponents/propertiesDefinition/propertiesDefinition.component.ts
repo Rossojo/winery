@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017-2018 Contributors to the Eclipse Foundation
+ * Copyright (c) 2017-2020 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -15,17 +15,26 @@ import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { InstanceService } from '../../instance.service';
 import { PropertiesDefinitionService } from './propertiesDefinition.service';
 import {
-    PropertiesDefinition, PropertiesDefinitionEnum, PropertiesDefinitionKVElement, PropertiesDefinitionsResourceApiData,
-    WinerysPropertiesDefinition
+    PropertiesDefinition, PropertiesDefinitionEnum, PropertiesDefinitionKVElement, PropertiesDefinitionsResourceApiData, WinerysPropertiesDefinition
 } from './propertiesDefinitionsResourceApiData';
 import { SelectData } from '../../../model/selectData';
-import { isNullOrUndefined } from 'util';
 import { WineryNotificationService } from '../../../wineryNotificationModule/wineryNotification.service';
-import { WineryValidatorObject } from '../../../wineryValidators/wineryDuplicateValidator.directive';
-import { WineryRowData, WineryTableColumn } from '../../../wineryTableModule/wineryTable.component';
-import { ModalDirective } from 'ngx-bootstrap';
 import { HttpErrorResponse, HttpResponse } from '@angular/common/http';
-import * as _ from 'lodash';
+import { WineryRepositoryConfigurationService } from '../../../wineryFeatureToggleModule/WineryRepositoryConfiguration.service';
+import { FeatureEnum } from '../../../wineryFeatureToggleModule/wineryRepository.feature.direct';
+import { WineryDynamicTableMetadata } from '../../../wineryDynamicTable/wineryDynamicTableMetadata';
+import { DynamicTextData } from '../../../wineryDynamicTable/formComponents/dynamicText.component';
+import { Validators } from '@angular/forms';
+import { DynamicDropdownData } from '../../../wineryDynamicTable/formComponents/dynamicDropdown.component';
+import { DynamicConstraintsData } from '../../../wineryDynamicTable/formComponents/dynamicConstraints/dynamicConstraints.component';
+import { XmlTypes, YamlTypes } from '../../../model/parameters';
+
+// possible constraints according to TOSCA v1.2
+const valid_constraint_keys = ['equal', 'greater_than', 'greater_or_equal', 'less_than', 'less_or_equal', 'in_range',
+    'valid_values', 'length', 'min_length', 'max_length', 'pattern', 'schema'];
+// we differentiate between constraint keys to validate input
+const list_constraint_keys = ['valid_values', 'in_range'];
+const range_constraint_keys = ['in_range'];
 
 @Component({
     templateUrl: 'propertiesDefinition.component.html',
@@ -34,46 +43,91 @@ import * as _ from 'lodash';
     ],
     providers: [
         PropertiesDefinitionService
-    ]
+    ],
 })
+
 export class PropertiesDefinitionComponent implements OnInit {
 
     propertiesEnum = PropertiesDefinitionEnum;
     loading = true;
 
+    dynamicTableData: Array<WineryDynamicTableMetadata> = [];
+    tableTitle = 'Properties';
+    modalTitle = 'Add a Property Definition';
+    tableData: PropertiesDefinitionKVElement[] = [];
+
     resourceApiData: PropertiesDefinitionsResourceApiData;
     selectItems: SelectData[];
     activeElement = new SelectData();
-    selectedCell: WineryRowData;
-    elementToRemove: any = null;
-    columns: Array<WineryTableColumn> = [
-        { title: 'Name', name: 'key', sort: true },
-        { title: 'Type', name: 'type', sort: true },
-        { title: 'Description', name: 'description', sort: true },
-        { title: 'Pattern', name: 'pattern', sort: true },
-    ];
-    newProperty: PropertiesDefinitionKVElement = new PropertiesDefinitionKVElement();
-    elementToEdit: PropertiesDefinitionKVElement = new PropertiesDefinitionKVElement();
-    editIndex = -1;
+    configEnum = FeatureEnum;
 
-    validatorObject: WineryValidatorObject;
-    @ViewChild('confirmDeleteModal') confirmDeleteModal: ModalDirective;
-    @ViewChild('addModal') addModal: ModalDirective;
-    @ViewChild('addNameInputForm') addNameInputForm: ElementRef;
-    @ViewChild('editModal') editModal: ModalDirective;
-
-    includePattern = false;
+    @ViewChild('nameInputForm') nameInputForm: ElementRef;
 
     constructor(public sharedData: InstanceService, private service: PropertiesDefinitionService,
-                private notify: WineryNotificationService) {
+                private notify: WineryNotificationService, private configurationService: WineryRepositoryConfigurationService) {
     }
 
     // region ########## Angular Callbacks ##########
-    /**
-     * @override
-     */
     ngOnInit() {
         this.getPropertiesDefinitionsResourceApiData();
+
+        this.dynamicTableData = [
+            new DynamicTextData(
+                'key',
+                'Name',
+                0,
+                Validators.required
+            ),
+            new DynamicTextData(
+                'defaultValue',
+                'Default Value',
+                2
+            ),
+            new DynamicTextData(
+                'description',
+                'Description',
+                3
+            ),
+            new DynamicTextData(
+                'pattern',
+                'Pattern',
+                4
+            ),
+            new DynamicConstraintsData(
+                'constraints',
+                'Constraints',
+                valid_constraint_keys,
+                list_constraint_keys,
+                range_constraint_keys,
+                5,
+            )
+        ];
+        if (this.configurationService.configuration.features.yaml) {
+            const options = [
+                { label: 'string', value: 'string' },
+                { label: 'integer', value: 'integer' },
+                { label: 'float', value: 'float' },
+                { label: 'boolean', value: 'boolean' },
+                { label: 'timestamp', value: 'timestamp' }
+            ];
+            this.dynamicTableData.push(new DynamicDropdownData<YamlTypes>('type', 'Type', options, 1, 'string'));
+        } else {
+            const options = [
+                { label: 'xsd:string', value: 'xsd:string' },
+                { label: 'xsd:float', value: 'xsd:float' },
+                { label: 'xsd:decimal', value: 'xsd:decimal' },
+                { label: 'xsd:anyURI', value: 'xsd:anyURI' },
+                { label: 'xsd:QName', value: 'xsd:QName' }
+            ];
+            this.dynamicTableData.push(new DynamicDropdownData<XmlTypes>('type', 'Type', options, 1, 'xsd:string'));
+        }
+    }
+
+    copyToTable() {
+        this.tableData = [];
+        if (this.resourceApiData.winerysPropertiesDefinition && this.resourceApiData.winerysPropertiesDefinition.propertyDefinitionKVList) {
+            this.tableData = this.resourceApiData.winerysPropertiesDefinition.propertyDefinitionKVList;
+        }
     }
 
     // endregion
@@ -91,7 +145,7 @@ export class PropertiesDefinitionComponent implements OnInit {
     onXmlElementSelected(): void {
         this.resourceApiData.selectedValue = PropertiesDefinitionEnum.Element;
 
-        if (isNullOrUndefined(this.resourceApiData.propertiesDefinition)) {
+        if (!this.resourceApiData.propertiesDefinition) {
             this.resourceApiData.propertiesDefinition = new PropertiesDefinition();
         }
 
@@ -112,7 +166,7 @@ export class PropertiesDefinitionComponent implements OnInit {
     onXmlTypeSelected(): void {
         this.resourceApiData.selectedValue = PropertiesDefinitionEnum.Type;
 
-        if (isNullOrUndefined(this.resourceApiData.propertiesDefinition)) {
+        if (!this.resourceApiData.propertiesDefinition) {
             this.resourceApiData.propertiesDefinition = new PropertiesDefinition();
         }
 
@@ -133,30 +187,30 @@ export class PropertiesDefinitionComponent implements OnInit {
     onCustomKeyValuePairSelected(): void {
         this.resourceApiData.selectedValue = PropertiesDefinitionEnum.Custom;
 
-        if (isNullOrUndefined(this.resourceApiData.propertiesDefinition)) {
+        if (!this.resourceApiData.propertiesDefinition) {
             this.resourceApiData.propertiesDefinition = new PropertiesDefinition();
         }
         this.resourceApiData.propertiesDefinition.element = null;
         this.resourceApiData.propertiesDefinition.type = null;
 
-        if (isNullOrUndefined(this.resourceApiData.propertiesDefinition)) {
+        if (this.resourceApiData.propertiesDefinition) {
             this.resourceApiData.propertiesDefinition = new PropertiesDefinition();
         }
         this.resourceApiData.propertiesDefinition.element = null;
         this.resourceApiData.propertiesDefinition.type = null;
 
-        if (isNullOrUndefined(this.resourceApiData.winerysPropertiesDefinition)) {
+        if (!this.resourceApiData.winerysPropertiesDefinition) {
             this.resourceApiData.winerysPropertiesDefinition = new WinerysPropertiesDefinition();
         }
         // The key/value pair list may be null
-        if (isNullOrUndefined(this.resourceApiData.winerysPropertiesDefinition.propertyDefinitionKVList)) {
+        if (!this.resourceApiData.winerysPropertiesDefinition.propertyDefinitionKVList) {
             this.resourceApiData.winerysPropertiesDefinition.propertyDefinitionKVList = [];
         }
 
-        if (isNullOrUndefined(this.resourceApiData.winerysPropertiesDefinition.namespace)) {
+        if (!this.resourceApiData.winerysPropertiesDefinition.namespace) {
             this.resourceApiData.winerysPropertiesDefinition.namespace = this.sharedData.toscaComponent.namespace + '/propertiesdefinition/winery';
         }
-        if (isNullOrUndefined(this.resourceApiData.winerysPropertiesDefinition.elementName)) {
+        if (!this.resourceApiData.winerysPropertiesDefinition.elementName) {
             this.resourceApiData.winerysPropertiesDefinition.elementName = 'properties';
         }
 
@@ -166,7 +220,7 @@ export class PropertiesDefinitionComponent implements OnInit {
 
     // endregion
 
-    // region ########## Button Callbacks ##########
+    // region ########## Save Callbacks ##########
     save(): void {
         this.loading = true;
         if (this.resourceApiData.selectedValue === PropertiesDefinitionEnum.None) {
@@ -184,42 +238,6 @@ export class PropertiesDefinitionComponent implements OnInit {
         }
     }
 
-    /**
-     * handler for clicks on remove button
-     * @param data
-     */
-    onRemoveClick(data: PropertiesDefinitionKVElement) {
-        if (isNullOrUndefined(data)) {
-            return;
-        } else {
-            this.elementToRemove = data;
-            this.confirmDeleteModal.show();
-        }
-    }
-
-    /**
-     * handler for clicks on the add button
-     */
-    onAddClick() {
-        this.newProperty = new PropertiesDefinitionKVElement();
-        this.validatorObject = new WineryValidatorObject(this.resourceApiData.winerysPropertiesDefinition.propertyDefinitionKVList, 'key');
-        this.addModal.show();
-    }
-
-    /**
-     * handler for clicks on the edit button
-     */
-    onEditClick(data: PropertiesDefinitionKVElement) {
-        if (isNullOrUndefined(data)) {
-            return;
-        } else {
-            this.elementToEdit = _.cloneDeep(data);
-            this.editIndex = this.resourceApiData.winerysPropertiesDefinition.propertyDefinitionKVList.findIndex(el => el.key === this.elementToEdit.key);
-            this.validatorObject = new WineryValidatorObject(this.resourceApiData.winerysPropertiesDefinition.propertyDefinitionKVList, 'key');
-            this.editModal.show();
-        }
-    }
-
     // endregion
 
     /**
@@ -234,60 +252,11 @@ export class PropertiesDefinitionComponent implements OnInit {
         }
     }
 
-    onCellSelected(data: WineryRowData) {
-        if (!isNullOrUndefined(data)) {
-            this.selectedCell = data;
-        }
-    }
-
     // endregion
 
-    // region ########## Modal Callbacks ##########
-    /**
-     * Adds a property to the table and model
-     * @param propType
-     * @param propName
-     * @param propPattern
-     */
-    addProperty(propType: string, propName: string, propDescription: string, propPattern: string) {
-        this.resourceApiData.winerysPropertiesDefinition.propertyDefinitionKVList.push({
-            key: propName,
-            type: propType,
-            description: propDescription,
-            pattern: propPattern
-        });
-        this.addModal.hide();
-    }
-
-    removeConfirmed() {
-        this.confirmDeleteModal.hide();
-        this.deleteItemFromPropertyDefinitionKvList(this.elementToRemove);
-        this.elementToRemove = null;
-    }
-
-    onAddModalShown() {
-        this.addNameInputForm.nativeElement.focus();
-        this.includePattern = false;
-    }
-
-    editProperty(index: number, propType: string, propName: string, propDescription: string, propPattern: string) {
-        if (index > -1) {
-            this.resourceApiData.winerysPropertiesDefinition.propertyDefinitionKVList[index] = {
-                key: propName,
-                type: propType,
-                description: propDescription,
-                pattern: propPattern
-            };
-
-            // trigger change detection
-            this.resourceApiData.winerysPropertiesDefinition.propertyDefinitionKVList =
-                [].concat(this.resourceApiData.winerysPropertiesDefinition.propertyDefinitionKVList);
-        }
-        this.editModal.hide();
-    }
-
-    onEditModalShown() {
-        this.includePattern = this.elementToEdit.pattern != null;
+    // region ########## Table Callbacks ##########
+    onChangeProperty() {
+        this.save();
     }
 
     // endregion
@@ -312,10 +281,10 @@ export class PropertiesDefinitionComponent implements OnInit {
                 }
                 return item.id === this.resourceApiData.propertiesDefinition.element;
             });
-            return !isNullOrUndefined(this.activeElement);
+            return !!this.activeElement;
         });
 
-        if (isNullOrUndefined(this.activeElement)) {
+        if (!this.activeElement) {
             this.activeElement = new SelectData();
         }
     }
@@ -328,6 +297,7 @@ export class PropertiesDefinitionComponent implements OnInit {
      */
     private handleSuccess(data: any, actionType?: string): void {
         this.loading = false;
+        this.copyToTable();
         switch (actionType) {
             case 'delete':
                 this.notify.success('Deleted PropertiesDefinition', 'Success');
@@ -352,9 +322,8 @@ export class PropertiesDefinitionComponent implements OnInit {
 
     private handlePropertiesDefinitionData(data: PropertiesDefinitionsResourceApiData): void {
         this.resourceApiData = data;
-
         // because the selectedValue doesn't get set correctly do it here
-        switch (isNullOrUndefined(this.resourceApiData.selectedValue) ? '' : this.resourceApiData.selectedValue.toString()) {
+        switch (!this.resourceApiData.selectedValue ? '' : this.resourceApiData.selectedValue.toString()) {
             case PropertiesDefinitionEnum.Element:
                 this.onXmlElementSelected();
                 break;
@@ -365,7 +334,11 @@ export class PropertiesDefinitionComponent implements OnInit {
                 this.onCustomKeyValuePairSelected();
                 break;
             default:
-                this.resourceApiData.selectedValue = PropertiesDefinitionEnum.None;
+                if (this.configurationService.configuration.features.yaml) {
+                    this.onCustomKeyValuePairSelected();
+                } else {
+                    this.resourceApiData.selectedValue = PropertiesDefinitionEnum.None;
+                }
         }
 
         this.handleSuccess(data);
@@ -374,19 +347,6 @@ export class PropertiesDefinitionComponent implements OnInit {
     private handleSave(data: HttpResponse<string>) {
         this.handleSuccess(data, 'change');
         this.getPropertiesDefinitionsResourceApiData();
-    }
-
-    /**
-     * Deletes a property from the table and model.
-     * @param itemToDelete
-     */
-    private deleteItemFromPropertyDefinitionKvList(itemToDelete: any): void {
-        const list = this.resourceApiData.winerysPropertiesDefinition.propertyDefinitionKVList;
-        for (let i = 0; i < list.length; i++) {
-            if (list[i].key === itemToDelete.key) {
-                list.splice(i, 1);
-            }
-        }
     }
 
     /**

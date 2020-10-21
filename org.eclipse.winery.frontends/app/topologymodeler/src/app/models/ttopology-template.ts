@@ -13,9 +13,12 @@
  ********************************************************************************/
 import { DifferenceStates, VersionUtils } from './ToscaDiff';
 import { Visuals } from './visuals';
+import { TPolicy } from './policiesModalData';
+import { Interface } from '../../../../tosca-management/src/app/model/interfaces';
+import { PropertiesDefinition } from '../../../../tosca-management/src/app/instance/sharedComponents/propertiesDefinition/propertiesDefinitionsResourceApiData';
 import { NodeTemplateInstanceStates } from './enums';
 
-export class AbstractTTemplate {
+export class AbstractTEntity {
     constructor(public documentation?: any,
                 public any?: any,
                 public otherAttributes?: any) {
@@ -25,15 +28,16 @@ export class AbstractTTemplate {
 /**
  * This is the datamodel for node Templates and relationship templates
  */
-export class TTopologyTemplate extends AbstractTTemplate {
+export class TTopologyTemplate extends AbstractTEntity {
     nodeTemplates: Array<TNodeTemplate> = [];
     relationshipTemplates: Array<TRelationshipTemplate> = [];
+    policies: { policy: Array<TPolicy> };
 }
 
 /**
  * This is the datamodel for node Templates
  */
-export class TNodeTemplate extends AbstractTTemplate {
+export class TNodeTemplate extends AbstractTEntity {
 
     constructor(public properties: any,
                 public id: string,
@@ -47,10 +51,11 @@ export class TNodeTemplate extends AbstractTTemplate {
                 otherAttributes?: any,
                 public x?: number,
                 public y?: number,
-                public capabilities?: any,
-                public requirements?: any,
+                public capabilities?: { capability: any[] },
+                public requirements?: { requirement: any[] },
                 public deploymentArtifacts?: any,
-                public policies?: any,
+                public policies?: { policy: any[] },
+                public artifacts?: { artifact: Array<TArtifact> },
                 public instanceState?: NodeTemplateInstanceStates,
                 public valid?: boolean,
                 public working?: boolean,
@@ -69,7 +74,7 @@ export class TNodeTemplate extends AbstractTTemplate {
     generateNewNodeTemplateWithUpdatedAttribute(updatedAttribute: string, updatedValue: any): TNodeTemplate {
         const nodeTemplate = new TNodeTemplate(this.properties, this.id, this.type, this.name, this.minInstances, this.maxInstances,
             this.visuals, this.documentation, this.any, this.otherAttributes, this.x, this.y, this.capabilities,
-            this.requirements, this.deploymentArtifacts, this.policies, this.instanceState, this.valid, this.working, this._state);
+            this.requirements, this.deploymentArtifacts, this.policies, this.artifacts, this.instanceState, this.valid, this.working, this._state);
         if (updatedAttribute === 'coordinates') {
             nodeTemplate.x = updatedValue.x;
             nodeTemplate.y = updatedValue.y;
@@ -127,6 +132,10 @@ export class TNodeTemplate extends AbstractTTemplate {
     }
 }
 
+export interface Full<T> {
+    serviceTemplateOrNodeTypeOrNodeTypeImplementation: T[];
+}
+
 export class Entity {
     constructor(public id: string,
                 public qName: string,
@@ -163,10 +172,35 @@ export class VisualEntityType extends EntityType {
     }
 }
 
+export class TPolicyType extends EntityType {
+    constructor(id: string,
+                qName: string,
+                name: string,
+                namespace: string,
+                properties: any,
+                public full: any,
+                public targets?: string[]) {
+        super(id, qName, name, namespace, properties, full);
+    }
+}
+
+export class TArtifactType extends EntityType {
+    constructor(id: string,
+                qName: string,
+                name: string,
+                namespace: string,
+                full?: any,
+                properties?: any,
+                public mimeType?: string,
+                public fileExtensions?: string[]) {
+        super(id, qName, name, namespace, properties, full);
+    }
+}
+
 /**
  * This is the datamodel for relationship templates
  */
-export class TRelationshipTemplate extends AbstractTTemplate {
+export class TRelationshipTemplate extends AbstractTEntity {
 
     constructor(public sourceElement: { ref: string },
                 public targetElement: { ref: string },
@@ -197,4 +231,29 @@ export class TRelationshipTemplate extends AbstractTTemplate {
         return relTemplate;
     }
 
+}
+
+export class TArtifact extends AbstractTEntity {
+    constructor(public id: string,
+                public type: string,
+                public file: string,
+                public targetLocation?: string,
+                public properties?: any,
+                public documentation?: any,
+                public any?: any,
+                public otherAttributes?: any) {
+        super(documentation, any, otherAttributes);
+    }
+}
+
+export class TNodeType extends AbstractTEntity {
+    constructor(public name: string,
+                public interfaces: { interfaces: Interface[]},
+                public propertiesDefinition: PropertiesDefinition,
+                public derivedFrom: any,
+                documentation?: any,
+                any?: any,
+                other?: any) {
+        super(documentation, any, other);
+    }
 }

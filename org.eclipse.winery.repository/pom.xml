@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  ~ Copyright (c) 2013-2019 Contributors to the Eclipse Foundation
+  ~ Copyright (c) 2013-2020 Contributors to the Eclipse Foundation
   ~
   ~ See the NOTICE file(s) distributed with this work for additional
   ~ information regarding copyright ownership.
@@ -28,6 +28,16 @@
         <main.basedir>${project.parent.basedir}</main.basedir>
     </properties>
     <dependencies>
+        <dependency>
+            <groupId>com.sun.xml.bind</groupId>
+            <artifactId>jaxb-impl</artifactId>
+            <version>2.2.11</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.xml.bind</groupId>
+            <artifactId>jaxb-core</artifactId>
+            <version>2.2.11</version>
+        </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
@@ -60,7 +70,7 @@
         <dependency>
             <groupId>xerces</groupId>
             <artifactId>xercesImpl</artifactId>
-            <version>2.9.1</version>
+            <version>${xerces.xercesImpl.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -106,6 +116,11 @@
             </exclusions>
         </dependency>
         <dependency>
+            <groupId>commons-validator</groupId>
+            <artifactId>commons-validator</artifactId>
+            <version>1.6</version>
+        </dependency>
+        <dependency>
             <groupId>org.eclipse.jgit</groupId>
             <artifactId>org.eclipse.jgit</artifactId>
             <version>${org.eclipse.jgit.version}</version>
@@ -123,11 +138,10 @@
                 </exclusion>
             </exclusions>
         </dependency>
-
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>23.4-jre</version>
+            <version>27.1-jre</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.google.code.findbugs</groupId>
@@ -210,6 +224,24 @@
             <artifactId>org.eclipse.winery.accountability</artifactId>
             <version>2.0.0-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>org.eclipse.winery</groupId>
+            <artifactId>org.eclipse.winery.model.tosca.yaml</artifactId>
+            <version>2.0.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>1.17</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.11</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
     <build>
         <resources>
@@ -246,7 +278,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>2.17</version>
+                <version>${maven.checkstyle.version}</version>
                 <executions>
                     <execution>
                         <id>checkstyle</id>
@@ -258,14 +290,9 @@
                 </executions>
                 <dependencies>
                     <dependency>
-                        <groupId>com.puppycrawl.tools</groupId>
-                        <artifactId>checkstyle</artifactId>
-                        <version>7.6</version>
-                    </dependency>
-                    <dependency>
                         <groupId>com.thomasjensen.checkstyle.addons</groupId>
                         <artifactId>checkstyle-addons</artifactId>
-                        <version>4.0.1</version>
+                        <version>${checkstyle.addons.version}</version>
                     </dependency>
                 </dependencies>
             </plugin>

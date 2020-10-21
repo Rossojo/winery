@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012-2019 Contributors to the Eclipse Foundation
+ * Copyright (c) 2012-2020 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -138,7 +138,9 @@ public class FileUtils {
                             return FileVisitResult.SKIP_SUBTREE;
                         } else {
                             try {
-                                Files.copy(dir, newFile);
+                                if (!Files.exists(newFile)) {
+                                    Files.copy(dir, newFile);
+                                }
                             } catch (IOException ex) {
                                 ex.printStackTrace();
                             }
@@ -197,6 +199,10 @@ public class FileUtils {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static boolean isPresent(Path path) {
+        return Files.exists(path);
     }
 
     // public static Response readContentFromFile(RepositoryFileReference ref) {

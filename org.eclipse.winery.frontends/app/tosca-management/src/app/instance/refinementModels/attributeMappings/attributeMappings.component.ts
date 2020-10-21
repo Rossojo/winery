@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018-2019 Contributors to the Eclipse Foundation
+ * Copyright (c) 2018-2020 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -39,9 +39,8 @@ export class AttributeMappingsComponent implements OnInit {
 
     loading = true;
     columns: Array<WineryTableColumn> = [
-        { title: 'Id', name: 'id', sort: true },
-        { title: 'Detector Node', name: 'detectorNode', sort: true },
-        { title: 'Refinement Node', name: 'refinementNode', sort: true },
+        { title: 'Detector Node', name: 'detectorElement', sort: true },
+        { title: 'Refinement Node', name: 'refinementElement', sort: true },
         { title: 'Type', name: 'type', sort: true },
         { title: 'Detector Node Property', name: 'detectorProperty', sort: true },
         { title: 'Refinement Node Property', name: 'refinementProperty', sort: true },
@@ -71,7 +70,7 @@ export class AttributeMappingsComponent implements OnInit {
 
     constructor(private service: RefinementMappingsService,
                 private notify: WineryNotificationService,
-                private sharedData: InstanceService,
+                public sharedData: InstanceService,
                 private modalService: BsModalService) {
     }
 
@@ -90,16 +89,7 @@ export class AttributeMappingsComponent implements OnInit {
 
     // region ********** Table Callbacks **********
     onAddButtonClicked() {
-        let id = 0;
-        this.attributeMappings.forEach(value => {
-            const number = Number(value.id.split(AttributeMapping.idPrefix)[1]);
-            if (!isNaN(number) && number >= id) {
-                id = number;
-                if (number === id) {
-                    id++;
-                }
-            }
-        });
+        const id = this.service.getNewMappingsId(this.attributeMappings, AttributeMapping.idPrefix);
 
         this.mapping = new AttributeMapping(id);
         this.cleanProperties();
@@ -132,14 +122,14 @@ export class AttributeMappingsComponent implements OnInit {
     }
 
     detectorNodeSelected(node: SelectData) {
-        this.mapping.detectorNode = node.id;
+        this.mapping.detectorElement = node.id;
         this.selectedDetectorElement = this.detectorTemplates
             .find(value => value.id === node.id);
         this.getProperties();
     }
 
     refinementNodeSelected(node: SelectData) {
-        this.mapping.refinementNode = node.id;
+        this.mapping.refinementElement = node.id;
         this.selectedRefinementElement = this.refinementStructureTemplates
             .find(value => value.id === node.id);
         this.getProperties();
