@@ -28,6 +28,7 @@ import { BsModalRef, BsModalService } from 'ngx-bootstrap';
 import { WineryRepositoryConfigurationService } from '../../../wineryFeatureToggleModule/WineryRepositoryConfiguration.service';
 
 const bpmn4tosca = 'http://www.opentosca.org/bpmn4tosca';
+const bpmn = 'http://www.omg.org/spec/BPMN/20100524/MODEL';
 
 @Component({
     selector: 'winery-plans',
@@ -124,12 +125,22 @@ export class PlansComponent implements OnInit {
     }
 
     onEditPlan(plan: PlansApiData) {
-        const bpmnUrl = this.configurationService.configuration.endpoints.workflowmodeler
-            + '?repositoryURL=' + encodeURIComponent(backendBaseURL + '/')
-            + '&namespace=' + encodeURIComponent(this.sharedData.toscaComponent.namespace)
-            + '&id=' + this.sharedData.toscaComponent.localName
-            + '&plan=' + plan.name;
-        window.open(bpmnUrl, '_blank');
+        if (plan.planLanguage.includes(bpmn)) {
+            // derzeit nur zum Testen
+            const bpmnUrl = 'http://localhost:4242'
+                + '?repositoryURL=' + encodeURIComponent(backendBaseURL + '/')
+                + '&namespace=' + encodeURIComponent(this.sharedData.toscaComponent.namespace)
+                + '&id=' + this.sharedData.toscaComponent.localName
+                + '&plan=' + plan.name;
+            window.open(bpmnUrl, '_blank');
+        } else {
+             const workflowUrl = this.configurationService.configuration.endpoints.workflowmodeler
+             + '?repositoryURL=' + encodeURIComponent(backendBaseURL + '/')
+             + '&namespace=' + encodeURIComponent(this.sharedData.toscaComponent.namespace)
+             + '&id=' + this.sharedData.toscaComponent.localName
+             + '&plan=' + plan.name;
+             window.open(workflowUrl, '_blank');
+        }
     }
 
     onRemovePlan(plan: PlansApiData) {
@@ -150,7 +161,9 @@ export class PlansComponent implements OnInit {
 
     onCellSelected(plan: WineryRowData) {
         const selected: PlansApiData = plan.row;
-        this.enableEditButton = selected.planLanguage.includes(bpmn4tosca);
+        if (selected.planLanguage.includes(bpmn4tosca) || selected.planLanguage.includes(bpmn)) {
+            this.enableEditButton = true;
+        }
     }
 
     // endregion
@@ -185,6 +198,9 @@ export class PlansComponent implements OnInit {
 
     planLanguageSelected(event: SelectItem) {
         if (event.id.includes(bpmn4tosca)) {
+            this.fileDropped = true;
+            this.showArchiveUpload = false;
+        } else if (event.id.includes(bpmn)) {
             this.fileDropped = true;
             this.showArchiveUpload = false;
         } else if (!isNullOrUndefined(this.fileToUpload)) {
