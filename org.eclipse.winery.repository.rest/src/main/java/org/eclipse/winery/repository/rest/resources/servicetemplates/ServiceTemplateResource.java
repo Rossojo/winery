@@ -511,7 +511,6 @@ public class ServiceTemplateResource extends AbstractComponentInstanceResourceCo
     public Response createPlaceholderSubstituteVersion() throws IOException, SplittingException {
         TTopologyTemplate originTopologyTemplate = this.getServiceTemplate().getTopologyTemplate();
         TTags tagsOfServiceTemplate = this.getServiceTemplate().getTags();
-        Map<String, TNodeTemplate> nodeTemplateIdAndPlaceholderMap = new LinkedHashMap<>();
 
         String participantId = "";
         TTags newTagList = new TTags();
@@ -525,15 +524,14 @@ public class ServiceTemplateResource extends AbstractComponentInstanceResourceCo
         }
         final String finalParticipantId = participantId;
 
-        List<TNodeTemplate> nodeTemplatesToBeRemoved = new ArrayList<>();
+        List<String> nodeTemplatesWithNewHost = new ArrayList<>();
 
         for (TNodeTemplate tNodeTemplate : originTopologyTemplate.getNodeTemplates()) {
             if (ModelUtilities.getTargetLabel(tNodeTemplate).isPresent()) {
                 if (tNodeTemplate.getTypeAsQName().getNamespaceURI().equals("http://www.example.org/tosca/placeholdertypes")
                     && ModelUtilities.getTargetLabel(tNodeTemplate).get().equals(finalParticipantId.toLowerCase())) {
-                    nodeTemplatesToBeRemoved.add(tNodeTemplate);
                     for (TRelationshipTemplate tRelationshipTemplate : ModelUtilities.getIncomingRelationshipTemplates(originTopologyTemplate, tNodeTemplate)) {
-                        nodeTemplateIdAndPlaceholderMap.put(ModelUtilities.getSourceNodeTemplateOfRelationshipTemplate(originTopologyTemplate, tRelationshipTemplate).getId(), tNodeTemplate);
+                        nodeTemplatesWithNewHost.add(ModelUtilities.getSourceNodeTemplateOfRelationshipTemplate(originTopologyTemplate, tRelationshipTemplate).getId());
                     }
                 }
             }
@@ -550,13 +548,6 @@ public class ServiceTemplateResource extends AbstractComponentInstanceResourceCo
             }
         }
 
-        for (TNodeTemplate nodeTemplateToBeRemoved : nodeTemplatesToBeRemoved) {
-            originTopologyTemplate.getNodeTemplateOrRelationshipTemplate().remove(nodeTemplateToBeRemoved);
-        }
-
-        for (TRelationshipTemplate relationshipTemplateToBeRemoved : relationshipTemplatesToBeRemoved) {
-            originTopologyTemplate.getNodeTemplateOrRelationshipTemplate().remove(relationshipTemplateToBeRemoved);
-        }
         ServiceTemplateId id = (ServiceTemplateId) this.getId();
         WineryVersion version = VersionUtils.getVersion(id);
 
@@ -578,38 +569,16 @@ public class ServiceTemplateResource extends AbstractComponentInstanceResourceCo
         ResourceResult response = RestUtils.duplicate(id, newId);
 
         TServiceTemplate newServiceTemplate = repo.getElement(newId);
-        newServiceTemplate.setTopologyTemplate(originTopologyTemplate);
+        newServiceTemplate.setTopologyTemplate(BackendUtils.clone(originTopologyTemplate));
 
         Splitting splitting = new Splitting();
 
-        Map<String, List<TTopologyTemplate>> resultList = splitting.getHostingInjectionOptions(newServiceTemplate.getTopologyTemplate());
+        Map<String, List<TTopologyTemplate>> resultList = splitting.getHostingInjectionOptions(BackendUtils.clone(newServiceTemplate.getTopologyTemplate()));
         for (Map.Entry<String, List<TTopologyTemplate>> entry : resultList.entrySet()) {
-            List<TTopologyTemplate> toBeRemovedTopologyTemplates = new ArrayList<>();
-            /*for (TTopologyTemplate tTopologyTemplate : entry.getValue()) {
-                LinkedHashMap<String, String> substitutionProperties = new LinkedHashMap<>();
-                for (TNodeTemplate tNodeTemplate : tTopologyTemplate.getNodeTemplates()) {
-                    for (Map.Entry<String, String> prop : tNodeTemplate.getProperties().getKVProperties().entrySet()) {
-                        substitutionProperties.put(prop.getKey(), prop.getValue());
-                    }
-                }
-                for (Map.Entry<String, TNodeTemplate> nodeTemplateAndItsPlaceholder : nodeTemplateIdAndPlaceholderMap.entrySet()) {
-                    if (nodeTemplateAndItsPlaceholder.getKey().equals(entry.getKey())) {
-                        for (Map.Entry<String, String> propOfPlaceholder : nodeTemplateAndItsPlaceholder.getValue().getProperties().getKVProperties().entrySet()) {
-                            if (!substitutionProperties.containsKey(propOfPlaceholder.getKey())) {
-                                // remove topology template from valid candidate set if it doesn't contain all properties we need
-                                toBeRemovedTopologyTemplates.add(tTopologyTemplate);
-                            }
-                        }
-                    }
-                }
-            }
-            if (!toBeRemovedTopologyTemplates.isEmpty()) {
-                entry.getValue().removeAll(toBeRemovedTopologyTemplates);
-            }*/
-            if (!resultList.get(entry.getKey()).isEmpty()) {
+            if (nodeTemplatesWithNewHost.contains(entry.getKey()) && !resultList.get(entry.getKey()).isEmpty()) {
                 Map<String, TTopologyTemplate> choiceTopologyTemplate = new LinkedHashMap<>();
                 choiceTopologyTemplate.put(entry.getKey(), entry.getValue().get(0));
-                splitting.injectNodeTemplates(originTopologyTemplate, choiceTopologyTemplate, InjectRemoval.REMOVE_NOTHING);
+                splitting.injectNodeTemplates(newServiceTemplate.getTopologyTemplate(), choiceTopologyTemplate, InjectRemoval.REMOVE_REPLACED);
                 for (TNodeTemplate injectNodeTemplate : choiceTopologyTemplate.get(entry.getKey()).getNodeTemplates()) {
                     injectNodeTemplate.getOtherAttributes().put(QNAME_LOCATION, finalParticipantId);
                 }
