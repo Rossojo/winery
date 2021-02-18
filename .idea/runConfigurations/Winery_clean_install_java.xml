@@ -12,8 +12,9 @@
             <list>
               <option value="clean" />
               <option value="package" />
+              <option value="-DskipTests" />
               <option value="-Dmaven.javadoc.skip=true" />
-              <option value="-Dcheckstyle.skipt=true" />
+              <option value="-Dcheckstyle.skip=true" />
             </list>
           </option>
           <option name="pomFileName" value="pom.xml" />
