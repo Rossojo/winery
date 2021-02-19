@@ -13,8 +13,11 @@
    -->
 <div id="NTPropertiesView"
      class="sidebar-root"
-     style="display: block;">
-    <div id="nodeTemplateInformationSection" style="margin: 8px"  *ngIf="sidebarState.template">
+     style="display: block;"
+     [@sidebarAnimationStatus]="sidebarAnimationStatus"
+     [style.top.px]="this.top"
+     *ngIf="sidebarState.sidebarVisible">
+    <div id="nodeTemplateInformationSection" style="margin: 8px" *ngIf="sidebarState.template">
         <button type="button" class="close" style="color: #000000" aria-label="Close" (click)="closeSidebar()" closeSidebar>
             <span aria-hidden="true">&times;</span>
         </button>
@@ -162,7 +165,6 @@
                             </div>
                         </div>
                     </div>
-
                 </div>
             </div>
             <div class="row">

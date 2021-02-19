@@ -37,3 +37,9 @@ input::-webkit-inner-spin-button {
 a {
     overflow-y: auto;
 }
+
+a:hover {
+    /*background-color: #303030 !important;
+    color: #03A9F4 !important;*/
+}
+
