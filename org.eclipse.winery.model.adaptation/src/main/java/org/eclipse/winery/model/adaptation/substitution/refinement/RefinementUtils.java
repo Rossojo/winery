@@ -233,14 +233,27 @@ public abstract class RefinementUtils {
                 // change the source element to the new source defined in the relation mapping
                 if (Objects.nonNull(idMapping)) {
                     String id = idMapping.get(relationMapping.getRefinementElement().getId());
-                    relationship.setTargetNodeTemplate(topology.getNodeTemplate(id));
+                    // create a new relation to not mess up the original elements
+                    ModelUtilities.createRelationshipTemplateAndAddToTopology(
+                        (TNodeTemplate) relationship.getSourceElement().getRef(),
+                        topology.getNodeTemplate(id),
+                        relationship.getType(),
+                        topology
+                    );
+                    topology.getNodeTemplateOrRelationshipTemplate().remove(relationship);
                 }
                 return true;
             } else if (Objects.isNull(relationMapping.getValidSourceOrTarget())
                 || ModelUtilities.isOfType(relationMapping.getValidSourceOrTarget(), relationship.getTargetElement().getRef().getType(), nodeTypes)) {
                 if (Objects.nonNull(idMapping)) {
                     String id = idMapping.get(relationMapping.getRefinementElement().getId());
-                    relationship.setSourceNodeTemplate(topology.getNodeTemplate(id));
+                    ModelUtilities.createRelationshipTemplateAndAddToTopology(
+                        topology.getNodeTemplate(id),
+                        (TNodeTemplate) relationship.getTargetElement().getRef(),
+                        relationship.getType(),
+                        topology
+                    );
+                    topology.getNodeTemplateOrRelationshipTemplate().remove(relationship);
                 }
                 return true;
             }

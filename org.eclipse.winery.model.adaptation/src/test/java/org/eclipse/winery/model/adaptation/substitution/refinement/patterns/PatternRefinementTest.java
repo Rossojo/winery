@@ -117,33 +117,35 @@ class PatternRefinementTest extends AbstractRefinementTest {
         PatternRefinement patternRefinement = new PatternRefinement();
         patternRefinement.applyRefinement(candidateForTopology, topology);
 
-        // static elements
-        TRelationshipTemplate relation21 = topology.getRelationshipTemplate("21");
-        TRelationshipTemplate relation32 = topology.getRelationshipTemplate("32");
-
-        assertTrue(Objects.nonNull(topology.getNodeTemplate("1")));
-        assertTrue(Objects.nonNull(topology.getNodeTemplate("3")));
-        assertTrue(Objects.nonNull(relation21));
-        assertTrue(Objects.nonNull(relation32));
+        assertEquals(11, topology.getNodeTemplateOrRelationshipTemplate().size());
+        assertNotNull(topology.getNodeTemplate("1"));
+        assertNotNull(topology.getNodeTemplate("3"));
 
         // added elements
-        assertTrue(Objects.nonNull(topology.getNodeTemplate("10")));
-        assertTrue(Objects.nonNull(topology.getNodeTemplate("11")));
-        assertTrue(Objects.nonNull(topology.getNodeTemplate("12")));
-        assertTrue(Objects.nonNull(topology.getNodeTemplate("13")));
-        assertTrue(Objects.nonNull(topology.getRelationshipTemplate("1012")));
-        assertTrue(Objects.nonNull(topology.getRelationshipTemplate("1112")));
-        assertTrue(Objects.nonNull(topology.getRelationshipTemplate("1213")));
+        assertNotNull(topology.getNodeTemplate("10"));
+        assertNotNull(topology.getNodeTemplate("11"));
+        assertNotNull(topology.getNodeTemplate("12"));
+        assertNotNull(topology.getNodeTemplate("13"));
+        assertNotNull(topology.getRelationshipTemplate("1012"));
+        assertNotNull(topology.getRelationshipTemplate("1112"));
+        assertNotNull(topology.getRelationshipTemplate("1213"));
 
         // deleted elements
-        assertTrue(Objects.isNull(topology.getNodeTemplate("2")));
-        assertTrue(Objects.isNull(topology.getNodeTemplate("4")));
-        assertTrue(Objects.isNull(topology.getRelationshipTemplate("24")));
+        assertNull(topology.getNodeTemplate("2"));
+        assertNull(topology.getNodeTemplate("4"));
+        assertNull(topology.getRelationshipTemplate("24"));
+        assertNull(topology.getRelationshipTemplate("21"));
+        assertNull(topology.getRelationshipTemplate("32"));
 
         // changes
-        assertEquals("10", relation21.getSourceElement().getRef().getId());
-        assertEquals("11", relation32.getTargetElement().getRef().getId());
-        assertEquals(11, topology.getNodeTemplateOrRelationshipTemplate().size());
+        assertTrue(topology.getRelationshipTemplates().removeIf(relation ->
+            "10".equals(relation.getSourceElement().getRef().getId())
+                && "1".equals(relation.getTargetElement().getRef().getId())
+        ));
+        assertTrue(topology.getRelationshipTemplates().removeIf(relation ->
+            "3".equals(relation.getSourceElement().getRef().getId())
+                && "11".equals(relation.getTargetElement().getRef().getId())
+        ));
     }
 
     @Test
@@ -180,30 +182,29 @@ class PatternRefinementTest extends AbstractRefinementTest {
         PatternRefinement patternRefinement = new PatternRefinement();
         patternRefinement.applyRefinement(candidateForTopology, topology2);
 
-        // static elements
-        assertTrue(Objects.nonNull(topology2.getNodeTemplate("1")));
-
-        TRelationshipTemplate relation21 = topology2.getRelationshipTemplate("21");
-        assertTrue(Objects.nonNull(relation21));
+        assertNotNull(topology2.getNodeTemplate("1"));
+        assertEquals(9, topology2.getNodeTemplateOrRelationshipTemplate().size());
 
         // added elements
-        assertTrue(Objects.nonNull(topology2.getNodeTemplate("10")));
-        assertTrue(Objects.nonNull(topology2.getNodeTemplate("11")));
-        assertTrue(Objects.nonNull(topology2.getNodeTemplate("12")));
-        assertTrue(Objects.nonNull(topology2.getNodeTemplate("13")));
-        assertTrue(Objects.nonNull(topology2.getRelationshipTemplate("1012")));
-        assertTrue(Objects.nonNull(topology2.getRelationshipTemplate("1112")));
-        assertTrue(Objects.nonNull(topology2.getRelationshipTemplate("1213")));
+        assertNotNull(topology2.getNodeTemplate("10"));
+        assertNotNull(topology2.getNodeTemplate("11"));
+        assertNotNull(topology2.getNodeTemplate("12"));
+        assertNotNull(topology2.getNodeTemplate("13"));
+        assertNotNull(topology2.getRelationshipTemplate("1012"));
+        assertNotNull(topology2.getRelationshipTemplate("1112"));
+        assertNotNull(topology2.getRelationshipTemplate("1213"));
 
         // deleted elements
-        assertTrue(Objects.isNull(topology2.getNodeTemplate("2")));
-        assertTrue(Objects.isNull(topology2.getNodeTemplate("4")));
-        assertTrue(Objects.isNull(topology2.getRelationshipTemplate("24")));
+        assertNull(topology2.getNodeTemplate("2"));
+        assertNull(topology2.getNodeTemplate("4"));
+        assertNull(topology2.getRelationshipTemplate("24"));
+        assertNull(topology2.getRelationshipTemplate("21"));
 
         // changes
-        assertNotNull(relation21);
-        assertEquals("10", relation21.getSourceElement().getRef().getId());
-        assertEquals(9, topology2.getNodeTemplateOrRelationshipTemplate().size());
+        assertTrue(topology2.getRelationshipTemplates().removeIf(relation ->
+            "10".equals(relation.getSourceElement().getRef().getId())
+                && "1".equals(relation.getTargetElement().getRef().getId())
+        ));
     }
     // endregion
 
@@ -484,10 +485,10 @@ class PatternRefinementTest extends AbstractRefinementTest {
         assertEquals("4", relation1112.getTargetElement().getRef().getId());
         assertEquals("11", relation1112.getSourceElement().getRef().getId());
 
-        TRelationshipTemplate relation21 = topology2.getRelationshipTemplate("21");
-        assertNotNull(relation21);
-        assertEquals("1", relation21.getTargetElement().getRef().getId());
-        assertEquals("10", relation21.getSourceElement().getRef().getId());
+        assertTrue(topology2.getRelationshipTemplates().removeIf(relation ->
+            "10".equals(relation.getSourceElement().getRef().getId())
+                && "1".equals(relation.getTargetElement().getRef().getId())
+        ));
         // endregion
     }
 

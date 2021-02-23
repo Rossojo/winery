@@ -82,7 +82,7 @@ public abstract class TEntityTemplate extends HasId implements HasType, HasName 
         super(id);
     }
 
-    public TEntityTemplate(Builder builder) {
+    public TEntityTemplate(Builder<?> builder) {
         super(builder);
         this.properties = builder.properties;
         this.propertyConstraints = builder.propertyConstraints;
@@ -121,7 +121,6 @@ public abstract class TEntityTemplate extends HasId implements HasType, HasName 
         this.propertyConstraints = value;
     }
 
-    @Nullable
     public QName getType() {
         return type;
     }
@@ -131,7 +130,6 @@ public abstract class TEntityTemplate extends HasId implements HasType, HasName 
     }
 
     @Override
-    @Nullable
     public QName getTypeAsQName() {
         return this.getType();
     }
@@ -307,7 +305,7 @@ public abstract class TEntityTemplate extends HasId implements HasType, HasName 
         @NonNull
         public List<TPropertyConstraint> getPropertyConstraint() {
             if (propertyConstraint == null) {
-                propertyConstraint = new ArrayList<TPropertyConstraint>();
+                propertyConstraint = new ArrayList<>();
             }
             return this.propertyConstraint;
         }
