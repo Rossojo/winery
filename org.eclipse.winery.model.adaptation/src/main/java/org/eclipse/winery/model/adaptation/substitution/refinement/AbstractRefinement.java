@@ -22,6 +22,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.eclipse.winery.model.adaptation.substitution.AbstractSubstitution;
+import org.eclipse.winery.model.adaptation.substitution.SubstitutionUtils;
 import org.eclipse.winery.model.ids.definitions.ServiceTemplateId;
 import org.eclipse.winery.model.ids.extensions.RefinementId;
 import org.eclipse.winery.model.tosca.TServiceTemplate;
@@ -71,6 +72,66 @@ public abstract class AbstractRefinement extends AbstractSubstitution {
     }
 
     public void refineTopology(TTopologyTemplate topology) {
+        this.refineTopology(topology, this.refinementModels, this.refinementChooser);
+    }
+
+    public void refineTopologyWithBacktracking(TTopologyTemplate topologyTemplate) {
+        this.refineTopologyWithBacktracking(topologyTemplate, true);
+    }
+
+    private void refineTopologyWithBacktracking(TTopologyTemplate topologyTemplate, final boolean rootLevel) {
+        ArrayList<OTRefinementModel> currentRefinementModels = new ArrayList<>(this.refinementModels);
+        RefinementChooser chooser = (candidates, refinementServiceTemplate, currentTopology) -> {
+            LOGGER.debug("Found {} applicable candidates", candidates.size());
+            ServiceTemplateId backTrackVersion = this.getSubstitutionServiceTemplateId(refinementServiceTemplate);
+            try {
+                repository.setElement(
+                    backTrackVersion,
+                    new TServiceTemplate.Builder(backTrackVersion.getXmlId().getDecoded(), currentTopology)
+                        .build()
+                );
+            } catch (IOException e) {
+                LOGGER.error("Could not persist backtrack version!", e);
+            }
+
+            ArrayList<RefinementCandidate> possibleSolutions = new ArrayList<>();
+            for (RefinementCandidate candidate : candidates) {
+                TTopologyTemplate workingTopology = repository.getElement(backTrackVersion).getTopologyTemplate();
+
+                if (workingTopology == null) {
+                    throw new IllegalStateException("Could not load backtracking version!");
+                }
+
+                this.applyRefinement(candidate, workingTopology);
+
+                this.refineTopologyWithBacktracking(workingTopology, false);
+
+                if (SubstitutionUtils.containsPatterns(workingTopology.getNodeTemplates(), this.nodeTypes)) {
+                    possibleSolutions.add(candidate);
+                } else {
+                    LOGGER.info("Could not completely refine the topology using PRM {}", candidate.getRefinementModel().getIdFromIdOrNameField());
+                }
+            }
+
+            if (possibleSolutions.size() == 1) {
+                return possibleSolutions.get(0);
+            } else if (rootLevel) {
+                if (possibleSolutions.size() < 1) {
+                    return this.refinementChooser.chooseRefinement(possibleSolutions, refinementServiceTemplate, currentTopology);
+                } else {
+                    LOGGER.warn("Did not find any valid refinement path for Service Template {}!", refinementServiceTemplate.getQName());
+                    return null;
+                }
+            }
+
+            return new RandomRefinementChooser()
+                .chooseRefinement(possibleSolutions, refinementServiceTemplateId, currentTopology);
+        };
+        this.refineTopology(topologyTemplate, currentRefinementModels, chooser);
+    }
+
+    private void refineTopology(TTopologyTemplate topology, List<OTRefinementModel> refinementModelsList,
+                                RefinementChooser customRefinementChooser) {
         ToscaIsomorphismMatcher isomorphismMatcher = new ToscaIsomorphismMatcher();
         int[] id = new int[1];
 
@@ -78,7 +139,7 @@ public abstract class AbstractRefinement extends AbstractSubstitution {
             ToscaGraph topologyGraph = ToscaTransformer.createTOSCAGraph(topology);
 
             List<RefinementCandidate> candidates = new ArrayList<>();
-            this.refinementModels.forEach(prm -> {
+            refinementModelsList.forEach(prm -> {
                 ToscaGraph detectorGraph = ToscaTransformer.createTOSCAGraph(prm.getDetector());
                 IToscaMatcher matcher = this.getMatcher(prm);
                 Iterator<GraphMapping<ToscaNode, ToscaEdge>> matches = isomorphismMatcher.findMatches(detectorGraph, topologyGraph, matcher);
@@ -95,7 +156,7 @@ public abstract class AbstractRefinement extends AbstractSubstitution {
                 break;
             }
 
-            RefinementCandidate refinement = this.refinementChooser.chooseRefinement(candidates, this.refinementServiceTemplateId, topology);
+            RefinementCandidate refinement = customRefinementChooser.chooseRefinement(candidates, this.refinementServiceTemplateId, topology);
 
             if (Objects.isNull(refinement)) {
                 break;
