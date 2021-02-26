@@ -400,7 +400,8 @@ export class LiveModelingService {
                 concatMap(() => this.containerService.getServiceTemplateInstanceState(csarId, serviceTemplateInstanceId)),
                 distinctUntilChanged(),
                 timeout(this.settings.timeout),
-                takeWhile(state => state !== desiredInstanceState && state !== ServiceTemplateInstanceStates.ERROR, true),
+                // TODO: fix
+                // takeWhile(state => state !== desiredInstanceState && state !== ServiceTemplateInstanceStates.ERROR, true),
             ).subscribe(state => {
                 this.ngRedux.dispatch(this.liveModelingActions.setCurrentServiceTemplateInstanceState(state));
                 if (state === ServiceTemplateInstanceStates.ERROR) {
@@ -602,7 +603,8 @@ export class LiveModelingService {
                 concatMap(() => this.containerService.getNodeTemplateInstanceState(csarId, serviceTemplateInstanceId, nodeTemplateId)),
                 distinctUntilChanged(),
                 timeout(this.settings.timeout),
-                takeWhile(state => state !== desiredInstanceState && state !== NodeTemplateInstanceStates.ERROR, true),
+                // TODO: fix
+                // takeWhile(state => state !== desiredInstanceState && state !== NodeTemplateInstanceStates.ERROR, true),
             ).subscribe(state => {
                 if (state === NodeTemplateInstanceStates.ERROR) {
                     reject(new NodeTemplateInstanceError());

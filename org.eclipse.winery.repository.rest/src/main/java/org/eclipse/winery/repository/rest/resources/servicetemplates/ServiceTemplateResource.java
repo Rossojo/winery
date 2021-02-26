@@ -809,7 +809,7 @@ public class ServiceTemplateResource extends AbstractComponentInstanceResourceCo
     public Response createLiveModelingVersion() {
         LOGGER.debug("Creating live modeling version of Service Template {}...", this.getId());
         ServiceTemplateId id = (ServiceTemplateId) this.getId();
-        WineryVersion version = VersionUtils.getVersion(id);
+        WineryVersion version = VersionUtils.getVersion(id.toString());
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd-HHmmss");
         WineryVersion newVersion = new WineryVersion(
@@ -819,7 +819,7 @@ public class ServiceTemplateResource extends AbstractComponentInstanceResourceCo
         );
 
         ServiceTemplateId newId = new ServiceTemplateId(id.getNamespace().getDecoded(),
-            VersionUtils.getNameWithoutVersion(id) + WineryVersion.WINERY_NAME_FROM_VERSION_SEPARATOR + newVersion.toString(),
+            VersionUtils.getNameWithoutVersion(id.toString()) + WineryVersion.WINERY_NAME_FROM_VERSION_SEPARATOR + newVersion.toString(),
             false);
         ResourceResult response = RestUtils.duplicate(id, newId);
 

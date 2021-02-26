@@ -54,8 +54,8 @@ export class NodeTemplateComponent implements OnInit, OnDestroy {
     ngOnInit() {
         this.subscriptions.push(this.ngRedux.select(state => state.wineryState.sidebarContents)
             .subscribe(sidebarContents => {
-                if (sidebarContents.nodeClicked && sidebarContents.id) {
-                    this.nodeSubject.next(sidebarContents.id);
+                if (sidebarContents.nodeClicked && sidebarContents.template.id) {
+                    this.nodeSubject.next(sidebarContents.template.id);
                 } else {
                     this.nodeSubject.next(null);
                 }

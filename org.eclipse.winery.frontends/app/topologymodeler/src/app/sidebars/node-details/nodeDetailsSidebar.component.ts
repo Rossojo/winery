@@ -31,7 +31,7 @@ import { animate, state, style, transition, trigger } from '@angular/animations'
  */
 @Component({
     selector: 'winery-node-details-sidebar',
-    templateUrl: '../nodeDetailsSidebar.component.html',
+    templateUrl: 'nodeDetailsSidebar.component.html',
     styleUrls: ['../sidebar.css'],
     animations: [
         trigger('sidebarAnimationStatus', [
