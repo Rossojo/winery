@@ -17,19 +17,19 @@ import { IWineryState } from '../../redux/store/winery.store';
 import { WineryActions } from '../../redux/actions/winery.actions';
 import { debounceTime, distinctUntilChanged, tap } from 'rxjs/operators';
 import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { KeyValueItem } from '../../../../../tosca-management/src/app/model/keyValueItem';
+import { Utils } from 'ngx-bootstrap';
 
 @Component({
-    selector: 'winery-properties-kv',
+    selector: 'winery-kv-properties',
     templateUrl: './kv-properties.component.html',
     styleUrls: ['./kv-properties.component.css']
 })
 export class KvPropertiesComponent implements OnInit, OnDestroy {
-    @Input() nodeId: string;
-    @Input() properties: any;
     @Input() readonly: boolean;
-    @Input() nodeData: any;
+    @Input() nodeProperties: object;
 
-    @Output() updateProperty: EventEmitter<any> = new EventEmitter<any>();
+    @Output() propertyEdited: EventEmitter<KeyValueItem> = new EventEmitter<KeyValueItem>();
 
     invalidNodeProperties: any = {};
     kvPatternMap: any;
@@ -37,6 +37,7 @@ export class KvPropertiesComponent implements OnInit, OnDestroy {
     checkEnabled: boolean;
 
     propertiesSubject: Subject<any> = new Subject<any>();
+    debouncer: Subject<any> = new Subject<any>();
     subscriptions: Array<Subscription> = [];
 
     constructor(private ngRedux: NgRedux<IWineryState>,
@@ -44,7 +45,15 @@ export class KvPropertiesComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit(): void {
-        if (this.properties) {
+        this.subscriptions.push(this.debouncer.pipe(debounceTime(50))
+            .subscribe(target => {
+                this.propertyEdited.emit({
+                    key: target.name,
+                    value: target.value,
+                });
+            }));
+
+        if (this.nodeProperties) {
             this.initKVDescriptionMap();
             this.initKVPatternMap();
         }
@@ -66,8 +75,20 @@ export class KvPropertiesComponent implements OnInit, OnDestroy {
             if (this.checkEnabled) {
                 this.checkProperty(property.key, property.value);
             }
-            this.updateProperty.emit({key: property.key, value: property.value});
+            this.propertyEdited.emit({key: property.key, value: property.value});
         }));
+    }
+
+    ngOnDestroy(): void {
+        this.subscriptions.forEach(s => s.unsubscribe());
+    }
+
+    isEmpty(): boolean {
+        return !this.nodeProperties || Utils.isEmpty(this.nodeProperties);
+    }
+
+    keyup(target: any): void {
+        this.debouncer.next(target);
     }
 
     initKVDescriptionMap() {
@@ -129,9 +150,5 @@ export class KvPropertiesComponent implements OnInit, OnDestroy {
         } finally {
             this.checkForErrors();
         }
-    }
-
-    ngOnDestroy(): void {
-        this.subscriptions.forEach(subscription => subscription.unsubscribe());
     }
 }
