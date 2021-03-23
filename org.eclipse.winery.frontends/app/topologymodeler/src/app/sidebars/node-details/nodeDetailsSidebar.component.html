@@ -16,7 +16,7 @@
      style="display: block;"
      [@sidebarAnimationStatus]="sidebarAnimationStatus"
      [style.top.px]="this.top"
-     *ngIf="sidebarState.sidebarVisible">
+     *ngIf="sidebarState.visible">
     <div id="nodeTemplateInformationSection" style="margin: 8px" *ngIf="sidebarState.template">
         <button type="button" class="close" style="color: #000000" aria-label="Close" (click)="closeSidebar()" closeSidebar>
             <span aria-hidden="true">&times;</span>
