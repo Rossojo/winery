@@ -46,6 +46,12 @@ export interface WineryConfiguration {
         edmmTransformationTool: string;
         eclipseChe: string;
     };
+    git: {
+        clientId: string;
+        accessToken: string;
+        tokenType: string;
+        username: string;
+    };
 }
 
 export interface WineryRepositoryConfiguration {
