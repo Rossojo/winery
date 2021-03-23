@@ -41,6 +41,7 @@ import { takeLast, tap } from 'rxjs/operators';
 import { NgRedux } from '@angular-redux/store';
 import { IWineryState } from '../redux/store/winery.store';
 import { WineryActions } from '../redux/actions/winery.actions';
+import { DeploymentTechnology } from '../models/deployment-technology';
 
 /**
  * Responsible for interchanging data between the app and the server.
@@ -778,6 +779,12 @@ export class BackendService {
     requestPolicyTemplates(): Observable<Entity[]> {
         if (this.configuration) {
             return this.http.get<Entity[]>(this.configuration.repositoryURL + '/policytemplates', { headers: this.headers });
+        }
+    }
+
+    requestSupportedDeploymentTechnologies(): Observable<DeploymentTechnology[]> {
+        if (this.configuration) {
+            return this.http.get<Entity[]>(this.serviceTemplateURL + '/edmm/supportedTechnologies', { headers: this.headers });
         }
     }
 
