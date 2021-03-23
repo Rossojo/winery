@@ -55,7 +55,6 @@ import { ReqCapRelationshipService } from './services/req-cap-relationship.servi
 import { WineryTableModule } from '../../../tosca-management/src/app/wineryTableModule/wineryTable.module';
 import { LiveModelingActions } from './redux/actions/live-modeling.actions';
 import { AngularResizedEventModule } from 'angular-resize-event';
-import { NavbarComponent } from './navbar/navbar.component';
 import { OverlayComponent } from './overlay/overlay.component';
 import { EdmmTransformationCheckComponent } from './edmmTransformationCheck/edmmTransformationCheck.component';
 import { EdmmReplacementRulesComponent } from './edmmTransformationCheck/edmm-replacement-rules/edmm-replacement-rules.component';
@@ -83,11 +82,11 @@ import { TopologyService } from './services/topology.service';
 import { LoggingService } from './services/logging.service';
 import { LiveModelingSidebarModule } from './live-modeling/live-modeling-sidebar.module';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { NavbarModule } from './navbar/navbar.module';
 
 @NgModule({
     declarations: [
         WineryComponent,
-        NavbarComponent,
         PaletteComponent,
         NodeDetailsSidebarComponent,
         PrintViewComponent,
@@ -141,7 +140,8 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
         TooltipModule.forRoot(),
         AngularResizedEventModule,
         ModalModule.forRoot(),
-        LiveModelingSidebarModule
+        LiveModelingSidebarModule,
+        NavbarModule
     ],
     providers: [
         // { provide: ToastOptions, useClass: WineryCustomOption },

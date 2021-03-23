@@ -46,6 +46,7 @@ import { WineryTableModule } from '../../../../tosca-management/src/app/wineryTa
 import { Ng2TableModule } from 'ng2-table';
 import { GroupsComponent } from '../node/groups/groups.component';
 import { AssignParticipantsComponent } from '../participants/assign-participants.component';
+import { NavbarModule } from '../navbar/navbar.module';
 
 @NgModule({
     imports: [
@@ -66,6 +67,7 @@ import { AssignParticipantsComponent } from '../participants/assign-participants
         WineryFeatureToggleModule,
         WineryTableModule,
         Ng2TableModule,
+        NavbarModule
     ],
     declarations: [
         NodeComponent,
