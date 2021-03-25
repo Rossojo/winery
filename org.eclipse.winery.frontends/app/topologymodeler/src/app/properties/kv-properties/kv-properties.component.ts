@@ -28,6 +28,8 @@ import { Utils } from '../../../../../tosca-management/src/app/wineryUtils/utils
 export class KvPropertiesComponent implements OnInit, OnDestroy {
     @Input() readonly: boolean;
     @Input() nodeProperties: object;
+    @Input() nodeId: string;
+    @Input() nodeData: any;
 
     @Output() propertyEdited: EventEmitter<KeyValueItem> = new EventEmitter<KeyValueItem>();
 
@@ -65,8 +67,7 @@ export class KvPropertiesComponent implements OnInit, OnDestroy {
                     this.checkAllProperties();
                 } else {
                     this.invalidNodeProperties = {};
-                    // TODO
-                    // this.ngRedux.dispatch(this.actions.setNodePropertyValidity(this.nodeId, true));
+                    this.ngRedux.dispatch(this.actions.setNodePropertyValidity(this.nodeId, true));
                 }
             }));
 
@@ -94,13 +95,13 @@ export class KvPropertiesComponent implements OnInit, OnDestroy {
 
     initKVDescriptionMap() {
         this.kvDescriptionMap = {};
+        console.log(this.nodeProperties);
         try {
-            // TODO
-            /** const propertyDefinitionKVList =
-             this.nodeData.entityType.full.serviceTemplateOrNodeTypeOrNodeTypeImplementation[0].any[0].propertyDefinitionKVList;
-             propertyDefinitionKVList.forEach(prop => {
+            const propertyDefinitionKVList =
+                this.nodeData.entityType.full.serviceTemplateOrNodeTypeOrNodeTypeImplementation[0].any[0].propertyDefinitionKVList;
+            propertyDefinitionKVList.forEach(prop => {
                 this.kvDescriptionMap[prop.key] = prop['description'];
-            });*/
+            });
         } catch (e) {
         }
     }
@@ -108,12 +109,11 @@ export class KvPropertiesComponent implements OnInit, OnDestroy {
     initKVPatternMap() {
         this.kvPatternMap = {};
         try {
-            // TODO
-            /** const propertyDefinitionKVList =
-             this.nodeData.entityType.full.serviceTemplateOrNodeTypeOrNodeTypeImplementation[0].any[0].propertyDefinitionKVList;
-             propertyDefinitionKVList.forEach(prop => {
+            const propertyDefinitionKVList =
+                this.nodeData.entityType.full.serviceTemplateOrNodeTypeOrNodeTypeImplementation[0].any[0].propertyDefinitionKVList;
+            propertyDefinitionKVList.forEach(prop => {
                 this.kvPatternMap[prop.key] = prop['pattern'];
-            }); */
+            });
         } catch (e) {
         }
     }
@@ -123,20 +123,18 @@ export class KvPropertiesComponent implements OnInit, OnDestroy {
     }
 
     checkForErrors() {
-        // TODO
-        /** if (Object.keys(this.invalidNodeProperties).length > 0) {
+        if (Object.keys(this.invalidNodeProperties).length > 0) {
             this.ngRedux.dispatch(this.actions.setNodePropertyValidity(this.nodeId, false));
         } else {
             this.ngRedux.dispatch(this.actions.setNodePropertyValidity(this.nodeId, true));
-        } */
+        }
     }
 
     checkAllProperties() {
-        // TODO
-        /** Object.keys(this.properties).forEach(key => {
-            this.checkProperty(key, this.properties[key]);
+        Object.keys(this.nodeProperties).forEach(key => {
+            this.checkProperty(key, this.nodeProperties[key]);
         });
-         this.checkForErrors();*/
+        this.checkForErrors();
     }
 
     checkProperty(key: string, value: string) {

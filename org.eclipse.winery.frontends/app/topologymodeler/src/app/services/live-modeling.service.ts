@@ -15,7 +15,9 @@
 import { Injectable } from '@angular/core';
 import { NgRedux } from '@angular-redux/store';
 import { IWineryState } from '../redux/store/winery.store';
-import { AdaptationAction, LiveModelingStates, NodeTemplateInstanceStates, ServiceTemplateInstanceStates } from '../models/enums';
+import {
+    AdaptationAction, LiveModelingStates, NodeTemplateInstanceStates, ServiceTemplateInstanceStates
+} from '../models/enums';
 import { BackendService } from './backend.service';
 import { CsarUpload } from '../models/container/csar-upload.model';
 import { ContainerService } from './container.service';
@@ -35,7 +37,8 @@ import { InputParametersModalComponent } from '../live-modeling/modals/input-par
 import { ToastrService } from 'ngx-toastr';
 import { NodeTemplateInstance } from '../models/container/node-template-instance.model';
 import {
-    AdaptInstanceError, CreateLiveModelingTemplateError, DeployInstanceError, LiveModelingError, NodeTemplateInstanceError, RetrieveInputParametersError,
+    AdaptInstanceError, CreateLiveModelingTemplateError, DeployInstanceError, LiveModelingError,
+    NodeTemplateInstanceError, RetrieveInputParametersError,
     ServiceTemplateInstanceError, TerminateInstanceError, TimeoutError, TransformInstanceError, UploadCsarError
 } from '../models/customErrors';
 import { AdaptationPayload } from '../models/container/adaptation-payload.model';
@@ -402,6 +405,7 @@ export class LiveModelingService {
                 timeout(this.settings.timeout),
                 // TODO: fix
                 // takeWhile(state => state !== desiredInstanceState && state !== ServiceTemplateInstanceStates.ERROR, true),
+                takeWhile(state => state !== desiredInstanceState && state !== ServiceTemplateInstanceStates.ERROR),
             ).subscribe(state => {
                 this.ngRedux.dispatch(this.liveModelingActions.setCurrentServiceTemplateInstanceState(state));
                 if (state === ServiceTemplateInstanceStates.ERROR) {
@@ -605,6 +609,7 @@ export class LiveModelingService {
                 timeout(this.settings.timeout),
                 // TODO: fix
                 // takeWhile(state => state !== desiredInstanceState && state !== NodeTemplateInstanceStates.ERROR, true),
+                takeWhile(state => state !== desiredInstanceState && state !== NodeTemplateInstanceStates.ERROR),
             ).subscribe(state => {
                 if (state === NodeTemplateInstanceStates.ERROR) {
                     reject(new NodeTemplateInstanceError());

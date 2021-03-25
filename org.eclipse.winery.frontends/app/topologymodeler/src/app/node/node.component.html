@@ -66,7 +66,8 @@
             <div class="col-sm-3">
                 <img *ngIf="!nodeTemplate.visuals?.imageUrl" src="https://via.placeholder.com/50x50"
                      style="border-radius: 10%; margin-top: 1px; width: 50px; height: auto">
-                <img *ngIf="nodeTemplate.visuals?.imageUrl" src="{{nodeTemplate.visuals?.imageUrl}}">
+                <img *ngIf="nodeTemplate.visuals?.imageUrl" src="{{nodeTemplate.visuals?.imageUrl}}"
+                     style="border-radius: 10%; margin-top: 1px; width: 50px; height: auto">
             </div>
             <div id="specifierDiv" class="col-sm-7" style="padding-left: 0; padding-right: 0;">
                 <table class="header-table">
@@ -234,49 +235,49 @@
                 </winery-capabilities>
             </accordion-group>
 
-        <!-- GROUPS -->
-        <accordion-group
-            #groupsgroup
-            panelClass="accordionGroupPanel"
-            *ngIf="navbarButtonsState.buttonsState.yamlGroupsButton">
-            <div accordion-heading>
-                Groups
-                <i class="pull-sm-0 float-sm-right fa icon-styling padding-top--2px"
-                   [ngClass]="{'fa-chevron-down': groupsgroup?.isOpen, 'fa-chevron-right': !groupsgroup?.isOpen}">
-                </i>
-            </div>
-            <winery-groups [readonly]="readonly"
-                           [groups]="groupDefinitions"
-                           [node]="nodeTemplate">
-            </winery-groups>
-        </accordion-group>
+            <!-- GROUPS -->
+            <accordion-group
+                #groupsgroup
+                panelClass="accordionGroupPanel"
+                *ngIf="navbarButtonsState.buttonsState.yamlGroupsButton">
+                <div accordion-heading>
+                    Groups
+                    <i class="pull-sm-0 float-sm-right fa icon-styling padding-top--2px"
+                       [ngClass]="{'fa-chevron-down': groupsgroup?.isOpen, 'fa-chevron-right': !groupsgroup?.isOpen}">
+                    </i>
+                </div>
+                <winery-groups [readonly]="readonly"
+                               [groups]="groupDefinitions"
+                               [node]="nodeTemplate">
+                </winery-groups>
+            </accordion-group>
 
-        <!-- PARTICIPANTS -->
-        <accordion-group #participantsgroup panelClass="accordionGroupPanel"
-                         *ngIf="navbarButtonsState.buttonsState.assignParticipantsButton">
-            <div accordion-heading>
-                Participants
-                <i class="pull-sm-0 float-sm-right fa icon-styling padding-top--2px"
-                   [ngClass]="{'fa-chevron-down': participantsgroup?.isOpen, 'fa-chevron-right': !participantsgroup?.isOpen}">
-                </i>
-            </div>
-            <winery-assign-participants [readonly]="readonly" 
-                                        [participants]="participants" [node]="nodeTemplate">
-            </winery-assign-participants>
-        </accordion-group>
+            <!-- PARTICIPANTS -->
+            <accordion-group #participantsgroup panelClass="accordionGroupPanel"
+                             *ngIf="navbarButtonsState.buttonsState.assignParticipantsButton">
+                <div accordion-heading>
+                    Participants
+                    <i class="pull-sm-0 float-sm-right fa icon-styling padding-top--2px"
+                       [ngClass]="{'fa-chevron-down': participantsgroup?.isOpen, 'fa-chevron-right': !participantsgroup?.isOpen}">
+                    </i>
+                </div>
+                <winery-assign-participants [readonly]="readonly"
+                                            [participants]="participants" [node]="nodeTemplate">
+                </winery-assign-participants>
+            </accordion-group>
 
-        <!-- Deployment Technology -->
-        <accordion-group #deploymenttechnologygroup panelClass="accordionGroupPanel"
-                         *ngIf="navbarButtonsState.buttonsState.assignDeploymentTechnologyButton">
-            <div accordion-heading>
-                Deployment Technologies
-                <i class="pull-sm-0 float-sm-right fa icon-styling padding-top--2px"
-                   [ngClass]="{'fa-chevron-down': deploymenttechnologygroup?.isOpen, 'fa-chevron-right': !deploymenttechnologygroup?.isOpen}">
-                </i>
-            </div>
-            <winery-assign-deployment-technology [readonly]="readonly" [node]="nodeTemplate">
-            </winery-assign-deployment-technology>
-        </accordion-group>
+            <!-- Deployment Technology -->
+            <accordion-group #deploymenttechnologygroup panelClass="accordionGroupPanel"
+                             *ngIf="navbarButtonsState.buttonsState.assignDeploymentTechnologyButton">
+                <div accordion-heading>
+                    Deployment Technologies
+                    <i class="pull-sm-0 float-sm-right fa icon-styling padding-top--2px"
+                       [ngClass]="{'fa-chevron-down': deploymenttechnologygroup?.isOpen, 'fa-chevron-right': !deploymenttechnologygroup?.isOpen}">
+                    </i>
+                </div>
+                <winery-assign-deployment-technology [readonly]="readonly" [node]="nodeTemplate">
+                </winery-assign-deployment-technology>
+            </accordion-group>
 
             <!-- POLICIES -->
             <accordion-group
