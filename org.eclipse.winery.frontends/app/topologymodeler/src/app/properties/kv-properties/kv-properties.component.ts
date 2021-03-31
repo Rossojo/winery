@@ -95,7 +95,6 @@ export class KvPropertiesComponent implements OnInit, OnDestroy {
 
     initKVDescriptionMap() {
         this.kvDescriptionMap = {};
-        console.log(this.nodeProperties);
         try {
             const propertyDefinitionKVList =
                 this.nodeData.entityType.full.serviceTemplateOrNodeTypeOrNodeTypeImplementation[0].any[0].propertyDefinitionKVList;

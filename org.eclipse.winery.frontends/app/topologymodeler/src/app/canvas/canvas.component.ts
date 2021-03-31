@@ -2056,7 +2056,7 @@ export class CanvasComponent implements OnInit, OnDestroy, OnChanges, AfterViewI
             if (this.liveModelingState === LiveModelingStates.DISABLED) {
                 const sourceNode = this.allNodeTemplates.find(node => node.id === currentRel.sourceElement.ref);
                 const targetNode = this.allNodeTemplates.find(node => node.id === currentRel.targetElement.ref);
-                if (sourceNode.working && targetNode.working) {
+                if (sourceNode && targetNode && sourceNode.working && targetNode.working) {
                     return;
                 }
             }
