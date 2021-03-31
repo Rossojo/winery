@@ -5,8 +5,8 @@
     "scripts": {
         "ng": "ng",
         "start": "ng serve",
-        "start-tosca-management": "ng serve tosca-management",
-        "start-topologymodeler": "ng serve topologymodeler",
+        "start-tosca-management": "ng serve tosca-management --host 0.0.0.0",
+        "start-topologymodeler": "ng serve topologymodeler --host 0.0.0.0",
         "start-workflowmodeler": "ng serve workflowmodeler",
         "build-tosca-management": "ng build tosca-management",
         "build-topologymodeler": "ng build topologymodeler",

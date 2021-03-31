@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 Contributors to the Eclipse Foundation
+ * Copyright (c) 2019-2021 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -126,6 +126,13 @@ export class LiveModelingService {
             let newInstanceId;
             if (startInstance) {
                 const buildPlanInputParameters = await this.retrieveBuildPlanParametersAndShowModalIfNeeded(csarId);
+                buildPlanInputParameters.forEach((param: InputParameter) => {
+                    if (param.required.toLowerCase() === 'yes') {
+                        param.required = 'true';
+                    } else if (param.required.toLowerCase() === 'no') {
+                        param.required = 'false';
+                    }
+                });
                 newInstanceId = await this.deployServiceTemplateInstance(csarId, buildPlanInputParameters);
             } else {
                 newInstanceId = await this.initializeServiceTemplateInstance(csarId);

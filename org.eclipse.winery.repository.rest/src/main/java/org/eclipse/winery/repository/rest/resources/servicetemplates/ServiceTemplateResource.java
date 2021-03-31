@@ -80,6 +80,7 @@ import org.eclipse.winery.model.tosca.extensions.OTParticipant;
 import org.eclipse.winery.model.tosca.extensions.kvproperties.PropertyDefinitionKV;
 import org.eclipse.winery.model.tosca.extensions.kvproperties.WinerysPropertiesDefinition;
 import org.eclipse.winery.model.tosca.utils.ModelUtilities;
+import org.eclipse.winery.model.version.VersionSupport;
 import org.eclipse.winery.repository.backend.BackendUtils;
 import org.eclipse.winery.repository.backend.RepositoryFactory;
 import org.eclipse.winery.repository.backend.IRepository;
@@ -807,9 +808,9 @@ public class ServiceTemplateResource extends AbstractComponentInstanceResourceCo
     @Path("createlivemodelingversion")
     @Produces( {MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response createLiveModelingVersion() {
-        LOGGER.debug("Creating live modeling version of Service Template {}...", this.getId());
+        LOGGER.debug("Creating live modeling version of Service Template {}...", this.getId().getQName());
         ServiceTemplateId id = (ServiceTemplateId) this.getId();
-        WineryVersion version = VersionUtils.getVersion(id.toString());
+        WineryVersion version = VersionUtils.getVersion(id.getQName().toString());
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd-HHmmss");
         WineryVersion newVersion = new WineryVersion(
@@ -818,8 +819,10 @@ public class ServiceTemplateResource extends AbstractComponentInstanceResourceCo
             0
         );
 
+        String newComponentVersionId = VersionSupport.getNewComponentVersionId(id, "live-" + dateFormat.format(new Date()));
+
         ServiceTemplateId newId = new ServiceTemplateId(id.getNamespace().getDecoded(),
-            VersionUtils.getNameWithoutVersion(id.toString()) + WineryVersion.WINERY_NAME_FROM_VERSION_SEPARATOR + newVersion.toString(),
+            newComponentVersionId,
             false);
         ResourceResult response = RestUtils.duplicate(id, newId);
 
