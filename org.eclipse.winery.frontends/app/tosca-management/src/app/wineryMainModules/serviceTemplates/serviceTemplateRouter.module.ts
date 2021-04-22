@@ -32,6 +32,8 @@ import { WineryLicenseComponent } from '../../wineryLicenseModule/wineryLicense.
 import { ConstraintCheckingComponent } from '../../instance/serviceTemplates/constraintChecking/constraintChecking.component';
 import { ThreatAssessmentComponent } from '../../instance/serviceTemplates/threatAssessment/threatAssessment.component';
 import { InputOutputParametersComponent } from '../../instance/serviceTemplates/inputOutputParameters/inputOutputParameters.component';
+import { ResearchObjectComponent } from '../../instance/serviceTemplates/researchObject/researchObject.component';
+import { researchObjectRoutes } from '../../instance/serviceTemplates/researchObject/researchObjectRouter.module';
 
 const toscaType = ToscaTypes.ServiceTemplate;
 
@@ -65,6 +67,11 @@ const serviceTemplateRoutes: Routes = [
             { path: 'constraintchecking', component: ConstraintCheckingComponent },
             { path: 'tags', component: TagComponent },
             { path: 'documentation', component: DocumentationComponent },
+            {
+                path: 'researchObject',
+                component: ResearchObjectComponent,
+                children: researchObjectRoutes
+            },
             { path: 'xml', component: EditXMLComponent },
             { path: 'threatmodeling', component: ThreatAssessmentComponent },
             { path: '', redirectTo: 'readme', pathMatch: 'full' }

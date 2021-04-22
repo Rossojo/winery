@@ -1,0 +1,36 @@
+<!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~ Copyright (c) 2017 Contributors to the Eclipse Foundation
+  ~
+  ~ See the NOTICE file(s) distributed with this work for additional
+  ~ information regarding copyright ownership.
+  ~
+  ~ This program and the accompanying materials are made available under the
+  ~ terms of the Eclipse Public License 2.0 which is available at
+  ~ http://www.eclipse.org/legal/epl-2.0, or the Apache Software License 2.0
+  ~ which is available at https://www.apache.org/licenses/LICENSE-2.0.
+  ~
+  ~ SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+<label class="control-label">Paper:</label>
+
+<div>
+    <winery-uploader (onSuccess)="loadFiles()" [uploadUrl]="uploadUrl" [allowMultipleFiles]="true"
+                     [isEditable]="sharedData?.currentVersion?.editable">
+    </winery-uploader>
+</div>
+<br>
+
+<label class="control-label" for="ReferenceUrl">Reference (URL):</label>
+<input class="form-control" id="ReferenceUrl" name="referenceUrl">
+
+<div class="form-group">
+    <label class="label-form">BibTeX:</label>
+    <textarea class="form-control" id="researchObjectBibTeXDiv" ></textarea>
+</div>
+
+<br>
+<div>
+    <button class="btn btn-primary" name="save">
+        Save
+    </button>
+</div>

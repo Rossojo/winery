@@ -1,0 +1,54 @@
+<!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~ Copyright (c) 2017 Contributors to the Eclipse Foundation
+  ~
+  ~ See the NOTICE file(s) distributed with this work for additional
+  ~ information regarding copyright ownership.
+  ~
+  ~ This program and the accompanying materials are made available under the
+  ~ terms of the Eclipse Public License 2.0 which is available at
+  ~ http://www.eclipse.org/legal/epl-2.0, or the Apache Software License 2.0
+  ~ which is available at https://www.apache.org/licenses/LICENSE-2.0.
+  ~
+  ~ SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+<!-- <div class="localLoader" [class.hidden]="!loading">
+    <winery-loader></winery-loader>
+</div> -->
+
+<div *ngIf="loading">
+    <label class="control-label" for="MetaTitle">Title:</label>
+    <input class="form-control" id="MetaTitle" name="title">
+    
+    <label class="control-label" for="metaAuthor">Author:</label>
+    <input class="form-control" id="metaAuthor" name="author">
+
+    <label class="control-label" for="metaContact">Contact:</label>
+    <input class="form-control" id="metaContact" name="contact">
+
+    <div class="form-group">
+        <label class="label-form">Description:</label>
+        <textarea class="form-control" id="researchObjectDescriptionDiv" ></textarea>
+    </div>
+
+    <div class="control-group">
+    <label class="control-label" for="metaSubject">Subject:</label>
+    <input class="form-control" id="metaSubject" name="subject">
+
+    <label class="control-label" for="metaKeywords">Keywords:</label>
+    <input class="form-control" id="metaKeywords" name="keywords">
+
+    <label class="control-label" for="metaProject">Project:</label>
+    <input class="form-control" id="metaProject" name="project">
+    </div>
+    <br>
+    <div>
+        <button class="btn btn-primary" name="save">
+            Save
+        </button>
+    </div>
+</div>
+
+<winery-modal bsModal #addModal="bs-modal" [modalRef]="addModal">
+    <winery-modal-header [title]="'Add MetaData'">
+    </winery-modal-header>
+</winery-modal>

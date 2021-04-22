@@ -67,6 +67,7 @@ export class SubMenuItems {
     static readonly requiredStructure: SubMenuItem = { displayName: 'Required Structure', urlFragment: 'requiredstructure' };
     static readonly requirementDefinitions: SubMenuItem = { displayName: 'Requirement Definitions', urlFragment: 'requirementdefinitions' };
     static readonly requirementDefinitionsYaml: SubMenuItem = { displayName: 'Requirement Definitions', urlFragment: 'requirementdefinitionsyaml' };
+    static readonly researchObject: SubMenuItem = {displayName: 'Research Object', urlFragment: 'researchObject'};
     static readonly selfServicePortal: SubMenuItem = { displayName: 'Self-Service Portal', urlFragment: 'selfserviceportal' };
     static readonly source: SubMenuItem = { displayName: 'Source', urlFragment: 'source' };
     static readonly sourceInterfaces: SubMenuItem = { displayName: 'Source Interfaces', urlFragment: 'sourceinterfaces' };

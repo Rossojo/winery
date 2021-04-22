@@ -64,7 +64,7 @@ export class InstanceService {
                     subMenu.push(SubMenuItems.parameters);
                 }
                 if (!this.configurationService.isYaml()) {
-                    subMenu.push(SubMenuItems.documentation, SubMenuItems.plans, SubMenuItems.selfServicePortal,
+                    subMenu.push(SubMenuItems.documentation, SubMenuItems.plans, SubMenuItems.selfServicePortal, SubMenuItems.researchObject,
                         SubMenuItems.boundaryDefinitions, SubMenuItems.tags, SubMenuItems.constraintChecking,
                         SubMenuItems.xml);
                     if (this.configurationService.configuration.features.nfv) {
