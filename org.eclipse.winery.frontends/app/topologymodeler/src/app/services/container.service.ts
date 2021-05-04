@@ -17,7 +17,7 @@ import { CsarUpload } from '../models/container/csar-upload.model';
 import { of } from 'rxjs';
 import { Observable } from 'rxjs/Rx';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { catchError, concatMap, filter, map, tap } from 'rxjs/operators';
+import { catchError, concatMap, filter, map, tap , retry} from 'rxjs/operators';
 import { NodeTemplateInstanceStates, PlanTypes, ServiceTemplateInstanceStates } from '../models/enums';
 import { Csar } from '../models/container/csar.model';
 import { ServiceTemplate } from '../models/container/service-template.model';
@@ -59,21 +59,21 @@ export class ContainerService {
     };
 
     private readonly baseInstallationPayload = [
-        { 'name': 'instanceDataAPIUrl', 'type': 'String', 'required': 'YES' },
-        { 'name': 'csarEntrypoint', 'type': 'String', 'required': 'YES' },
-        { 'name': 'CorrelationID', 'type': 'String', 'required': 'YES' }
+        { 'name': 'instanceDataAPIUrl', 'type': 'String', 'required': 'true' },
+        { 'name': 'csarEntrypoint', 'type': 'String', 'required': 'true' },
+        { 'name': 'CorrelationID', 'type': 'String', 'required': 'true' }
     ];
     private readonly baseManagementPayload = [
-        { 'name': 'instanceDataAPIUrl', 'type': 'String', 'required': 'YES' },
-        { 'name': 'OpenTOSCAContainerAPIServiceInstanceURL', 'type': 'String', 'required': 'YES' },
-        { 'name': 'CorrelationID', 'type': 'String', 'required': 'YES' }
+        { 'name': 'instanceDataAPIUrl', 'type': 'String', 'required': 'true' },
+        { 'name': 'OpenTOSCAContainerAPIServiceInstanceURL', 'type': 'String', 'required': 'true' },
+        { 'name': 'CorrelationID', 'type': 'String', 'required': 'true' }
     ];
     private readonly baseTransformationPayload = [
-        { 'name': 'CorrelationID', 'type': 'String', 'required': 'YES' },
-        { 'name': 'instanceDataAPIUrl', 'type': 'String', 'required': 'YES' },
-        { 'name': 'planCallbackAddress_invoker', 'type': 'String', 'required': 'YES' },
-        { 'name': 'csarEntrypoint', 'type': 'String', 'required': 'YES' },
-        { 'name': 'OpenTOSCAContainerAPIServiceInstanceURL', 'type': 'String', 'required': 'YES' },
+        { 'name': 'CorrelationID', 'type': 'String', 'required': 'true' },
+        { 'name': 'instanceDataAPIUrl', 'type': 'String', 'required': 'true' },
+        { 'name': 'planCallbackAddress_invoker', 'type': 'String', 'required': 'true' },
+        { 'name': 'csarEntrypoint', 'type': 'String', 'required': 'true' },
+        { 'name': 'OpenTOSCAContainerAPIServiceInstanceURL', 'type': 'String', 'required': 'true' },
     ];
     private readonly hidden_input_parameters = [
         'CorrelationID',
@@ -151,7 +151,7 @@ export class ContainerService {
     }
 
     public getServiceTemplateInstanceIdAfterDeployment(csarId: string, correlationId: string): Observable<string> {
-        return this.getBuildPlanInstance(csarId, correlationId).pipe(
+        return this.getBuildPlanInstance(csarId, correlationId).pipe(retry(3),
             map(resp => resp ? resp.service_template_instance_id.toString() : ''),
         );
     }
@@ -363,14 +363,15 @@ export class ContainerService {
     }
 
     private getBuildPlan(csarId: string): Observable<Plan> {
-        return this.getServiceTemplate(csarId).pipe(
+        let result = this.getServiceTemplate(csarId).pipe(
             concatMap(resp => this.http.get<PlanResources>(resp._links['buildplans'].href, this.headerAcceptJSON)),
             map(resp => resp.plans.find(plan => plan.plan_type === PlanTypes.BuildPlan))
-        );
+        ); 
+        return result; 
     }
 
     private getBuildPlanInstance(csarId: string, correlationId: string): Observable<PlanInstance> {
-        return this.getBuildPlan(csarId).pipe(
+        return this.getBuildPlan(csarId).pipe(retry(3),
             concatMap(resp => this.http.get<PlanInstanceResources>(resp._links['instances'].href, this.headerAcceptJSON)),
             map(resp => resp.plan_instances.find(planInstance => planInstance.correlation_id.toString() === correlationId))
         );

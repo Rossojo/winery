@@ -30,6 +30,7 @@ import { OverlayService } from './overlay.service';
 import { LoggingService } from './logging.service';
 import { catchError, concatMap, distinctUntilChanged, first, switchMap, takeWhile, tap, timeout } from 'rxjs/operators';
 import { forkJoin, Observable, of, Subscription } from 'rxjs';
+import 'rxjs/add/observable/timer';
 import { Csar } from '../models/container/csar.model';
 import { PlanInstance } from '../models/container/plan-instance.model';
 import { InputParameter } from '../models/container/input-parameter.model';
@@ -126,13 +127,6 @@ export class LiveModelingService {
             let newInstanceId;
             if (startInstance) {
                 const buildPlanInputParameters = await this.retrieveBuildPlanParametersAndShowModalIfNeeded(csarId);
-                buildPlanInputParameters.forEach((param: InputParameter) => {
-                    if (param.required.toLowerCase() === 'yes') {
-                        param.required = 'true';
-                    } else if (param.required.toLowerCase() === 'no') {
-                        param.required = 'false';
-                    }
-                });
                 newInstanceId = await this.deployServiceTemplateInstance(csarId, buildPlanInputParameters);
             } else {
                 newInstanceId = await this.initializeServiceTemplateInstance(csarId);
@@ -326,6 +320,7 @@ export class LiveModelingService {
                 this.loggingService.logInfo('App found. Skipping installation');
             }
         } catch (error) {
+            console.log(error);
             throw new UploadCsarError();
         }
     }
@@ -349,6 +344,7 @@ export class LiveModelingService {
             }
             return buildPlanInputParameters;
         } catch (error) {
+            console.log(error);
             throw new RetrieveInputParametersError();
         }
     }
@@ -373,6 +369,7 @@ export class LiveModelingService {
             this.loggingService.logSuccess('Successfully deployed service template instance with Id ' + newInstanceId);
             return newInstanceId;
         } catch (error) {
+            console.log(error);
             throw new DeployInstanceError();
         } finally {
             try {
@@ -381,6 +378,7 @@ export class LiveModelingService {
                     this.loggingService.logContainer(log.message);
                 }
             } catch (e) {
+                console.log(e);
             }
         }
     }
@@ -510,6 +508,7 @@ export class LiveModelingService {
 
             return parameterPayload;
         } catch (error) {
+            console.log(error)
             throw new RetrieveInputParametersError();
         }
     }

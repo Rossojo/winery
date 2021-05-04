@@ -42,7 +42,7 @@
                 (Unsaved changes detected)
             </p>
         </div>
-        <div *ngIf="liveModelingState !== LiveModelingStates.DISABLED" class="live-modeling-sidebar-page live-page">
+        <div *ngIf="liveModelingState !== LiveModelingStates.DISABLED" class="live-modeling-sidebar-page live-page" style="width: 100%">
             <div *ngIf="(deploymentChanges || unsavedChanges)"
                  class="d-flex flex-column warning-changes">
                 <span>
@@ -54,7 +54,7 @@
                     Save your changes and reconfigurate to update the instance.
                 </div>
             </div>
-            <div class="live-modeling-sidebar-info-panel">
+            <div class="live-modeling-sidebar-info-panel" style="max-width: 33%">
                 <div class="d-flex justify-content-between">
                     <label>General</label>
                     <div>
@@ -119,7 +119,7 @@
                     </button>
                 </div>
             </div>
-            <div class="d-flex flex-column justify-content-between" style="height: 100%">
+            <div class="d-flex flex-column justify-content-between" style="height: 100%; max-width: 33%">
                 <div class="d-flex flex-column" style="height: 100%">
                     <accordion>
                         <accordion-group #parametersTab
@@ -153,22 +153,10 @@
                             <winery-live-modeling-sidebar-node-template></winery-live-modeling-sidebar-node-template>
                         </accordion-group>
                     </accordion>
-                    <div class="d-flex flex-column" *ngIf="showLogs" style="height: 100%">
-                        <winery-live-modeling-sidebar-logs class="flex-grow-1"></winery-live-modeling-sidebar-logs>
-                        <button class="btn-live-modeling btn-footer-live-modeling"
-                                style="flex-grow: 0"
-                                (click)="toggleLogs()">
-                            <i class="fa fa-angle-up"></i>
-                            Hide logs
-                        </button>
-                    </div>
                 </div>
-                <button class="btn-live-modeling btn-footer-live-modeling"
-                        *ngIf="!showLogs"
-                        (click)="toggleLogs()">
-                    <i class="fa fa-angle-down"></i>
-                    Show logs
-                </button>
+            </div>
+            <div class="d-flex flex-column" style="height: 100%; max-width: 33%">
+                <winery-live-modeling-sidebar-logs class="flex-grow-1"></winery-live-modeling-sidebar-logs>
             </div>
         </div>
     </div>

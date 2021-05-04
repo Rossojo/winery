@@ -44,10 +44,10 @@ import { ReconfigureModalComponent } from './modals/reconfigure-modal/reconfigur
         ]),
         trigger('sidebarButtonState', [
             state('top', style({
-                transform: 'rotate(0deg)'
+                transform: 'rotate(0deg)',
             })),
             state('right', style({
-                transform: 'rotate(90deg) translateY(-100%)'
+                transform: 'rotate(0deg) translate(-50%,650%)',
             })),
         ])
     ]
