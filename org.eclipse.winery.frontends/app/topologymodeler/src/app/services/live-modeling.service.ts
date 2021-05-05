@@ -201,7 +201,7 @@ export class LiveModelingService {
                 sourceCsarId, oldInstanceId, transformationPlanId);
             this.setAllNodeTemplateInstanceState(NodeTemplateInstanceStates.NOT_AVAILABLE);
             const newInstanceId = await this.transformServiceTemplateInstance(
-                sourceCsarId, targetCsarId, oldInstanceId, parameterPayload);
+                sourceCsarId, targetCsarId, oldInstanceId, parameterPayload, transformationPlanId);
             this.ngRedux.dispatch(this.liveModelingActions.setCurrentCsarId(targetCsarId));
             this.ngRedux.dispatch(this.liveModelingActions.setCurrentServiceTemplateInstanceId(newInstanceId));
             await this.setDeployedTopologyTemplate(targetCsarId);
@@ -514,7 +514,7 @@ export class LiveModelingService {
     }
 
     private async transformServiceTemplateInstance(
-        sourceCsarId: string, targetCsarId: string, serviceTemplateInstanceId: string, transformationPayload: InputParameter[]): Promise<string> {
+        sourceCsarId: string, targetCsarId: string, serviceTemplateInstanceId: string, transformationPayload: InputParameter[], planId: string): Promise<string> {
         let correlationId;
         try {
             this.setAllNodeTemplateInstanceState(NodeTemplateInstanceStates.INITIAL);
@@ -522,14 +522,14 @@ export class LiveModelingService {
 
             this.loggingService.logInfo('Transforming service template instance...');
             correlationId = await this.containerService.executeTransformationPlan(
-                serviceTemplateInstanceId, sourceCsarId, targetCsarId, transformationPayload).toPromise();
+                serviceTemplateInstanceId, planId, sourceCsarId, targetCsarId, transformationPayload).toPromise();
 
             this.loggingService.logInfo('Executing transformation plan with correlation id ' + correlationId);
 
             await this.waitUntilServiceTemplateInstanceIsInState(sourceCsarId, serviceTemplateInstanceId, ServiceTemplateInstanceStates.MIGRATED);
 
             const newInstanceId = await this.waitForServiceTemplateInstanceIdAfterMigration(
-                sourceCsarId, serviceTemplateInstanceId, correlationId, sourceCsarId, targetCsarId).toPromise();
+                sourceCsarId, serviceTemplateInstanceId, planId, correlationId, sourceCsarId, targetCsarId).toPromise();
             this.loggingService.logInfo('Waiting for transformation of service template instance with id ' + newInstanceId);
 
             await this.waitUntilServiceTemplateInstanceIsInState(targetCsarId, newInstanceId, ServiceTemplateInstanceStates.CREATED);
@@ -541,7 +541,7 @@ export class LiveModelingService {
         } finally {
             try {
                 const transformationPlanLogs = await this.containerService.getTransformationPlanLogs(
-                    sourceCsarId, serviceTemplateInstanceId, correlationId, sourceCsarId, targetCsarId).toPromise();
+                    sourceCsarId, serviceTemplateInstanceId, planId, correlationId, sourceCsarId, targetCsarId).toPromise();
                 for (const log of transformationPlanLogs) {
                     this.loggingService.logContainer(log.message);
                 }
@@ -553,11 +553,11 @@ export class LiveModelingService {
     private waitForServiceTemplateInstanceIdAfterMigration(
         csarId: string,
         serviceTemplateInstanceId: string,
+        planId: string,
         correlationId: string,
         sourceCsarId: string,
         targetCsarId: string
     ): Observable<string> {
-        const planId = this.containerService.getTransformationPlanId(sourceCsarId, targetCsarId);
         return Observable.timer(0, this.settings.interval).pipe(
             concatMap(() => this.containerService.getServiceTemplateInstanceIdAfterTransformation(csarId, serviceTemplateInstanceId, correlationId, planId)),
             distinctUntilChanged(),
@@ -578,6 +578,7 @@ export class LiveModelingService {
             }
             return await this.containerService.executeManagementPlan(csarId, serviceTemplateInstanceId, adaptationPlan.id, parameterPayload).toPromise();
         } catch (error) {
+            console.log(error);
             throw new AdaptInstanceError();
         }
     }
