@@ -21,6 +21,7 @@
     display: flex;
     flex-direction: column;
     height: 33vh;
+    max-height: 30%;
     left: 50%;
     transform: translate(-50%, 0%);
     margin: 0 auto;
@@ -42,7 +43,7 @@
 }
 
 .live-modeling-sidebar-content {
-    height: 100%;
+    height: 25%;
     position: relative;
     flex-grow: 1;
     min-width: 300px;

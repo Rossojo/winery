@@ -54,7 +54,7 @@
                     Save your changes and reconfigurate to update the instance.
                 </div>
             </div>
-            <div class="live-modeling-sidebar-info-panel" style="max-width: 33%">
+            <div class="live-modeling-sidebar-info-panel" style="max-width: 33%; min-width: 33%; min-height: 100%;">
                 <div class="d-flex justify-content-between">
                     <label>General</label>
                     <div>
@@ -119,11 +119,21 @@
                     </button>
                 </div>
             </div>
-            <div class="d-flex flex-column justify-content-between" style="height: 100%; max-width: 33%">
+            <div class="d-flex flex-column justify-content-between" style="height: 100%; min-width: 33%; min-height: 100%; max-width: 33%">
                 <div class="d-flex flex-column" style="height: 100%">
                     <accordion>
+                        <accordion-group #nodeTemplateTab
+                                         isOpen="false"
+                                         panelClass="customClass">
+                            <span accordion-heading>
+                                <i *ngIf="!nodeTemplateTab.isOpen" class="fas fa-caret-right"></i>
+                                <i *ngIf="nodeTemplateTab.isOpen" class="fas fa-caret-down"></i>
+                                Node Template Instance
+                            </span>
+                            <winery-live-modeling-sidebar-node-template></winery-live-modeling-sidebar-node-template>
+                        </accordion-group>
                         <accordion-group #parametersTab
-                                         isOpen="true"
+                                         isOpen="false"
                                          panelClass="customClass">
                             <span accordion-heading>
                                 <i *ngIf="!parametersTab.isOpen" class="fas fa-caret-right"></i>
@@ -133,7 +143,7 @@
                             <winery-live-modeling-sidebar-buildplan-parameters></winery-live-modeling-sidebar-buildplan-parameters>
                         </accordion-group>
                         <accordion-group #outputsTab
-                                         isOpen="true"
+                                         isOpen="false"
                                          panelClass="customClass">
                             <span accordion-heading>
                                 <i *ngIf="!outputsTab.isOpen" class="fas fa-caret-right"></i>
@@ -142,21 +152,11 @@
                             </span>
                             <winery-live-modeling-sidebar-buildplan-outputs></winery-live-modeling-sidebar-buildplan-outputs>
                         </accordion-group>
-                        <accordion-group #nodeTemplateTab
-                                         isOpen="true"
-                                         panelClass="customClass">
-                            <span accordion-heading>
-                                <i *ngIf="!nodeTemplateTab.isOpen" class="fas fa-caret-right"></i>
-                                <i *ngIf="nodeTemplateTab.isOpen" class="fas fa-caret-down"></i>
-                                Node Template Instance
-                            </span>
-                            <winery-live-modeling-sidebar-node-template></winery-live-modeling-sidebar-node-template>
-                        </accordion-group>
                     </accordion>
                 </div>
             </div>
-            <div class="d-flex flex-column" style="height: 100%; max-width: 33%">
-                <winery-live-modeling-sidebar-logs class="flex-grow-1" style="height: 100%"></winery-live-modeling-sidebar-logs>
+            <div class="d-flex flex-column" style="height: 100%; max-width: 33%; min-width: 33%; min-height: 100%;">
+                <winery-live-modeling-sidebar-logs class="flex-grow-1" style="height: 100%; min-height: 100%; min-width: 33%;"></winery-live-modeling-sidebar-logs>
             </div>
         </div>
     </div>

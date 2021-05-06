@@ -14,7 +14,10 @@
 
 .scroll-container {
     flex: 1 0 0;
-    overflow-y: scroll;
+    position:fixed;
+    overflow-y: auto;
+    max-height: 70%;
+    min-height: 60%;
 }
 
 .log-item {
