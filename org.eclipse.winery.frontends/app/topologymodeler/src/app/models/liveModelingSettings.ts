@@ -18,6 +18,6 @@ export class LiveModelingSettings {
     }
 
     public static initial() {
-        return new LiveModelingSettings(60000, 2000);
+        return new LiveModelingSettings(600000, 2000);
     }
 }
