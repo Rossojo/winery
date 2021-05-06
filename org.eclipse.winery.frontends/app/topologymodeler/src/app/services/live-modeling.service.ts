@@ -516,6 +516,7 @@ export class LiveModelingService {
     private async transformServiceTemplateInstance(
         sourceCsarId: string, targetCsarId: string, serviceTemplateInstanceId: string, transformationPayload: InputParameter[], planId: string): Promise<string> {
         let correlationId;
+        let newInstanceId;
         try {
             this.setAllNodeTemplateInstanceState(NodeTemplateInstanceStates.INITIAL);
             const prevServiceTemplateInstanceId = serviceTemplateInstanceId;
@@ -528,7 +529,7 @@ export class LiveModelingService {
 
             await this.waitUntilServiceTemplateInstanceIsInState(sourceCsarId, serviceTemplateInstanceId, ServiceTemplateInstanceStates.MIGRATED);
 
-            const newInstanceId = await this.waitForServiceTemplateInstanceIdAfterMigration(
+            newInstanceId = await this.waitForServiceTemplateInstanceIdAfterMigration(
                 sourceCsarId, serviceTemplateInstanceId, planId, correlationId, sourceCsarId, targetCsarId).toPromise();
             this.loggingService.logInfo('Waiting for transformation of service template instance with id ' + newInstanceId);
 
@@ -537,15 +538,17 @@ export class LiveModelingService {
             this.loggingService.logSuccess(`Successfully transformed service template instance from ${prevServiceTemplateInstanceId} to ${newInstanceId}`);
             return newInstanceId;
         } catch (error) {
+            console.log(error);
             throw new TransformInstanceError();
         } finally {
             try {
                 const transformationPlanLogs = await this.containerService.getTransformationPlanLogs(
-                    sourceCsarId, serviceTemplateInstanceId, planId, correlationId, sourceCsarId, targetCsarId).toPromise();
+                    targetCsarId, newInstanceId, planId, correlationId).toPromise();
                 for (const log of transformationPlanLogs) {
                     this.loggingService.logContainer(log.message);
                 }
             } catch (e) {
+                console.log(e);
             }
         }
     }

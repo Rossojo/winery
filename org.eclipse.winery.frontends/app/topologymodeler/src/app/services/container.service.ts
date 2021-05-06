@@ -61,12 +61,14 @@ export class ContainerService {
     private readonly baseInstallationPayload = [
         { 'name': 'instanceDataAPIUrl', 'type': 'String', 'required': 'true' },
         { 'name': 'csarEntrypoint', 'type': 'String', 'required': 'true' },
-        { 'name': 'CorrelationID', 'type': 'String', 'required': 'true' }
+        { 'name': 'CorrelationID', 'type': 'String', 'required': 'true' },
+        { 'name': 'containerApiAddress', 'type': 'String', 'required': 'true' }
     ];
     private readonly baseManagementPayload = [
         { 'name': 'instanceDataAPIUrl', 'type': 'String', 'required': 'true' },
         { 'name': 'OpenTOSCAContainerAPIServiceInstanceURL', 'type': 'String', 'required': 'true' },
-        { 'name': 'CorrelationID', 'type': 'String', 'required': 'true' }
+        { 'name': 'CorrelationID', 'type': 'String', 'required': 'true' },
+        { 'name': 'containerApiAddress', 'type': 'String', 'required': 'true' }
     ];
     private readonly baseTransformationPayload = [
         { 'name': 'CorrelationID', 'type': 'String', 'required': 'true' },
@@ -74,6 +76,7 @@ export class ContainerService {
         { 'name': 'planCallbackAddress_invoker', 'type': 'String', 'required': 'true' },
         { 'name': 'csarEntrypoint', 'type': 'String', 'required': 'true' },
         { 'name': 'OpenTOSCAContainerAPIServiceInstanceURL', 'type': 'String', 'required': 'true' },
+        { 'name': 'containerApiAddress', 'type': 'String', 'required': 'true' }
     ];
     private readonly hidden_input_parameters = [
         'CorrelationID',
@@ -278,10 +281,8 @@ console.log(error);
         serviceTemplateInstanceId: string,
         planId: string,
         correlationId: string,
-        sourceCsarId: string,
-        targetCsarId: string
     ): Observable<Array<PlanLogEntry>> {
-        return this.getManagementPlans(csarId, serviceTemplateInstanceId).pipe(
+        return this.getManagementPlans(csarId, serviceTemplateInstanceId).pipe(retry(10),
             concatMap(resp => this.http.get<PlanInstanceResources>(
                 resp.find(plan => plan.id === planId && plan.plan_type === PlanTypes.TransformationPlan)._links['instances'].href, this.headerAcceptJSON)
             ),
@@ -387,14 +388,14 @@ console.log(error);
     }
 
     private getManagementPlans(csarId: string, serviceTemplateInstanceId: string): Observable<Array<Plan>> {
-        return this.getServiceTemplateInstance(csarId, serviceTemplateInstanceId).pipe(retry(10),
+        return this.getServiceTemplateInstance(csarId, serviceTemplateInstanceId).pipe(retry(100),
             concatMap(resp => this.http.get<PlanResources>(resp._links['managementplans'].href, this.headerAcceptJSON)),
             map(resp => resp.plans)
         );
     }
 
     private getManagementPlan(csarId: string, serviceTemplateInstanceId: string, planId: string): Observable<Plan> {
-        return this.getManagementPlans(csarId, serviceTemplateInstanceId).pipe(retry(10),
+        return this.getManagementPlans(csarId, serviceTemplateInstanceId).pipe(retry(100),
             map(resp => resp.find(plan => plan.id.toString() === planId))
         );
     }
