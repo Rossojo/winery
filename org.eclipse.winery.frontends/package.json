@@ -48,6 +48,7 @@
         "css-element-queries": "0.4.0",
         "elkjs": "0.4.1",
         "font-awesome": "4.7.0",
+        "is-promise": "^4.0.0",
         "jsplumb": "2.8.0",
         "lodash": "4.17.15",
         "ng-diff-match-patch": "3.0.1",

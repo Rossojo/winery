@@ -94,7 +94,7 @@ export class CanvasComponent implements OnInit, OnDestroy, OnChanges, AfterViewI
     @Input() sidebarDeleteButtonClickEvent: any;
     @Input() templateParameter: TopologyModelerConfiguration;
 
-    readonly draggingThreshold = 200;
+    readonly draggingThreshold = 300;
     readonly newNodePositionOffsetX = 108;
     readonly newNodePositionOffsetY = 30;
     readonly attributeMappingType = AttributeMappingType;
@@ -281,34 +281,8 @@ export class CanvasComponent implements OnInit, OnDestroy, OnChanges, AfterViewI
     @HostListener('mousedown', ['$event'])
     onMouseDown(event: MouseEvent) {
         // don't do right/middle clicks
-        if (event.button === 0) {
-            this.longPressing = false;
-            setTimeout(() => this.longPressing = true, 250);
-        } 
-        
-        /*else if (event.button === 1) {
-            this.isMiddleMouseButtonDown = true;
-            this.lastMouseEvent = event;
-        }*/
-    }
-
-    /*
-    @HostListener('mousemove', ['$event'])
-    onMouseMove(event: MouseEvent) {
-        if (this.isMiddleMouseButtonDown) {
-            const x = event.clientX - this.lastMouseEvent.clientX;
-            const y = event.clientY - this.lastMouseEvent.clientY;
-            this.moveNodes(x, y);
-            this.revalidateContainer();
-            this.lastMouseEvent = event;
-        }
-    }*/
-
-    moveNodes(x: number, y: number) {
-        for (const node of this.allNodeTemplates) {
-            node.x += x;
-            node.y += y;
-        }
+        this.longPressing = false;
+        setTimeout(() => this.longPressing = true, 250);
     }
 
     /**
@@ -1541,8 +1515,7 @@ export class CanvasComponent implements OnInit, OnDestroy, OnChanges, AfterViewI
      * @param $event
      */
     showSelectionRange($event: any) {
-        //if ($event.button === 0) {
-            this.gridTemplate.crosshair = true;
+         this.gridTemplate.crosshair = true;
             this.ngRedux.dispatch(this.actions.sendPaletteOpened(false));
             this.hideSidebar();
             this.clearSelectedNodes();
@@ -1557,7 +1530,6 @@ export class CanvasComponent implements OnInit, OnDestroy, OnChanges, AfterViewI
                 this.unbindMouseActions.push(this.renderer.listen(this.eref.nativeElement, 'mouseup', (event) =>
                     this.selectElements(event)));
             });
-       // }
     }
 
     /**
@@ -2064,10 +2036,6 @@ export class CanvasComponent implements OnInit, OnDestroy, OnChanges, AfterViewI
                     return;
                 }
             }
-
-            this.clearSelectedNodes();
-            this.newJsPlumbInstance.select().removeType('marked');
-
             let name = currentRel.name;
             if (currentRel.name.startsWith(this.backendService.configuration.relationshipPrefix)) {
                 // Workaround to support old topology templates with the real name
