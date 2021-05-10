@@ -154,7 +154,11 @@ export class PaletteComponent implements OnInit, OnDestroy {
             [],
             {},
             x,
-            y
+            y,
+            null,
+            null,
+            null,
+            null
         );
         this.ngRedux.dispatch(this.actions.saveNodeTemplate(newNode));
         return newNode;

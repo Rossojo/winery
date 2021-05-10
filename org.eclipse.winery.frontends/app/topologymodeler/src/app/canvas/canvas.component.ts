@@ -94,7 +94,7 @@ export class CanvasComponent implements OnInit, OnDestroy, OnChanges, AfterViewI
     @Input() sidebarDeleteButtonClickEvent: any;
     @Input() templateParameter: TopologyModelerConfiguration;
 
-    readonly draggingThreshold = 300;
+    readonly draggingThreshold = 200;
     readonly newNodePositionOffsetX = 108;
     readonly newNodePositionOffsetY = 30;
     readonly attributeMappingType = AttributeMappingType;
@@ -266,10 +266,11 @@ export class CanvasComponent implements OnInit, OnDestroy, OnChanges, AfterViewI
     @HostListener('mouseup', ['$event'])
     onMouseUp(event: MouseEvent) {
         this.longPressing = false;
+        /*
         if (event.button === 1) {
             this.isMiddleMouseButtonDown = false;
             this.updateAllNodes();
-        }
+        }*/
     }
 
     /**
@@ -283,12 +284,15 @@ export class CanvasComponent implements OnInit, OnDestroy, OnChanges, AfterViewI
         if (event.button === 0) {
             this.longPressing = false;
             setTimeout(() => this.longPressing = true, 250);
-        } else if (event.button === 1) {
+        } 
+        
+        /*else if (event.button === 1) {
             this.isMiddleMouseButtonDown = true;
             this.lastMouseEvent = event;
-        }
+        }*/
     }
 
+    /*
     @HostListener('mousemove', ['$event'])
     onMouseMove(event: MouseEvent) {
         if (this.isMiddleMouseButtonDown) {
@@ -298,7 +302,7 @@ export class CanvasComponent implements OnInit, OnDestroy, OnChanges, AfterViewI
             this.revalidateContainer();
             this.lastMouseEvent = event;
         }
-    }
+    }*/
 
     moveNodes(x: number, y: number) {
         for (const node of this.allNodeTemplates) {
@@ -1537,7 +1541,7 @@ export class CanvasComponent implements OnInit, OnDestroy, OnChanges, AfterViewI
      * @param $event
      */
     showSelectionRange($event: any) {
-        if ($event.button === 0) {
+        //if ($event.button === 0) {
             this.gridTemplate.crosshair = true;
             this.ngRedux.dispatch(this.actions.sendPaletteOpened(false));
             this.hideSidebar();
@@ -1553,7 +1557,7 @@ export class CanvasComponent implements OnInit, OnDestroy, OnChanges, AfterViewI
                 this.unbindMouseActions.push(this.renderer.listen(this.eref.nativeElement, 'mouseup', (event) =>
                     this.selectElements(event)));
             });
-        }
+       // }
     }
 
     /**
