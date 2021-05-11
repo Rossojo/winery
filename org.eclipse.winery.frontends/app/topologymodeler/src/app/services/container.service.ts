@@ -190,7 +190,7 @@ export class ContainerService {
     public getServiceTemplateInstanceBuildPlanInstance(csarId: string, serviceTemplateInstanceId: string): Observable<PlanInstance> {
         return this.getServiceTemplateInstance(csarId, serviceTemplateInstanceId).pipe(
             concatMap((resp) => {
-                return this.http.get<PlanInstance>(resp._links['build_plan_instance'].href, this.headerAcceptJSON)
+                return this.http.get<PlanInstance>(resp._links['build_plan_instance'].href, this.headerAcceptJSON);
             }),
             map((resp) => {
                 resp.inputs = resp.inputs.filter(input => this.hiddenInputParameters.indexOf(input.name) === -1);
@@ -235,7 +235,7 @@ export class ContainerService {
                 }
             ),
             map((resp) => {
-                return resp.node_template_instances.filter(n => n.service_template_instance_id.toString() === serviceTemplateInstanceId)
+                return resp.node_template_instances.filter(n => n.service_template_instance_id.toString() === serviceTemplateInstanceId);
             }),
             concatMap((resp) => {
                 return this.http.get<NodeTemplateInstance>(
@@ -304,12 +304,14 @@ export class ContainerService {
         return this.getManagementPlans(csarId, serviceTemplateInstanceId).pipe(
             concatMap((resp) => {
                 return this.http.get<PlanInstanceResources>(
-                        resp.find(plan => plan.id === planId && plan.plan_type === PlanTypes.TransformationPlan)._links['instances'].href, this.headerAcceptJSON);
+                        resp.find((plan) => {
+                            return plan.id === planId && plan.plan_type === PlanTypes.TransformationPlan;
+                        })._links['instances'].href, this.headerAcceptJSON);
                 }
             ),
             map((resp) => {
                 return resp.plan_instances.find(
-                    (plan) => { 
+                    (plan) => {
                         return plan.correlation_id.toString() === correlationId;
                     }).outputs.find(output => output.name === 'instanceId').value;
             }),
@@ -334,7 +336,7 @@ export class ContainerService {
             map((resp) => {
                 return resp.plan_instances.find((plan) => {
                     return plan.correlation_id.toString() === correlationId;
-                }).logs
+                }).logs;
             })
         );
     }

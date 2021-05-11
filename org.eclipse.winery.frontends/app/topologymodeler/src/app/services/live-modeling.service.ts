@@ -134,7 +134,7 @@ export class LiveModelingService {
             this.handleError(error);
         }
     }
-    
+
     public liveModelingIsActive(): boolean {
         return this.state !== LiveModelingStates.DISABLED &&
             this.state !== LiveModelingStates.TERMINATED &&
@@ -211,7 +211,7 @@ export class LiveModelingService {
             this.handleError(error);
         }
     }
-    
+
     public properStateForRedeploy(): boolean {
         return this.state !== LiveModelingStates.ENABLED &&
             this.state !== LiveModelingStates.ERROR &&
@@ -320,7 +320,7 @@ export class LiveModelingService {
             this.handleError(error);
         }
     }
-    
+
     public properStateForDisable(): boolean {
         return this.state !== LiveModelingStates.ENABLED &&
         this.state !== LiveModelingStates.TERMINATED &&
