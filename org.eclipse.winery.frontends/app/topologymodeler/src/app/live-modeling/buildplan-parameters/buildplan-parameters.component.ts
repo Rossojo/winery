@@ -11,7 +11,9 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
  *******************************************************************************/
-import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
+import {
+    AfterViewInit, Component, ElementRef, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren
+} from '@angular/core';
 import { LiveModelingLog } from '../../models/liveModelingLog';
 import { Subscription } from 'rxjs';
 import { LoggingService } from '../../services/logging.service';
@@ -34,7 +36,9 @@ export class BuildplanParametersComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit() {
-        this.subscriptions.push(this.ngRedux.select((state) => {return state.liveModelingState.currentBuildPlanInstance; })
+        this.subscriptions.push(this.ngRedux.select((state) => {
+            return state.liveModelingState.currentBuildPlanInstance;
+        })
             .subscribe(buildPlanInstance => {
                 if (buildPlanInstance && buildPlanInstance.hasOwnProperty('inputs')) {
                     this.buildPlanInputParameters = buildPlanInstance.inputs;
@@ -43,6 +47,8 @@ export class BuildplanParametersComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy() {
-        this.subscriptions.forEach((subscription) => {subscription.unsubscribe(); });
+        this.subscriptions.forEach((subscription) => {
+            subscription.unsubscribe();
+        });
     }
 }

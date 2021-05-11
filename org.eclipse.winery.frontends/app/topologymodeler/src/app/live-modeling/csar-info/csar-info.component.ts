@@ -31,13 +31,17 @@ export class CsarInfoComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit() {
-        this.subscriptions.push(this.ngRedux.select((state) => {return state.liveModelingState.currentCsar; })
+        this.subscriptions.push(this.ngRedux.select((state) => {
+            return state.liveModelingState.currentCsar;
+        })
             .subscribe((csar) => {
                 this.currentCsar = csar;
             }));
     }
 
     ngOnDestroy() {
-        this.subscriptions.forEach((subscription) => {subscription.unsubscribe(); });
+        this.subscriptions.forEach((subscription) => {
+            subscription.unsubscribe();
+        });
     }
 }

@@ -14,7 +14,7 @@
 
 .scroll-container {
     flex: 1 0 0;
-    position:fixed;
+    position: fixed;
     overflow-y: auto;
     max-height: 70%;
     min-height: 60%;

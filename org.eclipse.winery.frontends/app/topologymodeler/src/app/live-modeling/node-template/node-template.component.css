@@ -29,7 +29,7 @@
 
 .parameters-table {
     width: 100%;
-    table-layout: fixed ;
+    table-layout: fixed;
     border-collapse: collapse;
 }
 
@@ -49,6 +49,7 @@
 .parameters-table tr:nth-child(odd) {
     background: #242424
 }
+
 .parameters-table tr:nth-child(even) {
     background: #292929
 }

@@ -51,6 +51,7 @@
 .parameters-table tr:nth-child(odd) {
     background: #242424
 }
+
 .parameters-table tr:nth-child(even) {
     background: #292929
 }

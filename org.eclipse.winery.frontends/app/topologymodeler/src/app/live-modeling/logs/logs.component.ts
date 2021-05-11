@@ -11,7 +11,9 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
  *******************************************************************************/
-import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
+import {
+    AfterViewInit, Component, ElementRef, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren
+} from '@angular/core';
 import { LiveModelingLog } from '../../models/liveModelingLog';
 import { Subscription } from 'rxjs';
 import { LoggingService } from '../../services/logging.service';

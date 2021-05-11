@@ -537,10 +537,10 @@ export class NodeComponent implements OnInit, AfterViewInit, OnDestroy, DoCheck 
             this.artifactsChangedSubscription.unsubscribe();
         }
 
-        this.subscriptions.forEach((subscription: Subscription) => {
+        /*this.subscriptions.forEach((subscription: Subscription) => {
             subscription.unsubscribe();
         });
-        this.subscriptions = [];
+        this.subscriptions = [];*/
     }
 
     /**

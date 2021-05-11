@@ -17,16 +17,16 @@
     <div class="table-scrollable">
         <table class="parameters-table">
             <thead>
-                <tr>
-                    <th scope="col">Name</th>
-                    <th scope="col">Value</th>
-                </tr>
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Value</th>
+            </tr>
             </thead>
             <tbody>
-                <tr *ngFor="let parameter of buildPlanInputParameters">
-                    <td>{{parameter.name}}</td>
-                    <td>{{parameter.value || '(empty)'}}</td>
-                </tr>
+            <tr *ngFor="let parameter of buildPlanInputParameters">
+                <td>{{parameter.name}}</td>
+                <td>{{parameter.value || '(empty)'}}</td>
+            </tr>
             </tbody>
         </table>
     </div>

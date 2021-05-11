@@ -108,7 +108,7 @@ export class NodeTemplateComponent implements OnInit, OnDestroy {
         return this.selectedNodeId &&
             this.checkUpdatingData() &&
             this.checkLiveModelingState() &&
-             this.checkNodeState();
+            this.checkNodeState();
     }
 
     checkUpdatingData(): boolean {
@@ -149,7 +149,7 @@ export class NodeTemplateComponent implements OnInit, OnDestroy {
     }
 
     async openConfirmModal(title: string, content: string, showWarning = false): Promise<boolean> {
-        const initialState = {title, content, showWarning};
+        const initialState = { title, content, showWarning };
         const modalRef = this.modalService.show(ConfirmModalComponent, { initialState, backdrop: 'static' });
         await new Promise((resolve) => {
             const subscription = this.modalService.onHidden.subscribe((_) => {

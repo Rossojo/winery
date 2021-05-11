@@ -71,7 +71,9 @@ export class EnableModalComponent {
 
     checkContainerUrl(): Promise<boolean> {
         return this.http.get(this.containerUrl, { observe: 'response' }).pipe(
-            map((resp) => {return resp.ok; }),
+            map((resp) => {
+                return resp.ok;
+            }),
         ).toPromise();
     }
 
