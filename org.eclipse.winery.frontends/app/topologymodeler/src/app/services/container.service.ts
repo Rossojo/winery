@@ -94,7 +94,9 @@ export class ContainerService {
         private ngRedux: NgRedux<IWineryState>,
         private http: HttpClient,
     ) {
-        this.ngRedux.select(state => state.liveModelingState.containerUrl)
+        this.ngRedux.select((state) => {
+            return state.liveModelingState.containerUrl;
+        })
             .subscribe((containerUrl) => {
                 this.containerUrl = containerUrl;
             });
@@ -129,7 +131,9 @@ export class ContainerService {
     public getRequiredBuildPlanInputParameters(csarId: string): Observable<Array<InputParameter>> {
         return this.getAllBuildPlanInputParameters(csarId).pipe(
             map((resp) => {
-                return resp.filter(input => this.hiddenInputParameters.indexOf(input.name) === -1);
+                return resp.filter((input) => {
+                    return this.hiddenInputParameters.indexOf(input.name) === -1;
+                });
             })
         );
     }
@@ -193,7 +197,9 @@ export class ContainerService {
                 return this.http.get<PlanInstance>(resp._links['build_plan_instance'].href, this.headerAcceptJSON);
             }),
             map((resp) => {
-                resp.inputs = resp.inputs.filter(input => this.hiddenInputParameters.indexOf(input.name) === -1);
+                resp.inputs = resp.inputs.filter((input) => {
+                    return this.hiddenInputParameters.indexOf(input.name) === -1;
+                });
                 return resp;
             })
         );
@@ -231,11 +237,15 @@ export class ContainerService {
             // TODO: temporary until bug in container fixed (see https://github.com/OpenTOSCA/container/issues/133)
             concatMap((resp) => {
                 return this.http.get<NodeTemplateInstanceResources>(
-                        resp.find(template => template.id.toString() === nodeTemplateId)._links['self'].href + '/instances', this.headerAcceptJSON);
+                        resp.find((template) => {
+                            return template.id.toString() === nodeTemplateId;
+                        })._links['self'].href + '/instances', this.headerAcceptJSON);
                 }
             ),
             map((resp) => {
-                return resp.node_template_instances.filter(n => n.service_template_instance_id.toString() === serviceTemplateInstanceId);
+                return resp.node_template_instances.filter((n) => {
+                    return n.service_template_instance_id.toString() === serviceTemplateInstanceId;
+                });
             }),
             concatMap((resp) => {
                 return this.http.get<NodeTemplateInstance>(
@@ -313,7 +323,9 @@ export class ContainerService {
                 return resp.plan_instances.find(
                     (plan) => {
                         return plan.correlation_id.toString() === correlationId;
-                    }).outputs.find(output => output.name === 'instanceId').value;
+                    }).outputs.find((output) => {
+                        return output.name === 'instanceId';
+                }).value;
             }),
             catchError(() => of(''))
         );
@@ -349,7 +361,9 @@ export class ContainerService {
             map((resp) => {
                 return {
                     ...resp,
-                    input_parameters: resp.input_parameters.filter(input => this.hiddenInputParameters.indexOf(input.name) === -1)
+                    input_parameters: resp.input_parameters.filter((input) => {
+                        return this.hiddenInputParameters.indexOf(input.name) === -1;
+                    })
                 };
             })
         );

@@ -479,7 +479,7 @@ export class BackendService {
                 TopologyTemplateUtil.prepareSave(topologyTemplate),
                 { headers: headers, responseType: 'text', observe: 'response' }
             ).pipe(
-                tap(resp => {
+                tap((resp) => {
                     if (resp.ok) {
                         this.ngRedux.dispatch(this.wineryActions.setLastSavedJsonTopology(topologyTemplate));
                     }
@@ -510,13 +510,13 @@ export class BackendService {
             documentation: [],
             any: [],
             otherAttributes: {},
-            relationshipTemplates: topologyTemplate.relationshipTemplates.map(relationship => {
+            relationshipTemplates: topologyTemplate.relationshipTemplates.map((relationship) => {
                 const clone = Object.assign({}, relationship);
                 delete clone.state;
                 return clone;
             }),
             // remove the 'Color' field from all nodeTemplates as the REST Api does not recognize it.
-            nodeTemplates: topologyTemplate.nodeTemplates.map(nodeTemplate => {
+            nodeTemplates: topologyTemplate.nodeTemplates.map((nodeTemplate) => {
                 const clone = Object.assign({}, nodeTemplate);
                 delete clone._state;
                 delete clone.instanceState;

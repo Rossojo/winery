@@ -12,7 +12,6 @@
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
  *******************************************************************************/
 
-
 .table-scrollable {
     max-height: 200px;
     overflow-y: auto;
@@ -33,33 +32,35 @@
     border-collapse: collapse;
 }
 
-.parameters-table, .parameters-table th, .parameters-table td {
-    border: 1px solid #3D3D3D;
+.parameters-table,
+.parameters-table th,
+.parameters-table td {
+    border: 1px solid #3d3d3d;
 }
 
-.parameters-table th, .parameters-table td {
+.parameters-table th,
+.parameters-table td {
     width: 50%;
     word-break: break-all;
 }
 
 .parameters-table th {
-    background: #333333;
+    background: #333;
 }
 
 .parameters-table tr:nth-child(odd) {
-    background: #242424
+    background: #242424;
 }
 
 .parameters-table tr:nth-child(even) {
-    background: #292929
+    background: #292929;
 }
 
 .btn-live-modeling {
     flex: 1 1 0px;
-    border: none;
     background-color: #353537;
-    border: 1px solid #007BFF;
-    color: #007BFF;
+    border: 1px solid #007bff;
+    color: #007bff;
     letter-spacing: 0.05em;
     padding: 0.75em;
     border-radius: 0.25em;
@@ -70,7 +71,7 @@
 .btn-live-modeling:hover {
     cursor: pointer;
     color: white;
-    background-color: #007BFF;
+    background-color: #007bff;
 }
 
 .btn-live-modeling:active {
@@ -103,4 +104,3 @@
 .btn-live-modeling-stop:active {
     background-color: #bd2130;
 }
-

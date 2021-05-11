@@ -69,7 +69,7 @@
     color: grey;
 }
 
-::ng-deep .tooltip-check-properties .tooltip-inner{
+::ng-deep .tooltip-check-properties .tooltip-inner {
     white-space: nowrap;
     max-width: none;
 }

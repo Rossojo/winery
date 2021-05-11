@@ -35,8 +35,10 @@ export class DisableModalComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit(): void {
-        this.subscriptions.push(this.ngRedux.select(state => state.liveModelingState.currentServiceTemplateInstanceId)
-            .subscribe(instanceId => {
+        this.subscriptions.push(this.ngRedux.select((state) => {
+            return state.liveModelingState.currentServiceTemplateInstanceId;
+        })
+            .subscribe((instanceId) => {
                 this.currentServiceTemplateInstanceId = instanceId;
             }));
     }
@@ -51,6 +53,8 @@ export class DisableModalComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy() {
-        this.subscriptions.forEach(subscription => subscription.unsubscribe());
+        this.subscriptions.forEach((subscription) => {
+            subscription.unsubscribe();
+        });
     }
 }

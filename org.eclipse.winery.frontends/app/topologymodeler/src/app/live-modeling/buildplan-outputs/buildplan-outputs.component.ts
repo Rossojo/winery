@@ -32,16 +32,16 @@ export class BuildplanOutputsComponent implements OnInit, OnDestroy {
 
     ngOnInit() {
         // tslint:disable-next-line:no-unused-expression
-        this.subscriptions.push(this.ngRedux.select(state => {
+        this.subscriptions.push(this.ngRedux.select((state) => {
             return state.liveModelingState.currentBuildPlanInstance;
         })
-            .subscribe(buildPlanInstance => {
+            .subscribe((buildPlanInstance) => {
                 this.currentBuildPlanInstance = buildPlanInstance;
             }));
     }
 
     ngOnDestroy() {
-        this.subscriptions.forEach(subscription => {
+        this.subscriptions.forEach((subscription) => {
             subscription.unsubscribe();
         });
     }

@@ -38,8 +38,10 @@ export class ProgressbarComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit() {
-        this.subscriptions.push(this.ngRedux.select(state => state.liveModelingState.state)
-            .subscribe(state => {
+        this.subscriptions.push(this.ngRedux.select((state) => {
+            return state.liveModelingState.state;
+        })
+            .subscribe((state) => {
                 this.toggleProgressbar(state);
                 this.updateProgressbarContent(state);
             }));
@@ -82,6 +84,8 @@ export class ProgressbarComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy() {
-        this.subscriptions.forEach(subscription => subscription.unsubscribe());
+        this.subscriptions.forEach((subscription) => {
+            subscription.unsubscribe();
+        });
     }
 }

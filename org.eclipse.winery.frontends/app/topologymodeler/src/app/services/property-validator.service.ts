@@ -23,19 +23,25 @@ export class PropertyValidatorService {
 
     constructor(private ngRedux: NgRedux<IWineryState>,
                 private modalService: BsModalService) {
-        this.ngRedux.select(state => state.topologyRendererState.buttonsState.checkNodePropertiesButton)
-            .subscribe(checked => {
+        this.ngRedux.select((state) => {
+            return state.topologyRendererState.buttonsState.checkNodePropertiesButton;
+        })
+            .subscribe((checked) => {
                 this.validationEnabled = checked;
             });
-        this.ngRedux.select(state => state.wineryState.currentJsonTopology.nodeTemplates)
-            .subscribe(nodeTemplates => {
+        this.ngRedux.select((state) => {
+            return state.wineryState.currentJsonTopology.nodeTemplates;
+        })
+            .subscribe((nodeTemplates) => {
                 this.nodeTemplates = nodeTemplates;
             });
     }
 
     public isTopologyInvalid(): boolean {
         if (this.validationEnabled) {
-            return this.nodeTemplates.some(node => !node.valid);
+            return this.nodeTemplates.some((node) => {
+                return !node.valid;
+            });
         } else {
             return false;
         }

@@ -90,12 +90,24 @@ export class NavbarComponent implements OnDestroy {
                 public configurationService: WineryRepositoryConfigurationService,
                 private versionSliderService: VersionSliderService,
                 private che: CheService) {
-        this.subscriptions.push(ngRedux.select(state => state.topologyRendererState)
-            .subscribe(newButtonsState => this.setButtonsState(newButtonsState)));
-        this.subscriptions.push(ngRedux.select(currentState => currentState.wineryState.currentJsonTopology)
-            .subscribe(topologyTemplate => this.currentTopologyTemplate = topologyTemplate));
-        this.subscriptions.push(ngRedux.select(currentState => currentState.wineryState.unsavedChanges)
-            .subscribe(unsavedChanges => this.unsavedChanges = unsavedChanges));
+        this.subscriptions.push(ngRedux.select((state) => {
+            return state.topologyRendererState;
+        })
+            .subscribe((newButtonsState) => {
+                this.setButtonsState(newButtonsState);
+            }));
+        this.subscriptions.push(ngRedux.select((currentState) => {
+            return currentState.wineryState.currentJsonTopology;
+        })
+            .subscribe((topologyTemplate) => {
+                this.currentTopologyTemplate = topologyTemplate;
+            }));
+        this.subscriptions.push(ngRedux.select((currentState) => {
+            return currentState.wineryState.unsavedChanges;
+        })
+            .subscribe((unsavedChanges) => {
+                this.unsavedChanges = unsavedChanges;
+            }));
         this.hotkeysService.add(new Hotkey('mod+s', (event: KeyboardEvent): boolean => {
             event.stopPropagation();
             this.saveTopologyTemplateToRepository();
@@ -332,7 +344,7 @@ export class NavbarComponent implements OnDestroy {
     saveTopologyTemplateToRepository() {
         this.overlayService.showOverlay('Saving topology template. This may take a while.');
         this.backendService.saveTopologyTemplate(this.currentTopologyTemplate)
-            .subscribe(res => {
+            .subscribe((res) => {
                 if (res.ok) {
                     this.alert.success('<p>Saved the topology!<br>' + 'Response Status: '
                         + res.statusText + ' ' + res.status + '</p>');
@@ -340,7 +352,9 @@ export class NavbarComponent implements OnDestroy {
                     this.alert.info('<p>Something went wrong! <br>' + 'Response Status: '
                         + res.statusText + ' ' + res.status + '</p>');
                 }
-            }, err => this.alert.error(err.error))
+            }, (err) => {
+                this.alert.error(err.error);
+            })
             .add(() => {
                 this.topologyService.checkForSaveChanges();
                 this.topologyService.checkForDeployChanges();
@@ -352,7 +366,9 @@ export class NavbarComponent implements OnDestroy {
      * Angular lifecycle event.
      */
     ngOnDestroy() {
-        this.subscriptions.forEach(subscription => subscription.unsubscribe());
+        this.subscriptions.forEach((subscription) => {
+            subscription.unsubscribe();
+        });
     }
 
     openManagementUi() {

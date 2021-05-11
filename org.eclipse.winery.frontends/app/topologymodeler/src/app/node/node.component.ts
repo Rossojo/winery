@@ -279,8 +279,10 @@ export class NodeComponent implements OnInit, AfterViewInit, OnDestroy, DoCheck 
 
         this.addNewVersions(new QName(this.nodeTemplate.type));
 
-        this.subscriptions.push(this.$ngRedux.select(wineryState => wineryState.liveModelingState.state)
-            .subscribe(liveModelingState => {
+        this.subscriptions.push(this.$ngRedux.select((wineryState) => {
+            return wineryState.liveModelingState.state;
+        })
+            .subscribe((liveModelingState) => {
                 this.liveModelingEnabled = liveModelingState !== LiveModelingStates.DISABLED;
             }));
     }
@@ -537,10 +539,10 @@ export class NodeComponent implements OnInit, AfterViewInit, OnDestroy, DoCheck 
             this.artifactsChangedSubscription.unsubscribe();
         }
 
-        /*this.subscriptions.forEach((subscription: Subscription) => {
+        this.subscriptions.forEach((subscription: Subscription) => {
             subscription.unsubscribe();
         });
-        this.subscriptions = [];*/
+        this.subscriptions = [];
     }
 
     /**

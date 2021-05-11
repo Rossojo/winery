@@ -142,12 +142,15 @@ export class LiveModelingService {
             this.state !== LiveModelingStates.RECONFIGURATE;
     }
 
+    public propertStateForDeploy(): boolean {
+        return this.state !== LiveModelingStates.INIT &&
+            this.state !== LiveModelingStates.TERMINATED &&
+            this.state !== LiveModelingStates.ERROR;
+    }
+    
     public async deploy(startInstance: boolean): Promise<void> {
         try {
-            if (this.state !== LiveModelingStates.INIT &&
-                this.state !== LiveModelingStates.TERMINATED &&
-                this.state !== LiveModelingStates.ERROR
-            ) {
+            if (this.propertStateForDeploy()) {
                 this.toastrService.error('Unauthorized action');
                 return;
             }
@@ -171,12 +174,15 @@ export class LiveModelingService {
         }
     }
 
+    public isProperStateForUpdate(): boolean {
+        return this.state !== LiveModelingStates.DEPLOY &&
+        this.state !== LiveModelingStates.ENABLED &&
+        this.state !== LiveModelingStates.RECONFIGURATE;
+    }
+    
     public async update(): Promise<void> {
         try {
-            if (this.state !== LiveModelingStates.DEPLOY &&
-                this.state !== LiveModelingStates.ENABLED &&
-                this.state !== LiveModelingStates.RECONFIGURATE
-            ) {
+            if (this.isProperStateForUpdate()) {
                 this.toastrService.error('Unauthorized action');
                 return;
             }
@@ -451,7 +457,9 @@ export class LiveModelingService {
                 timeout(this.settings.timeout),
                 // TODO: fix
                 // takeWhile(state => state !== desiredInstanceState && state !== ServiceTemplateInstanceStates.ERROR, true),
-                takeWhile(state => state !== desiredInstanceState && state !== ServiceTemplateInstanceStates.ERROR),
+                takeWhile((state) => {
+                    return state !== desiredInstanceState && state !== ServiceTemplateInstanceStates.ERROR;
+                }),
             ).subscribe((state) => {
                 this.ngRedux.dispatch(this.liveModelingActions.setCurrentServiceTemplateInstanceState(state));
                 if (state === ServiceTemplateInstanceStates.ERROR) {
@@ -506,7 +514,7 @@ export class LiveModelingService {
     private updateNodeTemplateData(csarId: string, serviceTemplateInstanceId: string): Observable<NodeTemplateInstance[]> {
         this.loggingService.logInfo('Fetching node template data');
         return this.containerService.getNodeTemplates(csarId).pipe(
-            switchMap(nodeTemplates => {
+            switchMap((nodeTemplates) => {
                 const observables: Observable<NodeTemplateInstance>[] = [];
                 for (const nodeTemplate of nodeTemplates) {
                     observables.push(this.containerService.getNodeTemplateInstance(
@@ -522,7 +530,7 @@ export class LiveModelingService {
                 }
                 return forkJoin(observables);
             }),
-            catchError(error => {
+            catchError((error) => {
                 this.loggingService.logWarning('Unable to fetch node templates');
                 return of(null);
             })
@@ -532,7 +540,7 @@ export class LiveModelingService {
     private updateCurrentServiceTemplateInstanceState(csarId: string, serviceTemplateInstanceId: string): Observable<ServiceTemplateInstanceStates> {
         this.loggingService.logInfo('Fetching service template instance state');
         return this.containerService.getServiceTemplateInstanceState(csarId, serviceTemplateInstanceId).pipe(
-            catchError(error => {
+            catchError((error) => {
                 this.loggingService.logWarning('Unable to fetch service template instance state');
                 return of(ServiceTemplateInstanceStates.NOT_AVAILABLE);
             })
@@ -615,7 +623,9 @@ export class LiveModelingService {
         return Observable.timer(0, this.settings.interval).pipe(
             concatMap(() => this.containerService.getServiceTemplateInstanceIdAfterTransformation(csarId, serviceTemplateInstanceId, correlationId, planId)),
             distinctUntilChanged(),
-            first(resp => resp !== ''),
+            first((resp) => {
+                return resp !== '';
+            }),
             timeout(this.settings.timeout)
         );
     }
@@ -645,7 +655,9 @@ export class LiveModelingService {
         const startingNodes = adaptationPayload.target_node_templates;
         const stoppingNodes = topologyTemplate.nodeTemplates.filter((n) => {
             return !startingNodes.includes(n.id);
-        }).map(n => n.id);
+        }).map((n) => {
+            return n.id;
+        });
 
         const observables = [];
         startingNodes.forEach((nodeId) => {
@@ -672,8 +684,10 @@ export class LiveModelingService {
                 timeout(this.settings.timeout),
                 // TODO: fix
                 // takeWhile(state => state !== desiredInstanceState && state !== NodeTemplateInstanceStates.ERROR, true),
-                takeWhile(state => state !== desiredInstanceState && state !== NodeTemplateInstanceStates.ERROR),
-            ).subscribe(state => {
+                takeWhile((state) => {
+                    return state !== desiredInstanceState && state !== NodeTemplateInstanceStates.ERROR;
+                }),
+            ).subscribe((state) => {
                 if (state === NodeTemplateInstanceStates.ERROR) {
                     reject(new NodeTemplateInstanceError());
                 }
@@ -729,7 +743,7 @@ export class LiveModelingService {
     private terminateServiceTemplateInstanceInBackground(csarId: string, serviceTemplateInstanceId: string): Subscription {
         return this.containerService.executeTerminationPlan(csarId, serviceTemplateInstanceId).subscribe((resp) => {
             this.toastrService.info('Instance successfully terminated');
-        }, error => {
+        }, (error) => {
             this.toastrService.error('There was an error while terminating the service template instance');
         });
     }
@@ -737,7 +751,7 @@ export class LiveModelingService {
     private deleteApplicationInBackground(csarId: string): Subscription {
         return this.containerService.deleteApplication(csarId).subscribe((resp) => {
             this.toastrService.info('Application successfully deleted');
-        }, error => {
+        }, (error) => {
             this.toastrService.error('There was an error while deleting the application');
         });
     }
@@ -789,7 +803,7 @@ export class LiveModelingService {
             inputParameters: inputParameters
         };
         const modalRef = this.modalService.show(InputParametersModalComponent, { initialState, backdrop: 'static' });
-        await new Promise(resolve => {
+        await new Promise((resolve) => {
             this.modalService.onHidden.subscribe((resp) => {
                 resolve();
             });
@@ -804,69 +818,83 @@ export class LiveModelingService {
 
     private generateAdaptationPayload(topologyTemplate: TTopologyTemplate, nodeTemplateId: string, adaptationAction: AdaptationAction): AdaptationPayload {
         // Calculate source node templates
-        const source_node_templates = [];
+        const sourceNodeTemplates = [];
         for (const nodeTemplate of topologyTemplate.nodeTemplates) {
             if (nodeTemplate.instanceState === NodeTemplateInstanceStates.STARTED) {
-                source_node_templates.push(nodeTemplate.id);
+                sourceNodeTemplates.push(nodeTemplate.id);
             }
         }
 
         // Calculate source relationship templates
-        const source_relationship_templates = [];
+        const sourceRelationshipTemplates = [];
         for (const relationshipTemplate of topologyTemplate.relationshipTemplates) {
-            if (source_node_templates.findIndex(n => n === relationshipTemplate.sourceElement.ref) > -1 &&
-                source_node_templates.findIndex(n => n === relationshipTemplate.targetElement.ref) > -1
+            if (sourceNodeTemplates.findIndex((n) => {
+                    return n === relationshipTemplate.sourceElement.ref;
+                }) > -1 &&
+                sourceNodeTemplates.findIndex((n) => {
+                    return n === relationshipTemplate.targetElement.ref;
+                }) > -1
             ) {
-                source_relationship_templates.push(relationshipTemplate.id);
+                sourceRelationshipTemplates.push(relationshipTemplate.id);
             }
         }
 
         // Recursively calculate all node templates that are dependent
-        const temp_node_templates = [];
-        temp_node_templates.push(nodeTemplateId);
-        const dependent_node_templates_set = new Set<string>();
-        while (temp_node_templates.length > 0) {
-            const nodeId = temp_node_templates.shift();
-            dependent_node_templates_set.add(nodeId);
+        const tempNodeTemplates = [];
+        tempNodeTemplates.push(nodeTemplateId);
+        const dependentNodeTemplatesSet = new Set<string>();
+        while (tempNodeTemplates.length > 0) {
+            const nodeId = tempNodeTemplates.shift();
+            dependentNodeTemplatesSet.add(nodeId);
             let tempRelationships: TRelationshipTemplate[];
             if (adaptationAction === AdaptationAction.START_NODE) {
-                tempRelationships = topologyTemplate.relationshipTemplates.filter(rel => rel.sourceElement.ref === nodeId);
+                tempRelationships = topologyTemplate.relationshipTemplates.filter((rel) => {
+                    return rel.sourceElement.ref === nodeId;
+                });
             } else {
-                tempRelationships = topologyTemplate.relationshipTemplates.filter(rel => rel.targetElement.ref === nodeId);
+                tempRelationships = topologyTemplate.relationshipTemplates.filter((rel) => {
+                    return rel.targetElement.ref === nodeId;
+                });
             }
             for (const tempRel of tempRelationships) {
                 if (adaptationAction === AdaptationAction.START_NODE) {
-                    temp_node_templates.push(tempRel.targetElement.ref);
+                    tempNodeTemplates.push(tempRel.targetElement.ref);
                 } else {
-                    temp_node_templates.push(tempRel.sourceElement.ref);
+                    tempNodeTemplates.push(tempRel.sourceElement.ref);
                 }
             }
         }
 
         // Holds all node templates that need to be started/stopped
-        let target_node_templates;
-        const dependent_node_templates = Array.from(dependent_node_templates_set);
+        let targetNodeTemplates;
+        const dependentNodeTemplates = Array.from(dependentNodeTemplatesSet);
         if (adaptationAction === AdaptationAction.START_NODE) {
-            target_node_templates = _.union(source_node_templates, dependent_node_templates);
+            targetNodeTemplates = _.union(sourceNodeTemplates, dependentNodeTemplates);
         } else {
-            target_node_templates = source_node_templates.filter(n => !dependent_node_templates.includes(n));
+            targetNodeTemplates = sourceNodeTemplates.filter((n) => {
+                return !dependentNodeTemplates.includes(n);
+            });
         }
 
         // Calculate source relationship templates
-        const target_relationship_templates = [];
+        const targetRelationshipTemplates = [];
         for (const relationshipTemplate of topologyTemplate.relationshipTemplates) {
-            if (target_node_templates.findIndex(n => n === relationshipTemplate.sourceElement.ref) > -1 &&
-                target_node_templates.findIndex(n => n === relationshipTemplate.targetElement.ref) > -1
+            if (targetNodeTemplates.findIndex((n) => {
+                    return n === relationshipTemplate.sourceElement.ref;
+                }) > -1 &&
+                targetNodeTemplates.findIndex((n) => {
+                    return n === relationshipTemplate.targetElement.ref;
+                }) > -1
             ) {
-                target_relationship_templates.push(relationshipTemplate.id);
+                targetRelationshipTemplates.push(relationshipTemplate.id);
             }
         }
 
         return {
-            source_node_templates: source_node_templates,
-            source_relationship_templates: source_relationship_templates,
-            target_node_templates: target_node_templates,
-            target_relationship_templates: target_relationship_templates
+            source_node_templates: sourceNodeTemplates,
+            source_relationship_templates: sourceRelationshipTemplates,
+            target_node_templates: targetNodeTemplates,
+            target_relationship_templates: targetRelationshipTemplates
         };
     }
 

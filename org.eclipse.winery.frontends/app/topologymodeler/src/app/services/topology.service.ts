@@ -34,22 +34,30 @@ export class TopologyService {
                 private wineryActions: WineryActions,
                 private liveModelingActions: LiveModelingActions,
                 private backendService: BackendService) {
-        this.ngRedux.select(state => state.wineryState.currentJsonTopology)
-            .subscribe(topologyTemplate => {
+        this.ngRedux.select((state) => {
+            return state.wineryState.currentJsonTopology;
+        })
+            .subscribe((topologyTemplate) => {
                 this.currentJsonTopologyTemplate = topologyTemplate;
                 this.checkForSaveChanges();
             });
-        this.ngRedux.select(state => state.wineryState.lastSavedJsonTopology)
-            .subscribe(topologyTemplate => {
+        this.ngRedux.select((state) => {
+            return state.wineryState.lastSavedJsonTopology;
+        })
+            .subscribe((topologyTemplate) => {
                 this.lastSavedJsonTopologyTemplate = topologyTemplate;
             });
-        this.ngRedux.select(state => state.liveModelingState.deployedJsonTopology)
-            .subscribe(topologyTemplate => {
+        this.ngRedux.select((state) => {
+            return state.liveModelingState.deployedJsonTopology;
+        })
+            .subscribe((topologyTemplate) => {
                 this.deployedJsonTopologyTemplate = topologyTemplate;
                 this.checkForDeployChanges();
             });
-        this.ngRedux.select(state => state.liveModelingState.state)
-            .subscribe(state => {
+        this.ngRedux.select((state) => {
+            return state.liveModelingState.state;
+        })
+            .subscribe((state) => {
                 this.liveModelingState = state;
             });
     }
@@ -70,7 +78,7 @@ export class TopologyService {
         if (this.liveModelingState === LiveModelingStates.DISABLED || this.liveModelingState == null) {
             return;
         }
-        this.backendService.requestTopologyTemplate().subscribe(resp => {
+        this.backendService.requestTopologyTemplate().subscribe((resp) => {
             const changed = TopologyTemplateUtil.hasTopologyTemplateChanged(resp, this.deployedJsonTopologyTemplate);
             this.ngRedux.dispatch(this.liveModelingActions.setDeploymentChanges(changed));
         });

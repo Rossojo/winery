@@ -17,7 +17,7 @@
 }
 
 .wrapper .dropdown {
-    flex: 1
+    flex: 1;
 }
 
 .wrapper .dropdown-toggle {
@@ -37,7 +37,7 @@
     position: relative;
 }
 
-.input-wrapper-check:after {
+.input-wrapper-check::after {
     font-family: 'FontAwesome';
     content: '\f00c';
     position: absolute;
@@ -46,7 +46,7 @@
     right: 10px;
 }
 
-.input-wrapper-times:after {
+.input-wrapper-times::after {
     font-family: 'FontAwesome';
     content: '\f00d';
     position: absolute;

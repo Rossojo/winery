@@ -141,7 +141,7 @@ export class LiveModelingSidebarComponent implements OnInit, OnDestroy {
     async handleDeploy() {
         const resp = await this.openConfirmModal(
             'Deploy new Instance',
-            `Are you sure you want to deploy a new instance?`,
+            'Are you sure you want to deploy a new instance?',
             true,
             true
         );
@@ -287,8 +287,8 @@ export class LiveModelingSidebarComponent implements OnInit, OnDestroy {
             showStartOption: showStartOption
         };
         const modalRef = this.modalService.show(ConfirmModalComponent, { initialState, backdrop: 'static' });
-        await new Promise(resolve => {
-            const subscription = this.modalService.onHidden.subscribe(_ => {
+        await new Promise((resolve) => {
+            const subscription = this.modalService.onHidden.subscribe((_) => {
                 subscription.unsubscribe();
                 resolve();
             });
@@ -302,6 +302,8 @@ export class LiveModelingSidebarComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy() {
-        this.subscriptions.forEach(subscription => subscription.unsubscribe());
+        this.subscriptions.forEach((subscription) => {
+            subscription.unsubscribe();
+        });
     }
 }

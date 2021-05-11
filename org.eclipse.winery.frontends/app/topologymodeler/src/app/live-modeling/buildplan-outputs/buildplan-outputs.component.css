@@ -45,14 +45,13 @@
 }
 
 .parameters-table th {
-    background: #333333;
+    background: #333;
 }
 
 .parameters-table tr:nth-child(odd) {
-    background: #242424
+    background: #242424;
 }
 
 .parameters-table tr:nth-child(even) {
-    background: #292929
+    background: #292929;
 }
-

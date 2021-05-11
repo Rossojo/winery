@@ -63,7 +63,9 @@ export class NodeTemplateComponent implements OnInit, OnDestroy {
                 }
             }));
 
-        this.subscriptions.push(this.ngRedux.select(state => state.liveModelingState.state)
+        this.subscriptions.push(this.ngRedux.select((state) => {
+            return state.liveModelingState.state;
+        })
             .subscribe((state) => {
                 this.liveModelingState = state;
             }));

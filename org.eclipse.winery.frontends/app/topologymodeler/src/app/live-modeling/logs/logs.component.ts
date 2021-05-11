@@ -38,13 +38,13 @@ export class LogsComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     ngOnInit() {
-        this.subscriptions.push(this.loggingService.logStream.subscribe(logs => {
+        this.subscriptions.push(this.loggingService.logStream.subscribe((logs) => {
             this.logs = logs;
         }));
     }
 
     ngAfterViewInit(): void {
-        this.subscriptions.push(this.logItems.changes.subscribe(_ => {
+        this.subscriptions.push(this.logItems.changes.subscribe((_) => {
             this.scrollToBottom();
         }));
     }
@@ -85,6 +85,8 @@ export class LogsComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     ngOnDestroy() {
-        this.subscriptions.forEach(subscription => subscription.unsubscribe());
+        this.subscriptions.forEach((subscription) => {
+            subscription.unsubscribe();
+        });
     }
 }

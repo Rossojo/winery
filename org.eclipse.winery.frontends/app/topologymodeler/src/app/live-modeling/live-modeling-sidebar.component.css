@@ -92,7 +92,6 @@
 
 .btn-live-modeling {
     flex: 1 1 0px;
-    border: none;
     background-color: #353537;
     border: 1px solid #007bff;
     color: #007bff;
@@ -169,7 +168,6 @@ accordion-group {
     border-radius: 0;
     border: none;
 }
-
 
 ::ng-deep .card.customClass .card-header {
     background-color: transparent;

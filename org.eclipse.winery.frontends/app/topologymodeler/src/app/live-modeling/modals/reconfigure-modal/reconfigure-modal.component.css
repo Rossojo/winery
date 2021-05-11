@@ -17,9 +17,9 @@
     padding: 1em;
     display: flex;
     flex-direction: column;
-    border: 2px solid #dddddd;
+    border: 2px solid #ddd;
     cursor: pointer;
-    flex: 1 1 0px
+    flex: 1 1 0px;
 }
 
 .reconfigure-icon-container:hover {
@@ -60,7 +60,7 @@
 }
 
 .disabled-icon-container {
-    color: #dddddd;
+    color: #ddd;
     pointer-events: none;
     cursor: not-allowed;
 }
@@ -68,7 +68,7 @@
 .warning-container {
     width: 100%;
     padding: 0.5em;
-    background-color: #F8F4C3;
+    background-color: #f8f4c3;
     color: #a5893c;
     margin-bottom: 10px;
 }

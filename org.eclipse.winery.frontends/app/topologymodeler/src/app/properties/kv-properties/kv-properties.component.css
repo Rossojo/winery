@@ -17,7 +17,7 @@
     width: 100%;
 }
 
-.kv-table td{
+.kv-table td {
     padding: 2px;
 }
 
@@ -33,6 +33,6 @@
     border-color: #ff4a5b;
 }
 
-:host >> .tooltip {
+:host > .tooltip {
     font-size: x-small;
 }
