@@ -147,7 +147,7 @@ export class LiveModelingService {
             this.state !== LiveModelingStates.TERMINATED &&
             this.state !== LiveModelingStates.ERROR;
     }
-    
+
     public async deploy(startInstance: boolean): Promise<void> {
         try {
             if (this.propertStateForDeploy()) {
@@ -179,7 +179,7 @@ export class LiveModelingService {
         this.state !== LiveModelingStates.ENABLED &&
         this.state !== LiveModelingStates.RECONFIGURATE;
     }
-    
+
     public async update(): Promise<void> {
         try {
             if (this.isProperStateForUpdate()) {
