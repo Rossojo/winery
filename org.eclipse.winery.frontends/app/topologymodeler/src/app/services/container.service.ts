@@ -219,16 +219,16 @@ export class ContainerService {
             'source_csar_name': sourceCsarId,
             'target_csar_name': targetCsarId
         };
-        
+
         // transformationPlan_LiveModelingTest_w1-wip1-live-20210505-125229-w1-wip1_to_LiveModelingTest_w1-wip1-live-20210505-125522-w1-wip1_1620212146871
-        
-        try{
-            
-        
+
+        try {
+
+
 
         const endpoint = this.combineURLs(this.containerUrl, 'csars/transform');
-        
-        let transformationPlanId = this.stripCsarSuffix(sourceCsarId) + '_to_' + this.stripCsarSuffix(targetCsarId) + '_plan';
+
+        const transformationPlanId = this.stripCsarSuffix(sourceCsarId) + '_to_' + this.stripCsarSuffix(targetCsarId) + '_plan';
         return this.http.post<Plan>(endpoint, transformPayload, this.headerContentJSON).pipe(map(resp => resp.id.toString()));
         } catch (error) {
             console.log(error);
@@ -243,8 +243,8 @@ export class ContainerService {
         inputParameters: InputParameter[]
     ): Observable<string> {
         const payload = [...inputParameters, ...this.baseTransformationPayload];
-try{
-    
+try {
+
 
         return this.getManagementPlan(sourceCsarId, serviceTemplateInstanceId, planId).pipe(
             concatMap(resp => this.http.post(resp._links['instances'].href,
@@ -256,7 +256,7 @@ try{
                     responseType: 'text'
                 }))
         );
-} catch(error){
+} catch (error) {
 console.log(error);
 }
     }
@@ -373,11 +373,11 @@ console.log(error);
     }
 
     private getBuildPlan(csarId: string): Observable<Plan> {
-        let result = this.getServiceTemplate(csarId).pipe(
+        const result = this.getServiceTemplate(csarId).pipe(
             concatMap(resp => this.http.get<PlanResources>(resp._links['buildplans'].href, this.headerAcceptJSON)),
             map(resp => resp.plans.find(plan => plan.plan_type === PlanTypes.BuildPlan))
-        ); 
-        return result; 
+        );
+        return result;
     }
 
     private getBuildPlanInstance(csarId: string, correlationId: string): Observable<PlanInstance> {

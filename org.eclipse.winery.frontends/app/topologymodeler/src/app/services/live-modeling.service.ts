@@ -508,13 +508,17 @@ export class LiveModelingService {
 
             return parameterPayload;
         } catch (error) {
-            console.log(error)
+            console.log(error);
             throw new RetrieveInputParametersError();
         }
     }
 
     private async transformServiceTemplateInstance(
-        sourceCsarId: string, targetCsarId: string, serviceTemplateInstanceId: string, transformationPayload: InputParameter[], planId: string): Promise<string> {
+        sourceCsarId: string,
+        targetCsarId: string,
+        serviceTemplateInstanceId: string,
+        transformationPayload: InputParameter[],
+        planId: string): Promise<string> {
         let correlationId;
         let newInstanceId;
         try {
