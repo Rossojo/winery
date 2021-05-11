@@ -78,7 +78,7 @@ export class ContainerService {
         { 'name': 'OpenTOSCAContainerAPIServiceInstanceURL', 'type': 'String', 'required': 'true' },
         { 'name': 'containerApiAddress', 'type': 'String', 'required': 'true' }
     ];
-    private readonly hidden_input_parameters = [
+    private readonly hiddenInputParameters = [
         'CorrelationID',
         'csarID',
         'serviceTemplateID',
@@ -95,18 +95,24 @@ export class ContainerService {
         private http: HttpClient,
     ) {
         this.ngRedux.select(state => state.liveModelingState.containerUrl)
-            .subscribe(containerUrl => this.containerUrl = containerUrl);
+            .subscribe((containerUrl) => {
+                this.containerUrl = containerUrl;
+            });
     }
 
     public getCsar(csarId: string): Observable<Csar> {
         const csarUrl = this.combineURLs(this.combineURLs(this.containerUrl, 'csars'), csarId);
-        return this.http.get<Csar>(csarUrl, this.headerAcceptJSON).pipe(map(resp => resp));
+        return this.http.get<Csar>(csarUrl, this.headerAcceptJSON).pipe(map((resp) => {
+            return resp;
+        }));
     }
 
     public isApplicationInstalled(csarId: string): Observable<boolean> {
         const csarUrl = this.combineURLs(this.combineURLs(this.containerUrl, 'csars'), csarId);
         return this.http.get(csarUrl, { observe: 'response' }).pipe(
-            map(resp => resp.ok),
+            map((resp) => {
+                return resp.ok;
+            }),
             catchError(() => of(false))
         );
     }
@@ -122,7 +128,9 @@ export class ContainerService {
 
     public getRequiredBuildPlanInputParameters(csarId: string): Observable<Array<InputParameter>> {
         return this.getAllBuildPlanInputParameters(csarId).pipe(
-            map(resp => resp.filter(input => this.hidden_input_parameters.indexOf(input.name) === -1))
+            map((resp) => {
+                return resp.filter(input => this.hiddenInputParameters.indexOf(input.name) === -1);
+            })
         );
     }
 
@@ -130,46 +138,62 @@ export class ContainerService {
         const payload = [...buildPlanInputParameters, ...this.baseInstallationPayload];
 
         return this.getBuildPlan(csarId).pipe(
-            concatMap(resp => this.http.post(resp._links['instances'].href, payload, {
+            concatMap((resp) => {
+                return this.http.post(resp._links['instances'].href, payload, {
                 headers: new HttpHeaders({
                     'Content-Type': 'application/json'
                 }),
                 responseType: 'text'
-            }))
+            });
+            })
         );
     }
 
     public initializeServiceTemplateInstance(csarId: string, correlationId: string): Observable<string> {
         return this.getServiceTemplate(csarId).pipe(
-            concatMap(resp => this.http.post(resp._links['instances'].href, { 'correlation_id': correlationId }, {
+            concatMap((resp) => {
+                return this.http.post(resp._links['instances'].href, { 'correlation_id': correlationId }, {
                 headers: new HttpHeaders({
                     'Content-Type': 'application/json'
                 }),
                 responseType: 'text'
-            })),
-            map(resp => resp.replace(/"|%22/g, '')),
-            concatMap(resp => this.http.get<ServiceTemplateInstance>(resp)),
-            map(resp => resp.id.toString())
+            });
+            }),
+            map((resp) => {
+                return resp.replace(/"|%22/g, '');
+            }),
+            concatMap((resp) => {
+                return this.http.get<ServiceTemplateInstance>(resp);
+            }),
+            map((resp) => {
+                return resp.id.toString();
+            })
         );
     }
 
     public getServiceTemplateInstanceIdAfterDeployment(csarId: string, correlationId: string): Observable<string> {
         return this.getBuildPlanInstance(csarId, correlationId).pipe(retry(10),
-            map(resp => resp ? resp.service_template_instance_id.toString() : ''),
+            map((resp) => {
+                return resp ? resp.service_template_instance_id.toString() : '';
+            }),
         );
     }
 
     public getServiceTemplateInstanceState(csarId: string, serviceTemplateInstanceId: string): Observable<ServiceTemplateInstanceStates> {
         return this.getServiceTemplateInstance(csarId, serviceTemplateInstanceId).pipe(
-            map(resp => ServiceTemplateInstanceStates[resp.state]),
+            map((resp) => {
+                return ServiceTemplateInstanceStates[resp.state];
+            }),
         );
     }
 
     public getServiceTemplateInstanceBuildPlanInstance(csarId: string, serviceTemplateInstanceId: string): Observable<PlanInstance> {
         return this.getServiceTemplateInstance(csarId, serviceTemplateInstanceId).pipe(
-            concatMap(resp => this.http.get<PlanInstance>(resp._links['build_plan_instance'].href, this.headerAcceptJSON)),
-            map(resp => {
-                resp.inputs = resp.inputs.filter(input => this.hidden_input_parameters.indexOf(input.name) === -1);
+            concatMap((resp) => {
+                return this.http.get<PlanInstance>(resp._links['build_plan_instance'].href, this.headerAcceptJSON)
+            }),
+            map((resp) => {
+                resp.inputs = resp.inputs.filter(input => this.hiddenInputParameters.indexOf(input.name) === -1);
                 return resp;
             })
         );
@@ -177,39 +201,55 @@ export class ContainerService {
 
     public getBuildPlanOutputParameters(csarId: string): Observable<Array<OutputParameter>> {
         return this.getBuildPlan(csarId).pipe(
-            map(resp => resp.output_parameters)
+            map((resp) => {
+                return resp.output_parameters;
+            })
         );
     }
 
     public getBuildPlanLogs(csarId: string, correlationId: string): Observable<Array<PlanLogEntry>> {
         return this.getBuildPlanInstance(csarId, correlationId).pipe(retry(10),
-            map(resp => resp.logs)
+            map((resp) => {
+                return resp.logs;
+            })
         );
     }
 
     public getNodeTemplates(csarId: string): Observable<Array<NodeTemplate>> {
         return this.getServiceTemplate(csarId).pipe(
-            concatMap(resp => this.http.get<NodeTemplateResources>(resp._links['nodetemplates'].href, this.headerAcceptJSON)),
-            map(resp => resp.node_templates)
+            concatMap((resp) => {
+                return this.http.get<NodeTemplateResources>(resp._links['nodetemplates'].href, this.headerAcceptJSON);
+            }),
+            map((resp) => {
+                return resp.node_templates;
+            })
         );
     }
 
     public getNodeTemplateInstance(csarId: string, serviceTemplateInstanceId: string, nodeTemplateId: string): Observable<NodeTemplateInstance> {
         return this.getNodeTemplates(csarId).pipe(
             // TODO: temporary until bug in container fixed (see https://github.com/OpenTOSCA/container/issues/133)
-            concatMap(resp => this.http.get<NodeTemplateInstanceResources>(
-                resp.find(template => template.id.toString() === nodeTemplateId)._links['self'].href + '/instances', this.headerAcceptJSON)
+            concatMap((resp) => {
+                return this.http.get<NodeTemplateInstanceResources>(
+                        resp.find(template => template.id.toString() === nodeTemplateId)._links['self'].href + '/instances', this.headerAcceptJSON);
+                }
             ),
-            map(resp => resp.node_template_instances.filter(n => n.service_template_instance_id.toString() === serviceTemplateInstanceId)),
-            concatMap(resp => this.http.get<NodeTemplateInstance>(
-                resp[resp.length - 1]._links['self'].href, this.headerAcceptJSON)
+            map((resp) => {
+                return resp.node_template_instances.filter(n => n.service_template_instance_id.toString() === serviceTemplateInstanceId)
+            }),
+            concatMap((resp) => {
+                return this.http.get<NodeTemplateInstance>(
+                        resp[resp.length - 1]._links['self'].href, this.headerAcceptJSON);
+                }
             )
         );
     }
 
     public getNodeTemplateInstanceState(csarId: string, serviceTemplateInstanceId: string, nodeTemplateId: string): Observable<NodeTemplateInstanceStates> {
         return this.getNodeTemplateInstance(csarId, serviceTemplateInstanceId, nodeTemplateId).pipe(
-            map(resp => NodeTemplateInstanceStates[resp.state]),
+            map((resp) => {
+                return NodeTemplateInstanceStates[resp.state];
+            }),
             catchError(() => of(NodeTemplateInstanceStates.NOT_AVAILABLE))
         );
     }
@@ -220,16 +260,11 @@ export class ContainerService {
             'target_csar_name': targetCsarId
         };
 
-        // transformationPlan_LiveModelingTest_w1-wip1-live-20210505-125229-w1-wip1_to_LiveModelingTest_w1-wip1-live-20210505-125522-w1-wip1_1620212146871
-
         try {
-
-
-
         const endpoint = this.combineURLs(this.containerUrl, 'csars/transform');
-
-        const transformationPlanId = this.stripCsarSuffix(sourceCsarId) + '_to_' + this.stripCsarSuffix(targetCsarId) + '_plan';
-        return this.http.post<Plan>(endpoint, transformPayload, this.headerContentJSON).pipe(map(resp => resp.id.toString()));
+        return this.http.post<Plan>(endpoint, transformPayload, this.headerContentJSON).pipe(map((resp) => {
+            return resp.id.toString();
+        }));
         } catch (error) {
             console.log(error);
         }
@@ -243,22 +278,22 @@ export class ContainerService {
         inputParameters: InputParameter[]
     ): Observable<string> {
         const payload = [...inputParameters, ...this.baseTransformationPayload];
-try {
-
-
-        return this.getManagementPlan(sourceCsarId, serviceTemplateInstanceId, planId).pipe(
-            concatMap(resp => this.http.post(resp._links['instances'].href,
-                payload,
-                {
-                    headers: new HttpHeaders({
-                        'Content-Type': 'application/json'
-                    }),
-                    responseType: 'text'
-                }))
-        );
-} catch (error) {
-console.log(error);
-}
+        try {
+            return this.getManagementPlan(sourceCsarId, serviceTemplateInstanceId, planId).pipe(
+                concatMap((resp) => {
+                    return this.http.post(resp._links['instances'].href,
+                        payload,
+                        {
+                            headers: new HttpHeaders({
+                                'Content-Type': 'application/json'
+                            }),
+                            responseType: 'text'
+                        });
+                })
+            );
+        } catch (error) {
+            console.log(error);
+        }
     }
 
     public getServiceTemplateInstanceIdAfterTransformation(
@@ -267,11 +302,17 @@ console.log(error);
         correlationId: string,
         planId: string): Observable<string> {
         return this.getManagementPlans(csarId, serviceTemplateInstanceId).pipe(
-            concatMap(resp => this.http.get<PlanInstanceResources>(
-                resp.find(plan => plan.id === planId && plan.plan_type === PlanTypes.TransformationPlan)._links['instances'].href, this.headerAcceptJSON)
+            concatMap((resp) => {
+                return this.http.get<PlanInstanceResources>(
+                        resp.find(plan => plan.id === planId && plan.plan_type === PlanTypes.TransformationPlan)._links['instances'].href, this.headerAcceptJSON);
+                }
             ),
-            map(resp => resp.plan_instances.find(
-                plan => plan.correlation_id.toString() === correlationId).outputs.find(output => output.name === 'instanceId').value),
+            map((resp) => {
+                return resp.plan_instances.find(
+                    (plan) => { 
+                        return plan.correlation_id.toString() === correlationId;
+                    }).outputs.find(output => output.name === 'instanceId').value;
+            }),
             catchError(() => of(''))
         );
     }
@@ -283,20 +324,30 @@ console.log(error);
         correlationId: string,
     ): Observable<Array<PlanLogEntry>> {
         return this.getManagementPlans(csarId, serviceTemplateInstanceId).pipe(
-            concatMap(resp => this.http.get<PlanInstanceResources>(
-                resp.find(plan => plan.id === planId && plan.plan_type === PlanTypes.TransformationPlan)._links['instances'].href, this.headerAcceptJSON)
+            concatMap((resp) => {
+                return this.http.get<PlanInstanceResources>(
+                        resp.find((plan) => {
+                            return plan.id === planId && plan.plan_type === PlanTypes.TransformationPlan;
+                        })._links['instances'].href, this.headerAcceptJSON);
+                }
             ),
-            map(resp => resp.plan_instances.find(plan => plan.correlation_id.toString() === correlationId).logs)
+            map((resp) => {
+                return resp.plan_instances.find((plan) => {
+                    return plan.correlation_id.toString() === correlationId;
+                }).logs
+            })
         );
     }
 
     public generateAdaptationPlan(csarId: string, payload: AdaptationPayload): Observable<Plan> {
         return this.getCsar(csarId).pipe(
-            concatMap(resp => this.http.post<Plan>(this.combineURLs(resp._links['servicetemplate'].href, 'transform'), payload, this.headerContentJSON)),
-            map(resp => {
+            concatMap((resp) => {
+                return this.http.post<Plan>(this.combineURLs(resp._links['servicetemplate'].href, 'transform'), payload, this.headerContentJSON);
+            }),
+            map((resp) => {
                 return {
                     ...resp,
-                    input_parameters: resp.input_parameters.filter(input => this.hidden_input_parameters.indexOf(input.name) === -1)
+                    input_parameters: resp.input_parameters.filter(input => this.hiddenInputParameters.indexOf(input.name) === -1)
                 };
             })
         );
@@ -304,7 +355,11 @@ console.log(error);
 
     public getManagementPlanInputParameters(csarId: string, serviceTemplateInstanceId: string, planId: string): Observable<InputParameter[]> {
         return this.getManagementPlan(csarId, serviceTemplateInstanceId, planId).pipe(
-            map(resp => resp.input_parameters.filter(input => this.hidden_input_parameters.indexOf(input.name) === -1))
+            map((resp) => {
+                return resp.input_parameters.filter((input) => {
+                    return this.hiddenInputParameters.indexOf(input.name) === -1;
+                });
+            })
         );
     }
 
@@ -317,14 +372,16 @@ console.log(error);
         const payload = [...inputParameters, ...this.baseManagementPayload];
 
         return this.getManagementPlan(csarId, serviceTemplateInstanceId, planId).pipe(
-            concatMap(resp => this.http.post(resp._links['instances'].href,
-                payload,
-                {
-                    headers: new HttpHeaders({
-                        'Content-Type': 'application/json'
-                    }),
-                    responseType: 'text'
-                }))
+            concatMap((resp) => {
+                return this.http.post(resp._links['instances'].href,
+                    payload,
+                    {
+                        headers: new HttpHeaders({
+                            'Content-Type': 'application/json'
+                        }),
+                        responseType: 'text'
+                    });
+            })
         );
     }
 
@@ -335,74 +392,111 @@ console.log(error);
         state: NodeTemplateInstanceStates
     ): Observable<any> {
         return this.getNodeTemplateInstance(csarId, serviceTemplateInstanceId, nodeTemplateId).pipe(
-            concatMap(resp => this.http.put(resp._links['state'].href, state.toString(), this.headerContentTextPlain))
+            concatMap((resp) => {
+                return this.http.put(resp._links['state'].href, state.toString(), this.headerContentTextPlain);
+            })
         );
     }
 
     public executeTerminationPlan(csarId: string, serviceTemplateInstanceId: string): Observable<string> {
         return this.getTerminationPlan(csarId, serviceTemplateInstanceId).pipe(
-            concatMap(resp => this.http.post(resp._links['instances'].href, this.baseManagementPayload, {
-                headers: new HttpHeaders({
-                    'Content-Type': 'application/json'
-                }),
-                responseType: 'text'
-            }))
+            concatMap((resp) => {
+                return this.http.post(resp._links['instances'].href, this.baseManagementPayload, {
+                    headers: new HttpHeaders({
+                        'Content-Type': 'application/json'
+                    }),
+                    responseType: 'text'
+                });
+            })
         );
     }
 
     private getServiceTemplate(csarId: string): Observable<ServiceTemplate> {
         return this.getCsar(csarId).pipe(
-            concatMap(resp => this.http.get<ServiceTemplate>(resp._links['servicetemplate'].href, this.headerAcceptJSON))
+            concatMap((resp) => {
+                return this.http.get<ServiceTemplate>(resp._links['servicetemplate'].href, this.headerAcceptJSON);
+            })
         );
     }
 
     private getServiceTemplateInstance(csarId: string, serviceTemplateInstanceId: string): Observable<ServiceTemplateInstance> {
         return this.getServiceTemplate(csarId).pipe(
-            concatMap(resp => this.http.get<ServiceTemplateInstanceResources>(resp._links['instances'].href, this.headerAcceptJSON)),
-            concatMap(resp => this.http.get<ServiceTemplateInstance>(
-                resp.service_template_instances.find(instance =>
-                    instance.id.toString() === serviceTemplateInstanceId)._links['self'].href, this.headerAcceptJSON)
+            concatMap((resp) => {
+                return this.http.get<ServiceTemplateInstanceResources>(resp._links['instances'].href, this.headerAcceptJSON);
+            }),
+            concatMap((resp) => {
+                return this.http.get<ServiceTemplateInstance>(
+                        resp.service_template_instances.find((instance) => {
+                            return instance.id.toString() === serviceTemplateInstanceId;
+                        })._links['self'].href, this.headerAcceptJSON);
+                }
             )
         );
     }
 
     private getAllBuildPlanInputParameters(csarId: string): Observable<Array<InputParameter>> {
         return this.getBuildPlan(csarId).pipe(
-            map(resp => resp.input_parameters)
+            map((resp) => {
+                return resp.input_parameters;
+            })
         );
     }
 
     private getBuildPlan(csarId: string): Observable<Plan> {
         const result = this.getServiceTemplate(csarId).pipe(
-            concatMap(resp => this.http.get<PlanResources>(resp._links['buildplans'].href, this.headerAcceptJSON)),
-            map(resp => resp.plans.find(plan => plan.plan_type === PlanTypes.BuildPlan))
+            concatMap((resp) => {
+                return this.http.get<PlanResources>(resp._links['buildplans'].href, this.headerAcceptJSON);
+            }),
+            map((resp) => {
+                return resp.plans.find((plan) => {
+                    return plan.plan_type === PlanTypes.BuildPlan;
+                });
+            })
         );
         return result;
     }
 
     private getBuildPlanInstance(csarId: string, correlationId: string): Observable<PlanInstance> {
         return this.getBuildPlan(csarId).pipe(
-            concatMap(resp => this.http.get<PlanInstanceResources>(resp._links['instances'].href, this.headerAcceptJSON)),
-            map(resp => resp.plan_instances.find(planInstance => planInstance.correlation_id.toString() === correlationId))
+            concatMap((resp) => {
+                return this.http.get<PlanInstanceResources>(resp._links['instances'].href, this.headerAcceptJSON);
+            }),
+            map((resp) => {
+                return resp.plan_instances.find((planInstance) => {
+                    return planInstance.correlation_id.toString() === correlationId;
+                });
+            })
         );
     }
 
     private getManagementPlans(csarId: string, serviceTemplateInstanceId: string): Observable<Array<Plan>> {
         return this.getServiceTemplateInstance(csarId, serviceTemplateInstanceId).pipe(
-            concatMap(resp => this.http.get<PlanResources>(resp._links['managementplans'].href, this.headerAcceptJSON)),
-            map(resp => resp.plans)
+            concatMap((resp) => {
+                return this.http.get<PlanResources>(resp._links['managementplans'].href, this.headerAcceptJSON);
+            }),
+            map((resp) => {
+                return resp.plans;
+            })
         );
     }
 
     private getManagementPlan(csarId: string, serviceTemplateInstanceId: string, planId: string): Observable<Plan> {
         return this.getManagementPlans(csarId, serviceTemplateInstanceId).pipe(
-            map(resp => resp.find(plan => plan.id.toString() === planId))
+            map((resp) => {
+                return resp.find((plan) => {
+                    return plan.id.toString() === planId;
+                });
+            })
         );
     }
 
     private getTerminationPlan(csarId: string, serviceTemplateInstanceId: string): Observable<Plan> {
         return this.getManagementPlans(csarId, serviceTemplateInstanceId).pipe(
-            map(resp => resp.find(plan => plan.plan_type === PlanTypes.TerminationPlan))
+            map((resp) => {
+                return resp.find((plan) => {
+                    return plan.plan_type === PlanTypes.TerminationPlan;
+                });
+            })
         );
     }
 

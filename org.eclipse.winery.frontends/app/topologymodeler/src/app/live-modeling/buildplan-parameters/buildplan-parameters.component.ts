@@ -34,7 +34,7 @@ export class BuildplanParametersComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit() {
-        this.subscriptions.push(this.ngRedux.select(state => state.liveModelingState.currentBuildPlanInstance)
+        this.subscriptions.push(this.ngRedux.select((state) => {return state.liveModelingState.currentBuildPlanInstance; })
             .subscribe(buildPlanInstance => {
                 if (buildPlanInstance && buildPlanInstance.hasOwnProperty('inputs')) {
                     this.buildPlanInputParameters = buildPlanInstance.inputs;
@@ -43,6 +43,6 @@ export class BuildplanParametersComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy() {
-        this.subscriptions.forEach(subscription => subscription.unsubscribe());
+        this.subscriptions.forEach((subscription) => {subscription.unsubscribe(); });
     }
 }

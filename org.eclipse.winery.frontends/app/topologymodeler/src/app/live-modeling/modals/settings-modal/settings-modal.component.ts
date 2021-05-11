@@ -38,8 +38,10 @@ export class SettingsModalComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit(): void {
-        this.subscriptions.push(this.ngRedux.select(state => state.liveModelingState.settings)
-            .subscribe(settings => {
+        this.subscriptions.push(this.ngRedux.select((state) => {
+            return state.liveModelingState.settings;
+        })
+            .subscribe((settings) => {
                 this.settings = settings;
             }));
     }
@@ -65,6 +67,8 @@ export class SettingsModalComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy() {
-        this.subscriptions.forEach(subscription => subscription.unsubscribe());
+        this.subscriptions.forEach((subscription) => {
+            subscription.unsubscribe();
+        });
     }
 }

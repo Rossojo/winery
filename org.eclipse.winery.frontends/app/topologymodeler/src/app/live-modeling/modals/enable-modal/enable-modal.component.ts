@@ -71,13 +71,13 @@ export class EnableModalComponent {
 
     checkContainerUrl(): Promise<boolean> {
         return this.http.get(this.containerUrl, { observe: 'response' }).pipe(
-            map(resp => resp.ok),
+            map((resp) => {return resp.ok; }),
         ).toPromise();
     }
 
     resetErrorsAndAnimations() {
-        this.testingContainerUrl = undefined;
-        this.isContainerUrlInvalid = undefined;
+        this.testingContainerUrl = null;
+        this.isContainerUrlInvalid = null;
     }
 
     handleSettings() {

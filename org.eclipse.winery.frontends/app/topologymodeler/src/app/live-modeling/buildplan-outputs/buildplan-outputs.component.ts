@@ -31,13 +31,14 @@ export class BuildplanOutputsComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit() {
-        this.subscriptions.push(this.ngRedux.select(state => state.liveModelingState.currentBuildPlanInstance)
-            .subscribe(buildPlanInstance => {
-                this.currentBuildPlanInstance = buildPlanInstance;
-            }));
+        // tslint:disable-next-line:no-unused-expression
+        this.subscriptions.push(this.ngRedux.select(state => {
+            return state.liveModelingState.currentBuildPlanInstance;
+        })
+            .subscribe(buildPlanInstance => { this.currentBuildPlanInstance = buildPlanInstance; }));
     }
 
     ngOnDestroy() {
-        this.subscriptions.forEach(subscription => subscription.unsubscribe());
+        this.subscriptions.forEach(subscription => {subscription.unsubscribe(); });
     }
 }

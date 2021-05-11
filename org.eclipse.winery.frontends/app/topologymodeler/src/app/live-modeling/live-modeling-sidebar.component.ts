@@ -82,32 +82,46 @@ export class LiveModelingSidebarComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit() {
-        this.subscriptions.push(this.ngRedux.select(wineryState => wineryState.liveModelingState.state)
-            .subscribe(liveModelingState => {
+        this.subscriptions.push(this.ngRedux.select((wineryState) => {
+            return wineryState.liveModelingState.state;
+        })
+            .subscribe((liveModelingState) => {
                 this.liveModelingState = liveModelingState;
             }));
-        this.subscriptions.push(this.ngRedux.select(wineryState => wineryState.liveModelingState.currentServiceTemplateInstanceId)
-            .subscribe(serviceTemplateInstanceId => {
+        this.subscriptions.push(this.ngRedux.select((wineryState) => {
+            return wineryState.liveModelingState.currentServiceTemplateInstanceId;
+        })
+            .subscribe((serviceTemplateInstanceId) => {
                 this.serviceTemplateInstanceId = serviceTemplateInstanceId;
             }));
-        this.subscriptions.push(this.ngRedux.select(wineryState => wineryState.liveModelingState.currentServiceTemplateInstanceState)
-            .subscribe(serviceTemplateInstanceState => {
+        this.subscriptions.push(this.ngRedux.select((wineryState) => {
+            return wineryState.liveModelingState.currentServiceTemplateInstanceState;
+        })
+            .subscribe((serviceTemplateInstanceState) => {
                 this.serviceTemplateInstanceState = serviceTemplateInstanceState;
             }));
-        this.subscriptions.push(this.ngRedux.select(wineryState => wineryState.wineryState.liveModelingSidebarOpenedState)
-            .subscribe(sidebarOpened => {
+        this.subscriptions.push(this.ngRedux.select((wineryState) => {
+            return wineryState.wineryState.liveModelingSidebarOpenedState;
+        })
+            .subscribe((sidebarOpened) => {
                 this.updateSidebarState(sidebarOpened);
             }));
-        this.subscriptions.push(this.ngRedux.select(wineryState => wineryState.wineryState.unsavedChanges)
-            .subscribe(unsavedChanges => {
+        this.subscriptions.push(this.ngRedux.select((wineryState) => {
+            return wineryState.wineryState.unsavedChanges;
+        })
+            .subscribe((unsavedChanges) => {
                 this.unsavedChanges = unsavedChanges;
             }));
-        this.subscriptions.push(this.ngRedux.select(wineryState => wineryState.liveModelingState.deploymentChanges)
-            .subscribe(deploymentChanges => {
+        this.subscriptions.push(this.ngRedux.select((wineryState) => {
+            return wineryState.liveModelingState.deploymentChanges;
+        })
+            .subscribe((deploymentChanges) => {
                 this.deploymentChanges = deploymentChanges;
             }));
-        this.subscriptions.push(this.ngRedux.select(wineryState => wineryState.liveModelingState.currentCsarId)
-            .subscribe(csarId => {
+        this.subscriptions.push(this.ngRedux.select((wineryState) => {
+            return wineryState.liveModelingState.currentCsarId;
+        })
+            .subscribe((csarId) => {
                 this.currentCsarId = csarId;
             }));
     }
@@ -143,7 +157,7 @@ export class LiveModelingSidebarComponent implements OnInit, OnDestroy {
     async handleRedeploy() {
         const resp = await this.openConfirmModal(
             'Redeploy new Instance',
-            `Are you sure you want to redeploy a new instance?`,
+            'Are you sure you want to redeploy a new instance?',
             true,
             true
         );
@@ -177,8 +191,8 @@ export class LiveModelingSidebarComponent implements OnInit, OnDestroy {
 
     async handleReconfiguration() {
         const modalRef = this.modalService.show(ReconfigureModalComponent, { backdrop: 'static' });
-        await new Promise(resolve => {
-            const subscription = this.modalService.onHidden.subscribe(_ => {
+        await new Promise((resolve) => {
+            const subscription = this.modalService.onHidden.subscribe((_) => {
                 subscription.unsubscribe();
                 resolve();
             });

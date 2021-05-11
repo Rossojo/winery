@@ -12,7 +12,6 @@
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
  *******************************************************************************/
 
-
 .live-modeling-sidebar-root {
     width: 60%;
     position: fixed;
@@ -30,8 +29,8 @@
 #toggleButton {
     height: 35px;
     box-shadow: initial;
-    background-color: #4A4A4F;
-    border: 1px solid #4A4A4F;
+    background-color: #4a4a4f;
+    border: 1px solid #4a4a4f;
     min-width: 300px;
     color: white;
     border-radius: 0 1px 1px 0;
@@ -49,7 +48,7 @@
     min-width: 300px;
     background-color: #353537;
     box-sizing: border-box;
-    flex-direction: row
+    flex-direction: row;
 }
 
 .live-modeling-sidebar-page {
@@ -95,8 +94,8 @@
     flex: 1 1 0px;
     border: none;
     background-color: #353537;
-    border: 1px solid #007BFF;
-    color: #007BFF;
+    border: 1px solid #007bff;
+    color: #007bff;
     letter-spacing: 0.05em;
     padding: 0.75em;
     border-radius: 0.25em;
@@ -107,13 +106,13 @@
 .btn-live-modeling:hover {
     cursor: pointer;
     color: white;
-    background-color: #007BFF;
+    background-color: #007bff;
 }
 
 .btn-live-modeling:active {
     cursor: pointer;
     color: white;
-    background-color: #233C4F;
+    background-color: #233c4f;
 }
 
 .btn-live-modeling-deploy {
@@ -146,13 +145,13 @@
 .btn-live-modeling[disabled] {
     border: 1px solid #404144;
     background-color: #404144;
-    color: #7A8387;
+    color: #7a8387;
     cursor: not-allowed;
 }
 
 .btn-footer-live-modeling {
     border: none;
-    border-top: 1px solid #4A4A4F;
+    border-top: 1px solid #4a4a4f;
     color: white;
 }
 

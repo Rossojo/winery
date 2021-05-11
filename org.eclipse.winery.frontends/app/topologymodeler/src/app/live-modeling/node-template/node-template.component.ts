@@ -52,8 +52,10 @@ export class NodeTemplateComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit() {
-        this.subscriptions.push(this.ngRedux.select(state => state.wineryState.sidebarContents)
-            .subscribe(sidebarContents => {
+        this.subscriptions.push(this.ngRedux.select((state) => {
+            return state.wineryState.sidebarContents;
+        })
+            .subscribe((sidebarContents) => {
                 if (sidebarContents.nodeClicked && sidebarContents.template.id) {
                     this.nodeSubject.next(sidebarContents.template.id);
                 } else {
@@ -62,26 +64,30 @@ export class NodeTemplateComponent implements OnInit, OnDestroy {
             }));
 
         this.subscriptions.push(this.ngRedux.select(state => state.liveModelingState.state)
-            .subscribe(state => {
+            .subscribe((state) => {
                 this.liveModelingState = state;
             }));
 
-        this.subscriptions.push(this.ngRedux.select(state => state.liveModelingState.deploymentChanges)
-            .subscribe(deploymentChanges => {
+        this.subscriptions.push(this.ngRedux.select((state) => {
+            return state.liveModelingState.deploymentChanges;
+        })
+            .subscribe((deploymentChanges) => {
                 this.deploymentChanges = deploymentChanges;
             }));
 
         this.subscriptions.push(this.nodeSubject.pipe(
             distinctUntilChanged(),
-            tap(nodeId => {
+            tap((nodeId) => {
                 this.selectedNodeId = nodeId;
                 this.selectedNodeState = NodeTemplateInstanceStates.NOT_AVAILABLE;
             }),
-            tap(_ => this.fetchingData = true),
-            switchMap(nodeId => {
+            tap((_) => {
+                this.fetchingData = true;
+            }),
+            switchMap((nodeId) => {
                 return nodeId ? this.liveModelingService.fetchNodeTemplateInstanceData(nodeId) : of(null);
             })
-        ).subscribe(resp => {
+        ).subscribe((resp) => {
             this.updateNodeInstanceData(resp);
             this.fetchingData = false;
         }));
@@ -100,14 +106,24 @@ export class NodeTemplateComponent implements OnInit, OnDestroy {
 
     enableControlButtons(): boolean {
         return this.selectedNodeId &&
-            !this.fetchingData &&
-            this.liveModelingState === LiveModelingStates.ENABLED &&
-            !this.deploymentChanges && (
-                this.selectedNodeState === NodeTemplateInstanceStates.NOT_AVAILABLE ||
-                this.selectedNodeState === NodeTemplateInstanceStates.STARTED ||
-                this.selectedNodeState === NodeTemplateInstanceStates.STOPPED ||
-                this.selectedNodeState === NodeTemplateInstanceStates.DELETED
-            );
+            this.checkUpdatingData() &&
+            this.checkLiveModelingState() &&
+             this.checkNodeState();
+    }
+
+    checkUpdatingData(): boolean {
+        return !this.fetchingData && !this.deploymentChanges;
+    }
+
+    checkLiveModelingState(): boolean {
+        return this.liveModelingState === LiveModelingStates.ENABLED;
+    }
+
+    checkNodeState(): boolean {
+        return this.selectedNodeState === NodeTemplateInstanceStates.NOT_AVAILABLE ||
+            this.selectedNodeState === NodeTemplateInstanceStates.STARTED ||
+            this.selectedNodeState === NodeTemplateInstanceStates.STOPPED ||
+            this.selectedNodeState === NodeTemplateInstanceStates.DELETED;
     }
 
     async handleStartNode() {
@@ -133,14 +149,10 @@ export class NodeTemplateComponent implements OnInit, OnDestroy {
     }
 
     async openConfirmModal(title: string, content: string, showWarning = false): Promise<boolean> {
-        const initialState = {
-            title: title,
-            content: content,
-            showWarning: showWarning
-        };
+        const initialState = {title, content, showWarning};
         const modalRef = this.modalService.show(ConfirmModalComponent, { initialState, backdrop: 'static' });
-        await new Promise(resolve => {
-            const subscription = this.modalService.onHidden.subscribe(_ => {
+        await new Promise((resolve) => {
+            const subscription = this.modalService.onHidden.subscribe((_) => {
                 subscription.unsubscribe();
                 resolve();
             });
@@ -166,6 +178,8 @@ export class NodeTemplateComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy() {
-        this.subscriptions.forEach(subscription => subscription.unsubscribe());
+        this.subscriptions.forEach((subscription) => {
+            subscription.unsubscribe();
+        });
     }
 }

@@ -60,8 +60,10 @@ export class KvPropertiesComponent implements OnInit, OnDestroy {
             this.initKVPatternMap();
         }
 
-        this.subscriptions.push(this.ngRedux.select(state => state.topologyRendererState.buttonsState.checkNodePropertiesButton)
-            .subscribe(checked => {
+        this.subscriptions.push(this.ngRedux.select((state) => {
+            return state.topologyRendererState.buttonsState.checkNodePropertiesButton;
+        })
+            .subscribe((checked) => {
                 this.checkEnabled = checked;
                 if (this.checkEnabled) {
                     this.checkAllProperties();
@@ -73,7 +75,7 @@ export class KvPropertiesComponent implements OnInit, OnDestroy {
 
         this.subscriptions.push(this.propertiesSubject.pipe(
             distinctUntilChanged(),
-        ).subscribe(property => {
+        ).subscribe((property) => {
             if (this.checkEnabled) {
                 this.checkProperty(property.key, property.value);
             }
@@ -98,10 +100,11 @@ export class KvPropertiesComponent implements OnInit, OnDestroy {
         try {
             const propertyDefinitionKVList =
                 this.nodeData.entityType.full.serviceTemplateOrNodeTypeOrNodeTypeImplementation[0].any[0].propertyDefinitionKVList;
-            propertyDefinitionKVList.forEach(prop => {
+            propertyDefinitionKVList.forEach((prop) => {
                 this.kvDescriptionMap[prop.key] = prop['description'];
             });
         } catch (e) {
+            console.log(e);
         }
     }
 
@@ -110,10 +113,11 @@ export class KvPropertiesComponent implements OnInit, OnDestroy {
         try {
             const propertyDefinitionKVList =
                 this.nodeData.entityType.full.serviceTemplateOrNodeTypeOrNodeTypeImplementation[0].any[0].propertyDefinitionKVList;
-            propertyDefinitionKVList.forEach(prop => {
+            propertyDefinitionKVList.forEach((prop) => {
                 this.kvPatternMap[prop.key] = prop['pattern'];
             });
         } catch (e) {
+            console.log(e);
         }
     }
 
@@ -130,7 +134,7 @@ export class KvPropertiesComponent implements OnInit, OnDestroy {
     }
 
     checkAllProperties() {
-        Object.keys(this.nodeProperties).forEach(key => {
+        Object.keys(this.nodeProperties).forEach((key) => {
             this.checkProperty(key, this.nodeProperties[key]);
         });
         this.checkForErrors();
@@ -140,17 +144,25 @@ export class KvPropertiesComponent implements OnInit, OnDestroy {
         try {
             delete this.invalidNodeProperties[key];
             if (value && this.kvPatternMap[key]) {
-                if (!(value.startsWith('get_input:') || value.startsWith('get_property:'))) {
-                    const pattern = this.kvPatternMap[key];
-                    if (!new RegExp(pattern).test(value)) {
-                        this.invalidNodeProperties[key] = pattern;
-                    }
+                if (!(this.isInputOrPropertyValue(value))) {
+                    this.checkAndSetPattern(key, value);
                 }
             }
         } catch (e) {
-
+            console.log(e);
         } finally {
             this.checkForErrors();
         }
+    }
+
+    checkAndSetPattern(key: string, value: string): void {
+        const pattern = this.kvPatternMap[key];
+        if (!new RegExp(pattern).test(value)) {
+            this.invalidNodeProperties[key] = pattern;
+        }
+    }
+
+    isInputOrPropertyValue(value: string): boolean {
+        return value.startsWith('get_input:') || value.startsWith('get_property:');
     }
 }

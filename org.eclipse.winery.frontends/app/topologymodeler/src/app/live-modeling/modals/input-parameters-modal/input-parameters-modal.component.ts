@@ -34,13 +34,21 @@ export class InputParametersModalComponent implements OnInit {
 
     disableButton(): boolean {
         for (let i = 0; i < this.inputParameters.length; i++) {
-            if (this.inputParameters[i].value === null ||
-                this.inputParameters[i].value === undefined ||
-                this.inputParameters[i].value === '') {
+            if (this.isUndefined(this.inputParameters[i].value)) {
                 return true;
             }
         }
         return false;
+    }
+
+    isUndefined(someString: string): boolean {
+        if (someString === null ||
+            typeof someString === 'undefined' ||
+            someString === '') {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     confirm() {

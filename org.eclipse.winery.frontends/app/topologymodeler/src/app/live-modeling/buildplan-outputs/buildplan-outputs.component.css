@@ -28,15 +28,18 @@
 
 .parameters-table {
     width: 100%;
-    table-layout: fixed ;
+    table-layout: fixed;
     border-collapse: collapse;
 }
 
-.parameters-table, .parameters-table th, .parameters-table td {
-    border: 1px solid #3D3D3D;
+.parameters-table,
+.parameters-table th,
+.parameters-table td {
+    border: 1px solid #3d3d3d;
 }
 
-.parameters-table th, .parameters-table td {
+.parameters-table th,
+.parameters-table td {
     width: 50%;
     word-break: break-all;
 }

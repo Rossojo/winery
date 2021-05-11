@@ -69,29 +69,53 @@ export class LiveModelingService {
         private loggingService: LoggingService,
         private toastrService: ToastrService) {
 
-        this.ngRedux.select(state => state.liveModelingState.currentCsarId)
-            .subscribe(csarId => this.currentCsarId = csarId);
-        this.ngRedux.select(state => state.liveModelingState.currentServiceTemplateInstanceId)
-            .subscribe(serviceTemplateInstanceId => this.currentServiceTemplateInstanceId = serviceTemplateInstanceId);
-        this.ngRedux.select(state => state.wineryState.currentJsonTopology)
-            .subscribe(topologyTemplate => this.currentTopologyTemplate = topologyTemplate);
-        this.ngRedux.select(state => state.wineryState.lastSavedJsonTopology)
-            .subscribe(topologyTemplate => this.lastSavedTopologyTemplate = topologyTemplate);
-        this.ngRedux.select(state => state.liveModelingState.deployedJsonTopology)
-            .subscribe(topologyTemplate => this.deployedTopologyTemplate = topologyTemplate);
-        this.ngRedux.select(state => state.liveModelingState.state)
-            .subscribe(state => this.state = state);
-        this.ngRedux.select(state => state.liveModelingState.settings)
-            .subscribe(settings => this.settings = settings);
+        this.ngRedux.select((state) => {
+            return state.liveModelingState.currentCsarId;
+        })
+            .subscribe((csarId) => {
+                this.currentCsarId = csarId;
+            });
+        this.ngRedux.select((state) => {
+            return state.liveModelingState.currentServiceTemplateInstanceId;
+        })
+            .subscribe((serviceTemplateInstanceId) => {
+                this.currentServiceTemplateInstanceId = serviceTemplateInstanceId;
+            });
+        this.ngRedux.select((state) => {
+            return state.wineryState.currentJsonTopology;
+        })
+            .subscribe((topologyTemplate) => {
+                this.currentTopologyTemplate = topologyTemplate;
+            });
+        this.ngRedux.select((state) => {
+            return state.wineryState.lastSavedJsonTopology;
+        })
+            .subscribe((topologyTemplate) => {
+                this.lastSavedTopologyTemplate = topologyTemplate;
+            });
+        this.ngRedux.select((state) => {
+            return state.liveModelingState.deployedJsonTopology;
+        })
+            .subscribe((topologyTemplate) => {
+                this.deployedTopologyTemplate = topologyTemplate;
+            });
+        this.ngRedux.select((state) => {
+            return state.liveModelingState.state;
+        })
+            .subscribe((state) => {
+                this.state = state;
+            });
+        this.ngRedux.select((state) => {
+            return state.liveModelingState.settings;
+        })
+            .subscribe((settings) => {
+                this.settings = settings;
+            });
     }
 
     public async init(startInstance: boolean, containerUrl?: string): Promise<void> {
         try {
-            if (this.state !== LiveModelingStates.DISABLED &&
-                this.state !== LiveModelingStates.TERMINATED &&
-                this.state !== LiveModelingStates.ERROR &&
-                this.state !== LiveModelingStates.RECONFIGURATE
-            ) {
+            if (this.liveModelingIsActive()) {
                 this.toastrService.error('Unauthorized action');
                 return;
             }
@@ -109,6 +133,13 @@ export class LiveModelingService {
         } catch (error) {
             this.handleError(error);
         }
+    }
+    
+    public liveModelingIsActive(): boolean {
+        return this.state !== LiveModelingStates.DISABLED &&
+            this.state !== LiveModelingStates.TERMINATED &&
+            this.state !== LiveModelingStates.ERROR &&
+            this.state !== LiveModelingStates.RECONFIGURATE;
     }
 
     public async deploy(startInstance: boolean): Promise<void> {
@@ -161,10 +192,7 @@ export class LiveModelingService {
 
     public async redeploy(startInstance: boolean): Promise<void> {
         try {
-            if (this.state !== LiveModelingStates.ENABLED &&
-                this.state !== LiveModelingStates.ERROR &&
-                this.state !== LiveModelingStates.TERMINATED
-            ) {
+            if (this.properStateForRedeploy()) {
                 this.toastrService.error('Unauthorized action');
                 return;
             }
@@ -182,6 +210,12 @@ export class LiveModelingService {
         } catch (error) {
             this.handleError(error);
         }
+    }
+    
+    public properStateForRedeploy(): boolean {
+        return this.state !== LiveModelingStates.ENABLED &&
+            this.state !== LiveModelingStates.ERROR &&
+            this.state !== LiveModelingStates.TERMINATED;
     }
 
     public async transform(): Promise<void> {
@@ -267,9 +301,7 @@ export class LiveModelingService {
 
     public disable(): Promise<void> {
         try {
-            if (this.state !== LiveModelingStates.ENABLED &&
-                this.state !== LiveModelingStates.TERMINATED &&
-                this.state !== LiveModelingStates.ERROR) {
+            if (this.properStateForDisable()) {
                 this.toastrService.error('Unauthorized action');
                 return;
             }
@@ -288,6 +320,12 @@ export class LiveModelingService {
             this.handleError(error);
         }
     }
+    
+    public properStateForDisable(): boolean {
+        return this.state !== LiveModelingStates.ENABLED &&
+        this.state !== LiveModelingStates.TERMINATED &&
+        this.state !== LiveModelingStates.ERROR;
+    }
 
     // Action methods
 
@@ -305,6 +343,7 @@ export class LiveModelingService {
             this.overlayService.hideOverlay();
             return normalizedCsarId;
         } catch (error) {
+            console.log(error);
             throw new CreateLiveModelingTemplateError();
         }
     }
@@ -387,7 +426,9 @@ export class LiveModelingService {
         return Observable.timer(0, this.settings.interval).pipe(
             concatMap(() => this.containerService.getServiceTemplateInstanceIdAfterDeployment(csarId, correlationId)),
             distinctUntilChanged(),
-            first(resp => resp !== ''),
+            first((resp) => {
+                return resp !== '';
+            }),
             timeout(this.settings.timeout)
         );
     }
@@ -411,7 +452,7 @@ export class LiveModelingService {
                 // TODO: fix
                 // takeWhile(state => state !== desiredInstanceState && state !== ServiceTemplateInstanceStates.ERROR, true),
                 takeWhile(state => state !== desiredInstanceState && state !== ServiceTemplateInstanceStates.ERROR),
-            ).subscribe(state => {
+            ).subscribe((state) => {
                 this.ngRedux.dispatch(this.liveModelingActions.setCurrentServiceTemplateInstanceState(state));
                 if (state === ServiceTemplateInstanceStates.ERROR) {
                     reject(new ServiceTemplateInstanceError());
@@ -427,11 +468,17 @@ export class LiveModelingService {
     private updateLiveModelingData(csarId: string, serviceTemplateInstanceId: string): Promise<any> {
         return forkJoin([
             this.updateCsar(csarId)
-                .pipe(tap(resp => this.ngRedux.dispatch(this.liveModelingActions.setCurrentCsar(resp)))),
+                .pipe(tap((resp) => {
+                    this.ngRedux.dispatch(this.liveModelingActions.setCurrentCsar(resp));
+                })),
             this.updateBuildPlanInstance(csarId, serviceTemplateInstanceId)
-                .pipe(tap(resp => this.ngRedux.dispatch(this.liveModelingActions.setCurrentBuildPlanInstance(resp)))),
+                .pipe(tap((resp) => {
+                    this.ngRedux.dispatch(this.liveModelingActions.setCurrentBuildPlanInstance(resp));
+                })),
             this.updateCurrentServiceTemplateInstanceState(csarId, serviceTemplateInstanceId)
-                .pipe(tap(resp => this.ngRedux.dispatch(this.liveModelingActions.setCurrentServiceTemplateInstanceState(resp)))),
+                .pipe(tap((resp) => {
+                    this.ngRedux.dispatch(this.liveModelingActions.setCurrentServiceTemplateInstanceState(resp));
+                })),
             this.updateNodeTemplateData(csarId, serviceTemplateInstanceId)
         ]).toPromise();
     }
@@ -439,7 +486,7 @@ export class LiveModelingService {
     private updateCsar(csarId: string): Observable<Csar> {
         this.loggingService.logInfo('Fetching csar information');
         return this.containerService.getCsar(csarId).pipe(
-            catchError(error => {
+            catchError((error) => {
                 this.loggingService.logWarning('Unable to fetch csar information');
                 return of(null);
             })
@@ -447,9 +494,9 @@ export class LiveModelingService {
     }
 
     private updateBuildPlanInstance(csarId: string, serviceTemplateInstanceId: string): Observable<PlanInstance> {
-        this.loggingService.logInfo(`Fetching service template instance build plan instance`);
+        this.loggingService.logInfo('Fetching service template instance build plan instance');
         return this.containerService.getServiceTemplateInstanceBuildPlanInstance(csarId, serviceTemplateInstanceId).pipe(
-            catchError(error => {
+            catchError((error) => {
                 this.loggingService.logWarning('Unable to fetch build plan instance');
                 return of(null);
             })
@@ -457,18 +504,18 @@ export class LiveModelingService {
     }
 
     private updateNodeTemplateData(csarId: string, serviceTemplateInstanceId: string): Observable<NodeTemplateInstance[]> {
-        this.loggingService.logInfo(`Fetching node template data`);
+        this.loggingService.logInfo('Fetching node template data');
         return this.containerService.getNodeTemplates(csarId).pipe(
             switchMap(nodeTemplates => {
                 const observables: Observable<NodeTemplateInstance>[] = [];
                 for (const nodeTemplate of nodeTemplates) {
                     observables.push(this.containerService.getNodeTemplateInstance(
                         csarId, serviceTemplateInstanceId, nodeTemplate.id).pipe(
-                        tap(resp => {
+                        tap((resp) => {
                             this.ngRedux.dispatch(this.wineryActions.setNodeInstanceState(resp.node_template_id, NodeTemplateInstanceStates[resp.state]));
                         }),
-                        catchError(error => {
-                            this.loggingService.logWarning(`Unable to fetch data for node ${nodeTemplate.id}`);
+                        catchError((error) => {
+                            this.loggingService.logWarning('Unable to fetch data for node ${nodeTemplate.id}');
                             return of(null);
                         })
                     ));
@@ -483,7 +530,7 @@ export class LiveModelingService {
     }
 
     private updateCurrentServiceTemplateInstanceState(csarId: string, serviceTemplateInstanceId: string): Observable<ServiceTemplateInstanceStates> {
-        this.loggingService.logInfo(`Fetching service template instance state`);
+        this.loggingService.logInfo('Fetching service template instance state');
         return this.containerService.getServiceTemplateInstanceState(csarId, serviceTemplateInstanceId).pipe(
             catchError(error => {
                 this.loggingService.logWarning('Unable to fetch service template instance state');
@@ -539,7 +586,7 @@ export class LiveModelingService {
 
             await this.waitUntilServiceTemplateInstanceIsInState(targetCsarId, newInstanceId, ServiceTemplateInstanceStates.CREATED);
 
-            this.loggingService.logSuccess(`Successfully transformed service template instance from ${prevServiceTemplateInstanceId} to ${newInstanceId}`);
+            this.loggingService.logSuccess('Successfully transformed service template instance from ${prevServiceTemplateInstanceId} to ${newInstanceId}');
             return newInstanceId;
         } catch (error) {
             console.log(error);
@@ -596,14 +643,16 @@ export class LiveModelingService {
         topologyTemplate: TTopologyTemplate,
         adaptationPayload: AdaptationPayload) {
         const startingNodes = adaptationPayload.target_node_templates;
-        const stoppingNodes = topologyTemplate.nodeTemplates.filter(n => !startingNodes.includes(n.id)).map(n => n.id);
+        const stoppingNodes = topologyTemplate.nodeTemplates.filter((n) => {
+            return !startingNodes.includes(n.id);
+        }).map(n => n.id);
 
         const observables = [];
-        startingNodes.forEach(nodeId => {
+        startingNodes.forEach((nodeId) => {
             observables.push(
                 this.containerService.updateNodeTemplateInstanceState(csarId, serviceTemplateInstanceId, nodeId, NodeTemplateInstanceStates.STARTED));
         });
-        stoppingNodes.forEach(nodeId => {
+        stoppingNodes.forEach((nodeId) => {
             observables.push(
                 this.containerService.updateNodeTemplateInstanceState(csarId, serviceTemplateInstanceId, nodeId, NodeTemplateInstanceStates.DELETED));
         });
@@ -642,8 +691,10 @@ export class LiveModelingService {
                 return of(null);
             }
             return this.containerService.getNodeTemplateInstance(this.currentCsarId, this.currentServiceTemplateInstanceId, nodeTemplateId).pipe(
-                tap(resp => this.ngRedux.dispatch(this.wineryActions.setNodeInstanceState(nodeTemplateId, NodeTemplateInstanceStates[resp.state]))),
-                catchError(error => {
+                tap((resp) => {
+                    this.ngRedux.dispatch(this.wineryActions.setNodeInstanceState(nodeTemplateId, NodeTemplateInstanceStates[resp.state]));
+                }),
+                catchError((error) => {
                     this.loggingService.logWarning('Unable to fetch node template instance');
                     this.ngRedux.dispatch(this.wineryActions.setNodeInstanceState(nodeTemplateId, NodeTemplateInstanceStates.NOT_AVAILABLE));
                     return of(null);
@@ -657,11 +708,11 @@ export class LiveModelingService {
     private async terminateServiceTemplateInstance(csarId: string, serviceTemplateInstanceId: string): Promise<void> {
         try {
 
-            this.loggingService.logInfo(`Terminating service template instance ${serviceTemplateInstanceId}`);
+            this.loggingService.logInfo('Terminating service template instance ${serviceTemplateInstanceId}');
 
             await this.containerService.executeTerminationPlan(csarId, serviceTemplateInstanceId).toPromise();
 
-            this.loggingService.logInfo(`Waiting for deletion of service template instance with instance id ${serviceTemplateInstanceId}`);
+            this.loggingService.logInfo('Waiting for deletion of service template instance with instance id ${serviceTemplateInstanceId}');
 
             await this.waitUntilServiceTemplateInstanceIsInState(csarId, serviceTemplateInstanceId, ServiceTemplateInstanceStates.DELETED);
 
@@ -676,7 +727,7 @@ export class LiveModelingService {
     }
 
     private terminateServiceTemplateInstanceInBackground(csarId: string, serviceTemplateInstanceId: string): Subscription {
-        return this.containerService.executeTerminationPlan(csarId, serviceTemplateInstanceId).subscribe(resp => {
+        return this.containerService.executeTerminationPlan(csarId, serviceTemplateInstanceId).subscribe((resp) => {
             this.toastrService.info('Instance successfully terminated');
         }, error => {
             this.toastrService.error('There was an error while terminating the service template instance');
@@ -684,7 +735,7 @@ export class LiveModelingService {
     }
 
     private deleteApplicationInBackground(csarId: string): Subscription {
-        return this.containerService.deleteApplication(csarId).subscribe(resp => {
+        return this.containerService.deleteApplication(csarId).subscribe((resp) => {
             this.toastrService.info('Application successfully deleted');
         }, error => {
             this.toastrService.error('There was an error while deleting the application');
@@ -739,7 +790,7 @@ export class LiveModelingService {
         };
         const modalRef = this.modalService.show(InputParametersModalComponent, { initialState, backdrop: 'static' });
         await new Promise(resolve => {
-            this.modalService.onHidden.subscribe(resp => {
+            this.modalService.onHidden.subscribe((resp) => {
                 resolve();
             });
         });

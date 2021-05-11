@@ -33,6 +33,6 @@
     border-color: #ff4a5b;
 }
 
-:host >>> .tooltip {
+:host >> .tooltip {
     font-size: x-small;
 }
