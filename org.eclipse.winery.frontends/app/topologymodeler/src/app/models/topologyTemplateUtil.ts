@@ -316,6 +316,10 @@ export abstract class TopologyTemplateUtil {
     }
 
     static objectsEquals(o1: Object, o2: Object): boolean {
+        if (o1 === null && o2 === null) {
+            return true;
+        }
+
         return typeof o1 === 'object' && Object.keys(o1).length > 0
             ? Object.keys(o1).length === Object.keys(o2).length
             && Object.keys(o1).every((p) => {
