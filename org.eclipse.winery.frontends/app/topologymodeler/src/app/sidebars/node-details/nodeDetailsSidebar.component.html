@@ -50,7 +50,9 @@
                 <winery-properties
                     [templateId]="sidebarState.template.id"
                     [readonly]="readonly"
-                    [isNode]="sidebarState.nodeClicked">
+                    [isNode]="sidebarState.nodeClicked"
+                [nodeId]="sidebarState.template.id"
+                [currentNodeData]="sidebarState.nodeData">
                 </winery-properties>
             </div>
             <div *ngIf="sidebarState.nodeClicked == false">

@@ -478,7 +478,7 @@ export class NodeComponent implements OnInit, AfterViewInit, OnDestroy, DoCheck 
         };
         this.setDragSource.emit(dragSourceInfo);
     }
-
+    
     /**
      * Only display the sidebar if the click is no longpress (drag)
      */
@@ -488,12 +488,19 @@ export class NodeComponent implements OnInit, AfterViewInit, OnDestroy, DoCheck 
         if (this.longpress) {
             this.sendPaletteStatus.emit('close Sidebar');
             this.$ngRedux.dispatch(this.actions.triggerSidebar(
-                { sidebarContents: new DetailsSidebarState(false, true) }));
+                { sidebarContents: new DetailsSidebarState(false, true, {entityTypes: this.entityTypes,
+                        nodeTemplate: this.nodeTemplate,
+                        propertyDefinitionType: this.propertyDefinitionType,
+                        entityType: this.nodeEntityType} ) }));
         } else {
             this.$ngRedux.dispatch(this.actions.triggerSidebar({
                 sidebarContents: {
                     visible: true,
                     nodeClicked: true,
+                    nodeData: {entityTypes: this.entityTypes,
+                        nodeTemplate: this.nodeTemplate,
+                        propertyDefinitionType: this.propertyDefinitionType,
+                        entityType: this.nodeEntityType},
                     template: this.nodeTemplate,
                     // special handling for instance restrictions due to infinity
                     minInstances: this.nodeTemplate.minInstances,

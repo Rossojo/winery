@@ -18,8 +18,8 @@
 <winery-kv-properties *ngIf="propertyDefinitionType == 'KV'"
                       [readonly]="readonly"
                       [nodeProperties]="templateProperties"
-                      [nodeId]="nodeId"
-                      [nodeData]="currentNodeData"
+                      [nodeId]="this.nodeId"
+                      [nodeData]="this.currentNodeData"
                       (propertyEdited)="kvPropertyEdit($event)">
 </winery-kv-properties>
 
