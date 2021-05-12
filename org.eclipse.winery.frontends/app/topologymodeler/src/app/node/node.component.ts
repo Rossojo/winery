@@ -478,7 +478,7 @@ export class NodeComponent implements OnInit, AfterViewInit, OnDestroy, DoCheck 
         };
         this.setDragSource.emit(dragSourceInfo);
     }
-    
+
     /**
      * Only display the sidebar if the click is no longpress (drag)
      */
