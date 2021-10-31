@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.eclipse.winery.model.adaptation.instance.plugins.Ec2AmiRefinementPlugin;
@@ -143,7 +144,11 @@ public class InstanceModelRefinement {
 
                         return toscaDiscoveryPlugin;
                     });
-                selectedPlugin.apply(topologyTemplate, discoveryPlugin);
+                Set<String> pluginDiscoveredNodeIds = selectedPlugin.apply(topologyTemplate);
+                List<String> discoveredIds = new ArrayList<>();
+                discoveredIds.addAll(pluginDiscoveredNodeIds);
+                discoveredIds.addAll(discoveryPlugin.getDiscoveredIds());
+                discoveryPlugin.setDiscoveredIds(discoveredIds);
                 updateDiscoveryPluginsInServiceTemplate(serviceTemplate, new ObjectMapper(), toscaDiscoveryPlugins);
                 try {
                     repository.setElement(serviceTemplateId, serviceTemplate);

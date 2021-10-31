@@ -17,6 +17,7 @@ package org.eclipse.winery.model.adaptation.instance.plugins;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +34,6 @@ import org.eclipse.winery.model.tosca.TEntityTemplate;
 import org.eclipse.winery.model.tosca.TNodeTemplate;
 import org.eclipse.winery.model.tosca.TNodeType;
 import org.eclipse.winery.model.tosca.TTopologyTemplate;
-import org.eclipse.winery.model.tosca.ToscaDiscoveryPlugin;
 import org.eclipse.winery.model.tosca.utils.ModelUtilities;
 import org.eclipse.winery.repository.backend.IRepository;
 import org.eclipse.winery.repository.backend.RepositoryFactory;
@@ -56,14 +56,14 @@ public class Ec2AmiRefinementPlugin extends InstanceModelRefinementPlugin {
     }
 
     @Override
-    public TTopologyTemplate apply(
-            TTopologyTemplate template,
-            ToscaDiscoveryPlugin discoveryPlugin) {
+    public Set<String> apply(
+        TTopologyTemplate template) {
         List<TNodeTemplate> nodesToRefineByAmi = template.getNodeTemplates().stream()
             .filter(node -> this.matchToBeRefined.nodeIdsToBeReplaced.contains(node.getId()) && Objects.equals(node.getType(),
                 COMPUTE_QNAME))
             .collect(Collectors.toList());
-
+        
+        Set<String> discoveredNodeIds = new HashSet<>();
         for (TNodeTemplate curNode : nodesToRefineByAmi) {
             Optional.ofNullable(curNode.getProperties())
                 .filter(TEntityTemplate.WineryKVProperties.class::isInstance)
@@ -71,9 +71,13 @@ public class Ec2AmiRefinementPlugin extends InstanceModelRefinementPlugin {
                 .map(TEntityTemplate.WineryKVProperties::getKVProperties)
                 .map(properties -> properties.get(PROPERTY_EC2_AMI))
                 .map(typeByAmi::get)
-                .ifPresent(curNode::setType);
+                .ifPresent(value -> {
+                    curNode.setType(value);
+                    discoveredNodeIds.add(curNode.getId());
+                });
         }
-        return template;
+        
+        return discoveredNodeIds;
     }
 
     @Override

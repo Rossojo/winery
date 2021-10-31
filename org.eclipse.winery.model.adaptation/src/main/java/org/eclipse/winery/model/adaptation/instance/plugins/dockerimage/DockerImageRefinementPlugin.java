@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +35,6 @@ import org.eclipse.winery.model.tosca.TEntityTemplate;
 import org.eclipse.winery.model.tosca.TNodeTemplate;
 import org.eclipse.winery.model.tosca.TNodeType;
 import org.eclipse.winery.model.tosca.TTopologyTemplate;
-import org.eclipse.winery.model.tosca.ToscaDiscoveryPlugin;
 import org.eclipse.winery.model.tosca.utils.ModelUtilities;
 import org.eclipse.winery.repository.backend.IRepository;
 import org.eclipse.winery.repository.backend.RepositoryFactory;
@@ -68,14 +68,14 @@ public class DockerImageRefinementPlugin extends InstanceModelRefinementPlugin {
     }
 
     @Override
-    public TTopologyTemplate apply(
-        TTopologyTemplate template,
-        ToscaDiscoveryPlugin discoveryPlugin) {
+    public Set<String> apply(
+        TTopologyTemplate template) {
         List<TNodeTemplate> nodesToRefineByImage = template.getNodeTemplates().stream()
             .filter(node -> this.matchToBeRefined.nodeIdsToBeReplaced.contains(node.getId())
                 && Objects.equals(node.getType(), QNAME_DOCKER_CONTAINER))
             .collect(Collectors.toList());
 
+        Set<String> discoveredNodeIds = new HashSet<>();
         for (TNodeTemplate curNode : nodesToRefineByImage) {
             Optional<String> imageId = Optional.ofNullable(curNode.getProperties())
                 .filter(TEntityTemplate.WineryKVProperties.class::isInstance)
@@ -90,11 +90,13 @@ public class DockerImageRefinementPlugin extends InstanceModelRefinementPlugin {
                 .map(refinementHandlerByImage::get);
 
             if (imageId.isPresent() && imageRefinementHandler.isPresent()) {
-                imageRefinementHandler.get().handleNode(curNode, template, imageId.get(), discoveryPlugin);
+                Set<String> handlerDiscoveredNodeIds = imageRefinementHandler.get()
+                    .handleNode(curNode, template, imageId.get());
+                discoveredNodeIds.addAll(handlerDiscoveredNodeIds);
             }
         }
 
-        return null;
+        return discoveredNodeIds;
     }
 
     @Override

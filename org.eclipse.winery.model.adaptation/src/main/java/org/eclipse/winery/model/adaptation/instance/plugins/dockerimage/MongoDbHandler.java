@@ -14,9 +14,7 @@
 
 package org.eclipse.winery.model.adaptation.instance.plugins.dockerimage;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -27,7 +25,6 @@ import org.eclipse.winery.model.ids.definitions.NodeTypeId;
 import org.eclipse.winery.model.tosca.TNodeTemplate;
 import org.eclipse.winery.model.tosca.TNodeType;
 import org.eclipse.winery.model.tosca.TTopologyTemplate;
-import org.eclipse.winery.model.tosca.ToscaDiscoveryPlugin;
 import org.eclipse.winery.model.tosca.constants.ToscaBaseTypes;
 import org.eclipse.winery.model.tosca.utils.ModelUtilities;
 import org.eclipse.winery.repository.backend.IRepository;
@@ -54,10 +51,11 @@ public class MongoDbHandler implements ImageRefinementHandler {
     }
 
     @Override
-    public void handleNode(
+    public Set<String> handleNode(
         TNodeTemplate dockerContainer,
         TTopologyTemplate topologyTemplate,
-        String imageId, ToscaDiscoveryPlugin discoveryPlugin) {
+        String imageId) {
+        Set<String> discoveredNodeIds = new HashSet<>();
         IRepository repository = RepositoryFactory.getRepository();
 
         QName type;
@@ -84,9 +82,8 @@ public class MongoDbHandler implements ImageRefinementHandler {
             ToscaBaseTypes.hostedOnRelationshipType,
             topologyTemplate);
 
-        List<String> discoveredIds = new ArrayList<>(discoveryPlugin.getDiscoveredIds());
-        discoveredIds.add(dockerContainer.getId());
-        discoveredIds.add(mongo.getId());
-        discoveryPlugin.setDiscoveredIds(discoveredIds);
+        discoveredNodeIds.add(dockerContainer.getId());
+        discoveredNodeIds.add(mongo.getId());
+        return discoveredNodeIds;
     }
 }

@@ -16,6 +16,7 @@ package org.eclipse.winery.model.adaptation.instance.plugins;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
@@ -31,7 +32,6 @@ import org.eclipse.winery.model.tosca.TEntityTemplate;
 import org.eclipse.winery.model.tosca.TNodeTemplate;
 import org.eclipse.winery.model.tosca.TNodeType;
 import org.eclipse.winery.model.tosca.TTopologyTemplate;
-import org.eclipse.winery.model.tosca.ToscaDiscoveryPlugin;
 import org.eclipse.winery.model.tosca.constants.ToscaBaseTypes;
 import org.eclipse.winery.model.tosca.utils.ModelUtilities;
 import org.eclipse.winery.repository.backend.IRepository;
@@ -50,9 +50,9 @@ public class PetClinicRefinementPlugin extends InstanceModelRefinementPlugin {
     }
 
     @Override
-    public TTopologyTemplate apply(
-            TTopologyTemplate topology,
-            ToscaDiscoveryPlugin discoveryPlugin) {
+    public Set<String> apply(
+        TTopologyTemplate topology) {
+        Set<String> discoveredNodeIds = new HashSet<>();
         Optional<TNodeTemplate> first = topology.getNodeTemplates().stream()
             .filter(node -> this.matchToBeRefined.nodeIdsToBeReplaced.contains(node.getId())
                 && Objects.requireNonNull(node.getType()).equals(petClinic))
@@ -105,6 +105,8 @@ public class PetClinicRefinementPlugin extends InstanceModelRefinementPlugin {
                             ModelUtilities.createRelationshipTemplateAndAddToTopology(
                                 petClinicNode, db, ToscaBaseTypes.connectsToRelationshipType, topology
                             );
+                            discoveredNodeIds.add(petClinicNode.getId());
+                            discoveredNodeIds.add(db.getId());
                         });
                 }
 
@@ -112,7 +114,7 @@ public class PetClinicRefinementPlugin extends InstanceModelRefinementPlugin {
             }
         }
 
-        return topology;
+        return discoveredNodeIds;
     }
 
     @Override

@@ -19,6 +19,7 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -31,7 +32,6 @@ import org.eclipse.winery.model.ids.definitions.ServiceTemplateId;
 import org.eclipse.winery.model.tosca.TEntityTemplate;
 import org.eclipse.winery.model.tosca.TNodeTemplate;
 import org.eclipse.winery.model.tosca.TTopologyTemplate;
-import org.eclipse.winery.model.tosca.ToscaDiscoveryPlugin;
 import org.eclipse.winery.model.tosca.constants.OpenToscaBaseTypes;
 import org.eclipse.winery.repository.TestWithGitRepoAndSshServer;
 
@@ -72,11 +72,12 @@ class InstanceModelRefinementTest extends TestWithGitRepoAndSshServer {
                 ? null
                 : new InstanceModelRefinementPlugin("noop") {
                 @Override
-                public TTopologyTemplate apply(
-                        TTopologyTemplate template,
-                        ToscaDiscoveryPlugin discoveryPlugin) {
+                public Set<String> apply(
+                    TTopologyTemplate template) {
                     template.addNodeTemplate(mySpecialNode);
-                    return template;
+                    Set<String> discoveredNodeIds = new HashSet<>();
+                    discoveredNodeIds.add(mySpecialNode.getId());
+                    return discoveredNodeIds;
                 }
 
                 @Override

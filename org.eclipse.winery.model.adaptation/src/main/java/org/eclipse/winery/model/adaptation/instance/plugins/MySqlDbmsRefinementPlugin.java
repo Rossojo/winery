@@ -16,6 +16,7 @@ package org.eclipse.winery.model.adaptation.instance.plugins;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -31,7 +32,6 @@ import org.eclipse.winery.model.tosca.TEntityTemplate;
 import org.eclipse.winery.model.tosca.TNodeTemplate;
 import org.eclipse.winery.model.tosca.TNodeType;
 import org.eclipse.winery.model.tosca.TTopologyTemplate;
-import org.eclipse.winery.model.tosca.ToscaDiscoveryPlugin;
 import org.eclipse.winery.model.tosca.utils.ModelUtilities;
 import org.eclipse.winery.repository.backend.IRepository;
 import org.eclipse.winery.repository.backend.RepositoryFactory;
@@ -53,9 +53,9 @@ public class MySqlDbmsRefinementPlugin extends InstanceModelRefinementPlugin {
     }
 
     @Override
-    public TTopologyTemplate apply(
-            TTopologyTemplate template,
-            ToscaDiscoveryPlugin discoveryPlugin) {
+    public Set<String> apply(
+        TTopologyTemplate template) {
+        Set<String> discoveredNodeIds = new HashSet<>();
         try {
             Session session = InstanceModelUtils.createJschSession(template, this.matchToBeRefined.nodeIdsToBeReplaced);
             String mySQL_DBMS_version = InstanceModelUtils.executeCommand(
@@ -77,6 +77,7 @@ public class MySqlDbmsRefinementPlugin extends InstanceModelRefinementPlugin {
                     WineryVersion version = VersionUtils.getVersion(Objects.requireNonNull(mySQL.getType()).getLocalPart());
                     String[] split = mySQL_DBMS_version.split("\\.");
 
+                    discoveredNodeIds.add(mySQL.getId());
                     if (version.getComponentVersion() == null || !version.getComponentVersion().startsWith(split[0])) {
                         if ("5".equals(split[0]) && "5".equals(split[1])) {
                             mySQL.setType(mySql_5_5_QName);
@@ -96,7 +97,7 @@ public class MySqlDbmsRefinementPlugin extends InstanceModelRefinementPlugin {
             logger.error("Error while retrieving Tomcat information...", e);
         }
 
-        return template;
+        return discoveredNodeIds;
     }
 
     @Override

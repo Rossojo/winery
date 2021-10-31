@@ -16,6 +16,7 @@ package org.eclipse.winery.model.adaptation.instance.plugins;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -31,7 +32,6 @@ import org.eclipse.winery.model.tosca.TEntityTemplate;
 import org.eclipse.winery.model.tosca.TNodeTemplate;
 import org.eclipse.winery.model.tosca.TNodeType;
 import org.eclipse.winery.model.tosca.TTopologyTemplate;
-import org.eclipse.winery.model.tosca.ToscaDiscoveryPlugin;
 import org.eclipse.winery.model.tosca.constants.OpenToscaBaseTypes;
 import org.eclipse.winery.model.tosca.utils.ModelUtilities;
 import org.eclipse.winery.repository.backend.IRepository;
@@ -50,9 +50,9 @@ public class SpringWebAppRefinementPlugin extends InstanceModelRefinementPlugin 
     }
 
     @Override
-    public TTopologyTemplate apply(
-        TTopologyTemplate template,
-        ToscaDiscoveryPlugin discoveryPlugin) {
+    public Set<String> apply(
+        TTopologyTemplate template) {
+        Set<String> discoveredNodeIds = new HashSet<>();
         Session session = InstanceModelUtils.createJschSession(template, this.matchToBeRefined.nodeIdsToBeReplaced);
         String contextPath = InstanceModelUtils.executeCommand(
             session,
@@ -66,6 +66,7 @@ public class SpringWebAppRefinementPlugin extends InstanceModelRefinementPlugin 
                 && (springWebApp.equals(node.getType()) || petClinic.equals(node.getType())))
             .findFirst()
             .ifPresent(app -> {
+                discoveredNodeIds.add(app.getId());
                 if (app.getProperties() == null) {
                     app.setProperties(new TEntityTemplate.WineryKVProperties());
                 }
@@ -75,7 +76,7 @@ public class SpringWebAppRefinementPlugin extends InstanceModelRefinementPlugin 
                 }
             });
 
-        return template;
+        return discoveredNodeIds;
     }
 
     @Override
