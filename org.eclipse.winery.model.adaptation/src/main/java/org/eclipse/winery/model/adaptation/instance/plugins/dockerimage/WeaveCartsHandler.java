@@ -32,6 +32,8 @@ import org.eclipse.winery.repository.backend.RepositoryFactory;
 
 public class WeaveCartsHandler implements ImageRefinementHandler {
     private static final String IMAGE_ID_WEAVE_CART = "weaveworksdemos/carts:0.4.8";
+    private static final String IMAGE_ID_WEAVE_ORDER = "weaveworksdemos/orders:0.4.7";
+    private static final String IMAGE_ID_WEAVE_SHIPPING = "weaveworksdemos/shipping:0.4.8";
     private static final QName QNAME_ALPINE_CONTAINER = QName.valueOf(
         "{https://examples.opentosca.org/edmm/nodetypes}Alpine-Container");
     private static final QName QNAME_JAVA8 = QName.valueOf("{http://opentosca.org/nodetypes}Java8");
@@ -39,7 +41,8 @@ public class WeaveCartsHandler implements ImageRefinementHandler {
 
     @Override
     public Set<String> getTargetImages() {
-        return Stream.of(IMAGE_ID_WEAVE_CART).collect(Collectors.toSet());
+        return Stream.of(IMAGE_ID_WEAVE_CART, IMAGE_ID_WEAVE_ORDER, IMAGE_ID_WEAVE_SHIPPING)
+            .collect(Collectors.toSet());
     }
 
     @Override

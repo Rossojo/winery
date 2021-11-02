@@ -33,6 +33,7 @@ import org.eclipse.winery.repository.backend.RepositoryFactory;
 public class WeaveGoHandler implements ImageRefinementHandler {
     private static final String IMAGE_ID_WEAVE_CATALOGUE = "weaveworksdemos/catalogue:0.3.5";
     private static final String IMAGE_ID_WEAVE_USER = "weaveworksdemos/user:0.4.7";
+    private static final String IMAGE_ID_WEAVE_PAYMENT = "weaveworksdemos/payment:0.4.3";
     private static final QName QNAME_ALPINE_CONTAINER = QName.valueOf(
         "{https://examples.opentosca.org/edmm/nodetypes}Alpine-Container");
     private static final QName QNAME_GO_APP = QName.valueOf(
@@ -40,7 +41,8 @@ public class WeaveGoHandler implements ImageRefinementHandler {
 
     @Override
     public Set<String> getTargetImages() {
-        return Stream.of(IMAGE_ID_WEAVE_CATALOGUE, IMAGE_ID_WEAVE_USER).collect(Collectors.toSet());
+        return Stream.of(IMAGE_ID_WEAVE_CATALOGUE, IMAGE_ID_WEAVE_USER, IMAGE_ID_WEAVE_PAYMENT)
+            .collect(Collectors.toSet());
     }
 
     @Override

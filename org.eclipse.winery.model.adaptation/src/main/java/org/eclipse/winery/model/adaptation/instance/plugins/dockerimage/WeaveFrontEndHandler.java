@@ -32,7 +32,7 @@ import org.eclipse.winery.repository.backend.RepositoryFactory;
 
 public class WeaveFrontEndHandler implements ImageRefinementHandler {
     private static final String IMAGE_ID_WEAVE_FRONTEND = "weaveworksdemos/front-end:0.3.12";
-    private static final String IMAGE_ID_WEAVE_FRONTEND_ALT = "public.ecr.aws/s9j5x8n9/sock-shop-frontend:0.0.1";
+    private static final String IMAGE_ID_WEAVE_FRONTEND_ALT = "public.ecr.aws/s9j5x8n9/sock-shop-frontend:0.0.5";
     private static final QName QNAME_ALPINE_CONTAINER = QName.valueOf(
         "{https://examples.opentosca.org/edmm/nodetypes}Alpine-Container");
     private static final QName QNAME_NODEJS_10 = QName.valueOf("{http://opentosca.org/nodetypes}NodeJS_10.0");
