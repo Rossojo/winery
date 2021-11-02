@@ -65,6 +65,7 @@ import org.eclipse.winery.model.tosca.constants.ToscaBaseTypes;
 import org.eclipse.winery.model.tosca.extensions.kvproperties.PropertyDefinitionKV;
 import org.eclipse.winery.model.tosca.extensions.kvproperties.WinerysPropertiesDefinition;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Comment;
 import org.w3c.dom.Document;
@@ -856,7 +857,7 @@ public abstract class ModelUtilities {
                     .collect(
                         Collectors.joining(" "));
 
-                if (deploymentTechnologies == null
+                if (StringUtils.isBlank(supportedDeploymentTechnologies)
                     || "*".equals(supportedDeploymentTechnologies) || deploymentTechnologies.stream()
                     .anyMatch(s -> supportedDeploymentTechnologies.toLowerCase().contains(s.toLowerCase()))) {
                     list.stream()
