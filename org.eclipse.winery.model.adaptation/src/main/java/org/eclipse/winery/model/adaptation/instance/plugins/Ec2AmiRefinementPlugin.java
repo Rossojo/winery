@@ -45,6 +45,8 @@ public class Ec2AmiRefinementPlugin extends InstanceModelRefinementPlugin {
         "{http://docs.oasis-open.org/tosca/ToscaNormativeTypes/nodetypes}Compute");
     private static final QName UBUNTU_20_04_QNAME = QName.valueOf(
         "{https://examples.opentosca.org/edmm/nodetypes}Ubuntu_20.04.2-w1-wip1");
+    private static final QName UBUNTU_18_04_QNAME = QName.valueOf(
+        "{http://opentosca.org/nodetypes}Ubuntu-VM_18.04-w1");
 
     private static final String PROPERTY_EC2_AMI = "ec2-ami";
 
@@ -53,6 +55,7 @@ public class Ec2AmiRefinementPlugin extends InstanceModelRefinementPlugin {
     public Ec2AmiRefinementPlugin() {
         super("ec2ami");
         typeByAmi.put("ami-0af107682aaa86bd0", UBUNTU_20_04_QNAME);
+        typeByAmi.put("ami-00105f70a3660f2ae", UBUNTU_18_04_QNAME);
     }
 
     @Override
