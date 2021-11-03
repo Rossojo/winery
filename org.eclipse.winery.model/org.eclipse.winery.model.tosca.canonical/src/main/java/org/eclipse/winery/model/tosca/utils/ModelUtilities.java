@@ -58,13 +58,18 @@ import org.eclipse.winery.model.tosca.TRequirement;
 import org.eclipse.winery.model.tosca.TRequirementDefinition;
 import org.eclipse.winery.model.tosca.TServiceTemplate;
 import org.eclipse.winery.model.tosca.TTag;
+import org.eclipse.winery.model.tosca.TTags;
 import org.eclipse.winery.model.tosca.TTopologyTemplate;
+import org.eclipse.winery.model.tosca.DeploymentTechnologyDescriptor;
 import org.eclipse.winery.model.tosca.constants.Namespaces;
 import org.eclipse.winery.model.tosca.constants.QNames;
 import org.eclipse.winery.model.tosca.constants.ToscaBaseTypes;
 import org.eclipse.winery.model.tosca.extensions.kvproperties.PropertyDefinitionKV;
 import org.eclipse.winery.model.tosca.extensions.kvproperties.WinerysPropertiesDefinition;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.CollectionType;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Comment;
@@ -83,6 +88,7 @@ public abstract class ModelUtilities {
         "provider");
     public static final QName RELATIONSHIP_TEMPLATE_TRANSFER_TYPE =
         new QName(Namespaces.TOSCA_WINERY_EXTENSIONS_NAMESPACE, "dataTransferType");
+    public static final String TAG_DEPLOYMENT_TECHNOLOGIES = "jsonDeploymentTechnologies";
 
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(ModelUtilities.class);
     private static final DocumentBuilder DOCUMENT_BUILDER;
@@ -1064,5 +1070,32 @@ public abstract class ModelUtilities {
                 .anyMatch(policy -> policy.getPolicyType()
                     .equals(policyType)
                 );
+    }
+
+    public static List<DeploymentTechnologyDescriptor> extractDeploymentTechnologiesFromServiceTemplate(
+        TServiceTemplate serviceTemplate, ObjectMapper objectMapper) {
+        return Optional.ofNullable(serviceTemplate.getTags())
+            .map(tags -> extractDeploymentTechnologiesFromTags(tags, objectMapper))
+            .orElseGet(ArrayList::new);
+    }
+
+    public static List<DeploymentTechnologyDescriptor> extractDeploymentTechnologiesFromTags(
+        TTags tags, ObjectMapper objectMapper) {
+        return Optional.ofNullable(tags)
+            .map(TTags::getTag)
+            .flatMap(tTags -> tTags.stream()
+                .filter(tTag -> Objects.equals(tTag.getName(), TAG_DEPLOYMENT_TECHNOLOGIES))
+                .findAny())
+            .map(TTag::getValue)
+            .map(s -> {
+                CollectionType collectionType = objectMapper.getTypeFactory()
+                    .constructCollectionType(List.class, DeploymentTechnologyDescriptor.class);
+                try {
+                    return objectMapper.<List<DeploymentTechnologyDescriptor>>readValue(s, collectionType);
+                } catch (JsonProcessingException e) {
+                    throw new IllegalStateException("Deployment technologies tag could not be parsed as JSON", e);
+                }
+            })
+            .orElseGet(ArrayList::new);
     }
 }

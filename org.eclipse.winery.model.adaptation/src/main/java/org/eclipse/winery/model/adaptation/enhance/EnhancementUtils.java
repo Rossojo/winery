@@ -42,7 +42,7 @@ import org.eclipse.winery.model.tosca.TRelationshipTemplate;
 import org.eclipse.winery.model.tosca.TRelationshipType;
 import org.eclipse.winery.model.tosca.TRequirementDefinition;
 import org.eclipse.winery.model.tosca.TTopologyTemplate;
-import org.eclipse.winery.model.tosca.ToscaDeploymentTechnology;
+import org.eclipse.winery.model.tosca.DeploymentTechnologyDescriptor;
 import org.eclipse.winery.model.tosca.constants.OpenToscaBaseTypes;
 import org.eclipse.winery.model.tosca.constants.OpenToscaInterfaces;
 import org.eclipse.winery.model.tosca.constants.ToscaBaseTypes;
@@ -224,7 +224,7 @@ public class EnhancementUtils {
      */
     public static Map<String, Map<QName, String>> getAvailableFeaturesForTopology(
         TTopologyTemplate topology,
-        List<ToscaDeploymentTechnology> deploymentTechnologies) {
+        List<DeploymentTechnologyDescriptor> deploymentTechnologies) {
         IRepository repository = RepositoryFactory.getRepository();
 
         Map<String, Map<QName, String>> availableFeatures = new HashMap<>();
@@ -232,8 +232,8 @@ public class EnhancementUtils {
 
         topology.getNodeTemplates().forEach(node -> {
             List<String> nodeDeploymentTechnologies = deploymentTechnologies.stream()
-                .filter(toscaDeploymentTechnology -> toscaDeploymentTechnology.getManagedIds().contains(node.getId()))
-                .map(toscaDeploymentTechnology -> toscaDeploymentTechnology.getSourceTechnology().getId())
+                .filter(deploymentTechnologyDescriptor -> deploymentTechnologyDescriptor.getManagedIds().contains(node.getId()))
+                .map(deploymentTechnologyDescriptor -> deploymentTechnologyDescriptor.getSourceTechnology().getId())
                 .collect(
                     Collectors.toList());
             Map<TNodeType, String> featureChildren =

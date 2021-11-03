@@ -3,7 +3,7 @@ package org.eclipse.winery.model.tosca;
 import java.util.List;
 import java.util.Map;
 
-public class ToscaDeploymentTechnology {
+public class DeploymentTechnologyDescriptor {
     private String id;
     private ToscaSouceTechnology sourceTechnology;
     private List<String> managedIds;

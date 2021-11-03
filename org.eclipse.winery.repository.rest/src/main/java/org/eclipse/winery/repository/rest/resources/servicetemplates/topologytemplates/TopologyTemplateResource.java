@@ -56,9 +56,8 @@ import org.eclipse.winery.model.tosca.TEntityType;
 import org.eclipse.winery.model.tosca.TNodeTemplate;
 import org.eclipse.winery.model.tosca.TNodeType;
 import org.eclipse.winery.model.tosca.TRelationshipTemplate;
-import org.eclipse.winery.model.tosca.TTag;
 import org.eclipse.winery.model.tosca.TTopologyTemplate;
-import org.eclipse.winery.model.tosca.ToscaDeploymentTechnology;
+import org.eclipse.winery.model.tosca.DeploymentTechnologyDescriptor;
 import org.eclipse.winery.model.tosca.extensions.kvproperties.PropertyDefinitionKV;
 import org.eclipse.winery.model.tosca.utils.ModelUtilities;
 import org.eclipse.winery.model.version.VersionSupport;
@@ -78,9 +77,7 @@ import org.eclipse.winery.repository.splitting.Splitting;
 import org.eclipse.winery.repository.targetallocation.Allocation;
 import org.eclipse.winery.repository.targetallocation.util.AllocationRequest;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.type.CollectionType;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.slf4j.Logger;
@@ -491,33 +488,11 @@ public class TopologyTemplateResource {
     public ArrayList<AvailableFeaturesApiData> getAvailableFeatures() {
         ArrayList<AvailableFeaturesApiData> apiData = new ArrayList<>();
 
-        String deploymentTechnology = null;
-        List<ToscaDeploymentTechnology> deploymentTechnologies = Collections.emptyList();
+        List<DeploymentTechnologyDescriptor> deploymentTechnologies = Collections.emptyList();
         if (this.parent.getElement() instanceof HasTags && ((HasTags) this.parent.getElement()).getTags() != null) {
-            for (TTag tag : ((HasTags) this.parent.getElement()).getTags().getTag()) {
-                // To enable the usage of "technology" and "technologies", we only check for "technolog"
-                if ("deploymentTechnology".equalsIgnoreCase(tag.getName())) {
-                    deploymentTechnology = tag.getValue();
-                    break;
-                }
-            }
             ObjectMapper objectMapper = new ObjectMapper();
-            CollectionType collectionType = objectMapper.getTypeFactory()
-                .constructCollectionType(List.class, ToscaDeploymentTechnology.class);
-            deploymentTechnologies = ((HasTags) this.parent.getElement()).getTags()
-                .getTag()
-                .stream()
-                .filter(tTag -> "jsonDeploymentTechnologies".equalsIgnoreCase(tTag.getName()))
-                .findAny()
-                .map(TTag::getValue)
-                .map(s -> {
-                    try {
-                        return objectMapper.readValue(s, collectionType);
-                    } catch (JsonProcessingException e) {
-                        LOGGER.error("Could not parse list of deployment technologies from service model", e);
-                        return Collections.<ToscaDeploymentTechnology>emptyList();
-                    }
-                }).orElseGet(Collections::emptyList);
+            deploymentTechnologies = ModelUtilities.extractDeploymentTechnologiesFromTags(((HasTags) this.parent.getElement()).getTags(),
+                objectMapper);
         }
 
         EnhancementUtils.getAvailableFeaturesForTopology(this.topologyTemplate, deploymentTechnologies)
