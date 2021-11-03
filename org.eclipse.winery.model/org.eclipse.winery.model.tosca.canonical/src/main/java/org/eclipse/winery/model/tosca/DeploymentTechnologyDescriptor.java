@@ -5,7 +5,7 @@ import java.util.Map;
 
 public class DeploymentTechnologyDescriptor {
     private String id;
-    private ToscaSouceTechnology sourceTechnology;
+    private String technologyId;
     private List<String> managedIds;
     private Map<String, String> properties;
 
@@ -17,12 +17,12 @@ public class DeploymentTechnologyDescriptor {
         this.id = id;
     }
 
-    public ToscaSouceTechnology getSourceTechnology() {
-        return sourceTechnology;
+    public String getTechnologyId() {
+        return technologyId;
     }
 
-    public void setSourceTechnology(ToscaSouceTechnology sourceTechnology) {
-        this.sourceTechnology = sourceTechnology;
+    public void setTechnologyId(String technologyId) {
+        this.technologyId = technologyId;
     }
 
     public List<String> getManagedIds() {

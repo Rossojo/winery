@@ -32,12 +32,11 @@ import org.eclipse.winery.model.adaptation.instance.plugins.SpringWebAppRefineme
 import org.eclipse.winery.model.adaptation.instance.plugins.TomcatRefinementPlugin;
 import org.eclipse.winery.model.adaptation.instance.plugins.dockerimage.DockerImageRefinementPlugin;
 import org.eclipse.winery.model.ids.definitions.ServiceTemplateId;
+import org.eclipse.winery.model.tosca.DiscoveryPluginDescriptor;
 import org.eclipse.winery.model.tosca.TServiceTemplate;
 import org.eclipse.winery.model.tosca.TTag;
 import org.eclipse.winery.model.tosca.TTags;
 import org.eclipse.winery.model.tosca.TTopologyTemplate;
-import org.eclipse.winery.model.tosca.ToscaDiscoveryPlugin;
-import org.eclipse.winery.model.tosca.ToscaSouceTechnology;
 import org.eclipse.winery.repository.backend.IRepository;
 import org.eclipse.winery.repository.backend.RepositoryFactory;
 import org.eclipse.winery.topologygraph.model.ToscaGraph;
@@ -70,7 +69,7 @@ public class InstanceModelRefinement {
     }
 
     public static void updateDiscoveryPluginsInServiceTemplate(
-        TServiceTemplate serviceTemplate, ObjectMapper objectMapper, List<ToscaDiscoveryPlugin> discoveryPlugins) {
+        TServiceTemplate serviceTemplate, ObjectMapper objectMapper, List<DiscoveryPluginDescriptor> discoveryPlugins) {
         try {
             TTag updatedTag = new TTag.Builder().setName(TAG_DISCOVERY_PLUGINS)
                 .setValue(objectMapper.writeValueAsString(discoveryPlugins))
@@ -84,7 +83,7 @@ public class InstanceModelRefinement {
         }
     }
 
-    public static List<ToscaDiscoveryPlugin> extractDiscoveryPluginsFromServiceTemplate(
+    public static List<DiscoveryPluginDescriptor> extractDiscoveryPluginsFromServiceTemplate(
         TServiceTemplate serviceTemplate, ObjectMapper objectMapper) {
         return Optional.ofNullable(serviceTemplate.getTags())
             .map(TTags::getTag)
@@ -94,9 +93,9 @@ public class InstanceModelRefinement {
             .map(TTag::getValue)
             .map(s -> {
                 CollectionType collectionType = objectMapper.getTypeFactory()
-                    .constructCollectionType(List.class, ToscaDiscoveryPlugin.class);
+                    .constructCollectionType(List.class, DiscoveryPluginDescriptor.class);
                 try {
-                    return objectMapper.<List<ToscaDiscoveryPlugin>>readValue(s, collectionType);
+                    return objectMapper.<List<DiscoveryPluginDescriptor>>readValue(s, collectionType);
                 } catch (JsonProcessingException e) {
                     throw new RuntimeException("Deployment technologies tag could not be parsed as JSON", e);
                 }
@@ -109,7 +108,8 @@ public class InstanceModelRefinement {
         TServiceTemplate serviceTemplate = repository.getElement(serviceTemplateId);
         TTopologyTemplate topologyTemplate = serviceTemplate.getTopologyTemplate();
 
-        List<ToscaDiscoveryPlugin> toscaDiscoveryPlugins = extractDiscoveryPluginsFromServiceTemplate(serviceTemplate,
+        List<DiscoveryPluginDescriptor> discoveryPluginDescriptors = extractDiscoveryPluginsFromServiceTemplate(
+            serviceTemplate,
             new ObjectMapper());
 
         if (topologyTemplate == null) {
@@ -127,29 +127,27 @@ public class InstanceModelRefinement {
                 executablePlugins);
 
             if (selectedPlugin != null) {
-                ToscaDiscoveryPlugin discoveryPlugin = toscaDiscoveryPlugins.stream()
-                    .filter(toscaDiscoveryPlugin -> Objects.equals(toscaDiscoveryPlugin.getSourceTechnology().getId(),
+                DiscoveryPluginDescriptor discoveryPlugin = discoveryPluginDescriptors.stream()
+                    .filter(discoveryPluginDescriptor -> Objects.equals(discoveryPluginDescriptor.getId(),
                         selectedPlugin.getId()))
                     .findAny()
                     .orElseGet(() -> {
-                        ToscaDiscoveryPlugin toscaDiscoveryPlugin = new ToscaDiscoveryPlugin();
-                        toscaDiscoveryPlugin.setId(selectedPlugin.getId());
-                        ToscaSouceTechnology toscaSouceTechnology = new ToscaSouceTechnology();
-                        toscaSouceTechnology.setId(selectedPlugin.getId());
-                        toscaSouceTechnology.setName(selectedPlugin.getId());
-                        toscaDiscoveryPlugin.setSourceTechnology(toscaSouceTechnology);
-                        toscaDiscoveryPlugin.setDiscoveredIds(Collections.emptyList());
+                        DiscoveryPluginDescriptor discoveryPluginDescriptor = new DiscoveryPluginDescriptor();
+                        discoveryPluginDescriptor.setId(selectedPlugin.getId());
+                        discoveryPluginDescriptor.setDiscoveredIds(Collections.emptyList());
 
-                        toscaDiscoveryPlugins.add(toscaDiscoveryPlugin);
+                        discoveryPluginDescriptors.add(discoveryPluginDescriptor);
 
-                        return toscaDiscoveryPlugin;
+                        return discoveryPluginDescriptor;
                     });
                 Set<String> pluginDiscoveredNodeIds = selectedPlugin.apply(topologyTemplate);
                 List<String> discoveredIds = new ArrayList<>();
                 discoveredIds.addAll(pluginDiscoveredNodeIds);
                 discoveredIds.addAll(discoveryPlugin.getDiscoveredIds());
                 discoveryPlugin.setDiscoveredIds(discoveredIds);
-                updateDiscoveryPluginsInServiceTemplate(serviceTemplate, new ObjectMapper(), toscaDiscoveryPlugins);
+                updateDiscoveryPluginsInServiceTemplate(serviceTemplate,
+                    new ObjectMapper(),
+                    discoveryPluginDescriptors);
                 try {
                     repository.setElement(serviceTemplateId, serviceTemplate);
                 } catch (IOException e) {

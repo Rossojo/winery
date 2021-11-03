@@ -233,7 +233,7 @@ public class EnhancementUtils {
         topology.getNodeTemplates().forEach(node -> {
             List<String> nodeDeploymentTechnologies = deploymentTechnologies.stream()
                 .filter(deploymentTechnologyDescriptor -> deploymentTechnologyDescriptor.getManagedIds().contains(node.getId()))
-                .map(deploymentTechnologyDescriptor -> deploymentTechnologyDescriptor.getSourceTechnology().getId())
+                .map(DeploymentTechnologyDescriptor::getTechnologyId)
                 .collect(
                     Collectors.toList());
             Map<TNodeType, String> featureChildren =
