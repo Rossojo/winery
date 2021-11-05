@@ -41,7 +41,8 @@ import org.slf4j.LoggerFactory;
 public class MySqlDbRefinementPlugin extends InstanceModelRefinementPlugin {
 
     public static final QName mySqlDbQName = QName.valueOf("{http://opentosca.org/nodetypes}MySQL-DB");
-
+    public static final String COMMAND_RETRIEVE_DB_NAME = "sudo -i mysql -sN -e \"SELECT schema_name from INFORMATION_SCHEMA.SCHEMATA  WHERE schema_name NOT IN('information_schema', 'mysql', 'performance_schema'\n" +
+        ", 'sys');\"";
     private static final Logger logger = LoggerFactory.getLogger(MySqlDbRefinementPlugin.class);
 
     public MySqlDbRefinementPlugin() {
@@ -55,8 +56,7 @@ public class MySqlDbRefinementPlugin extends InstanceModelRefinementPlugin {
         Session session = InstanceModelUtils.createJschSession(template, this.matchToBeRefined.nodeIdsToBeReplaced);
         String mySqlDatabases = InstanceModelUtils.executeCommand(
             session,
-            "sudo mysql -sN -e \"SELECT schema_name from INFORMATION_SCHEMA.SCHEMATA  WHERE schema_name NOT IN('information_schema', 'mysql', 'performance_schema'\n" +
-                ", 'sys');\""
+            COMMAND_RETRIEVE_DB_NAME
         );
         logger.info("Found MySqlDatabases: {}", mySqlDatabases);
 
@@ -67,7 +67,10 @@ public class MySqlDbRefinementPlugin extends InstanceModelRefinementPlugin {
 
             template.getNodeTemplates().stream()
                 .filter(node -> this.matchToBeRefined.nodeIdsToBeReplaced.contains(node.getId())
-                    && Objects.requireNonNull(node.getType()).getLocalPart().toLowerCase().startsWith(mySqlDbQName.getLocalPart().toLowerCase()))
+                    && Objects.requireNonNull(node.getType())
+                    .getLocalPart()
+                    .toLowerCase()
+                    .startsWith(mySqlDbQName.getLocalPart().toLowerCase()))
                 .findFirst()
                 .ifPresent(db -> {
                     discoveredNodeIds.add(db.getId());
